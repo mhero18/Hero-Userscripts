@@ -19,7 +19,7 @@
 (function () {
     'use strict';
 
-    const STARTING_SCORE = 4224506 // <-- hardcode your starting score here
+    const STARTING_SCORE = #### // <-- hardcode your starting score here
     const SCORE_ELEMENT_ID = "BDFR_totalScore";
 
     function waitForScore() {
