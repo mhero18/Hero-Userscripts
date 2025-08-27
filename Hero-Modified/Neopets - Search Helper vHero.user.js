@@ -36,8 +36,8 @@
 // @match        *://*.neopets.com/games/teatime/
 // @match        *://*.neopets.com/gallery/index.phtml*
 // @icon         https://www.neopets.com/favicon.ico
-// @downloadURL  https://github.com/mhero18/Hero-Userscripts/blob/main/Hero-Modified/Neopets%20-%20Search%20Helper%20V3.js
-// @updateURL    https://github.com/mhero18/Hero-Userscripts/blob/main/Hero-Modified/Neopets%20-%20Search%20Helper%20V3.js
+// @downloadURL  https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Modified/Neopets%20-%20Search%20Helper%20vHero.user.js
+// @updateURL    https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Modified/Neopets%20-%20Search%20Helper%20vHero.user.js
 // @grant        none
 // ==/UserScript==
 
