@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Neopets Trading Post Utilities
+// @name         Neopets Trading Post Helper
 // @version      1.4
 // @description  Adds a "Neomail" button next to usernames and auto-selects "Newest" in search.
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
