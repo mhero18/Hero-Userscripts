@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Neopets Game Trophies Name Extractor
+// @name         Neopets Trophies Name Extractor
 // @author       Hero
 // @version      1.5
 // @description  Extract game names from userlookup games trophies and displays in copyable textbox.
@@ -11,10 +11,10 @@
 
 /*
  * Summary:
- *  - Scans userlookup trophy table for game trophy names.
- *  - Extracts game names from text or bolded elements.
+ *  - Scans userlookup trophy table for trophy names.
+ *  - Extracts names from text or bolded elements.
  *  - Cleans up extra text (e.g., "CHAMPION!!!").
- *  - Collects unique game names, sorts them alphabetically.
+ *  - Collects unique names, sorts them alphabetically.
  *  - Displays results in a fixed, copyable textarea on the page.
  */
 
