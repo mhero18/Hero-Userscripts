@@ -2,9 +2,12 @@
 // @name         Neopets Trading Post Utilities
 // @version      1.4
 // @description  Adds a "Neomail" button next to usernames and auto-selects "Newest" in search.
+// @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
 // @author       Hero
 // @match        *://*.neopets.com/island/tradingpost.phtml*
 // @grant        none
+// @downloadURL  https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20Trading%20Post%20Helper.user.js
+// @updateURL    https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20Trading%20Post%20Helper.user.js
 // ==/UserScript==
 
 

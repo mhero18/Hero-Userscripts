@@ -3,9 +3,12 @@
 // @author       Hero
 // @version      1.0.1
 // @description  Fetches prices from itemDB for the items in Your Shop.
+// @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
 // @match        *://www.neopets.com/market.phtml*
 // @grant        GM_xmlhttpRequest
 // @connect      itemdb.com.br
+// @downloadURL  https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20Item%20Price%20Values%20in%20Your%20Shop.user.js
+// @updateURL    https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20Item%20Price%20Values%20in%20Your%20Shop.user.js
 // ==/UserScript==
 
 /*

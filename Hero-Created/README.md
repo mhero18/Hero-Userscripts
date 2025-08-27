@@ -25,7 +25,8 @@ Adds a helper table on training school status pages (Swashbuckling Academy, Myst
 
 Adds quick-access action buttons next to usernames in Neomail for Trading Post, Auctions, Shop, and Gallery. Works in both message list (inbox) and individual message view.
 
-
+![neomailhelper1](assets/neomailhelper1.png)
+![neomailhelper2](assets/neomailhelper2.png)
 
 
 ## [Void BD Challenge Score Tracker](Void%20BD%20Challenge%20Score%20Tracker.js.user.js)
@@ -53,7 +54,7 @@ Fetches current item prices from itemDB API using item IDs. Displays each item's
 
 Scans user lookup trophy table for trophy names. Collects unique names, sorts them alphabetically and displays results in a copyable textbox. Mainly used if you need a quick list of the trophies you have. Needs lots of enhancement lol.
 
-![trophieslist](assets/trophieslist.png)
+![trophylist](assets/trophylist.png)
 
 ## [Jellyneo Item Names Extractor](Jellyneo%20Item%20Names%20Extractor.user.js)
 

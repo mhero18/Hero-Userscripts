@@ -2,10 +2,13 @@
 // @name         Neopets Shops and Inventory Rarity Display
 // @version      2.0.1
 // @description  Displays item rarities in both user shops and your inventory.
+// @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
 // @match        *://*.neopets.com/browseshop.phtml*
 // @match        *://*.neopets.com/inventory.phtml
 // @connect      itemdb.com.br
 // @grant        GM_xmlhttpRequest
+// @downloadURL  https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20Shops%20and%20Inventory%20Rarity%20Display.user.js
+// @updateURL    https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20Shops%20and%20Inventory%20Rarity%20Display.user.js
 // ==/UserScript==
 
 /*

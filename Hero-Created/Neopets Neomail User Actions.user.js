@@ -9,6 +9,8 @@
 // @grant        none
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
 // @run-at       document-end
+// @downloadURL  https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20Neomail%20User%20Actions.user.js
+// @updateURL    https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20Neomail%20User%20Actions.user.js
 // ==/UserScript==
 
 

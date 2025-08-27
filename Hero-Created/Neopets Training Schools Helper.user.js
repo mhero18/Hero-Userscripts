@@ -3,10 +3,13 @@
 // @version      1.5
 // @author       Hero
 // @description  Improves Neopets training schools: train, complete, cancel, and pay for courses with bulk actions.
+// @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
 // @match        *://*.neopets.com/pirates/academy.phtml?type=status*
 // @match        *://*.neopets.com/island/training.phtml?type=status*
 // @match        *://*.neopets.com/island/fight_training.phtml?type=status*
 // @grant        none
+// @downloadURL  https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20Training%20Schools%20Helper.user.js
+// @updateURL    https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20Training%20Schools%20Helper.user.js
 // ==/UserScript==
 
 

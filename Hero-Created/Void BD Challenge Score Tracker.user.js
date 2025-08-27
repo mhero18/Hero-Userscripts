@@ -6,6 +6,8 @@
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
 // @match        *://*.neopets.com/dome/record.phtml*
 // @grant        none
+// @downloadURL  https://github.com/mhero18/Hero-Userscripts/blob/main/Hero-Created/Void%20BD%20Challenge%20Score%20Tracker.user.js
+// @updateURL    https://github.com/mhero18/Hero-Userscripts/blob/main/Hero-Created/Void%20BD%20Challenge%20Score%20Tracker.user.js
 // ==/UserScript==
 
 

@@ -6,6 +6,8 @@
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
 // @match        https://www.neopets.com/userlookup.phtml*
 // @grant        none
+// @downloadURL  https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20Trophies%20Name%20Extractor.user.js
+// @updateURL    https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20Trophies%20Name%20Extractor.user.js
 // ==/UserScript==
 
 

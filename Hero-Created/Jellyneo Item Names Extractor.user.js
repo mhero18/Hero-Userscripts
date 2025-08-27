@@ -6,6 +6,8 @@
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
 // @match        *://items.jellyneo.net/*
 // @grant        none
+// @downloadURL  https://github.com/mhero18/Hero-Userscripts/blob/main/Hero-Created/Jellyneo%20Item%20Names%20Extractor.user.js
+// @updateURL    https://github.com/mhero18/Hero-Userscripts/blob/main/Hero-Created/Jellyneo%20Item%20Names%20Extractor.user.js
 // ==/UserScript==
 
 
