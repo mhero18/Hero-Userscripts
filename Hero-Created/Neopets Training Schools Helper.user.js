@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets Training Schools Helper
-// @version      1.5
+// @version      1.6
 // @author       Hero
 // @description  Improves Neopets training schools: train, complete, cancel, and pay for courses with bulk actions.
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -30,12 +30,12 @@
 
 
 (function() {
-  'use strict';
+    'use strict';
 
-  function log(msg) { console.log(`[TrainingHelper] ${msg}`); }
+    function log(msg) { console.log(`[TrainingHelper] ${msg}`); }
 
-  const style = document.createElement("style");
-  style.textContent = `
+    const style = document.createElement("style");
+    style.textContent = `
     .training-table { margin: 10px auto; width: 70%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     .training-table th, .training-table td { border: 1px solid #bbb; padding: 8px; text-align: center; }
     .training-table th { background: #4a8cd4; color: white; font-weight: bold; }
@@ -74,81 +74,81 @@
     .pet-status { font-size: 12px; color: #666; }
     .stat-recommendations { margin-top: 5px; font-size: 11px; color: #888; }
   `;
-  document.head.appendChild(style);
+    document.head.appendChild(style);
 
-  // Determine process URL
-  let processUrl;
-  const url = window.location.href;
-  if (url.includes('pirates/academy')) processUrl = '/pirates/process_academy.phtml';
-  else if (url.includes('island/fight_training')) processUrl = '/island/process_fight_training.phtml';
-  else processUrl = '/island/process_training.phtml';
+    // Determine process URL
+    let processUrl;
+    const url = window.location.href;
+    if (url.includes('pirates/academy')) processUrl = '/pirates/process_academy.phtml';
+    else if (url.includes('island/fight_training')) processUrl = '/island/process_fight_training.phtml';
+    else processUrl = '/island/process_training.phtml';
 
-  log(`Using process URL: ${processUrl}`);
+    log(`Using process URL: ${processUrl}`);
 
-  // Helper for random delay
-  function randomDelay(min=1000, max=2000) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  }
+    // Helper for random delay
+    function randomDelay(min=1000, max=2000) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
 
-  // Parse pets
-  const petsMap = {};
-  document.querySelectorAll("table").forEach(table => {
-    table.querySelectorAll("tr").forEach(tr => {
-      const td = tr.querySelector("td[align='center']");
-      if (!td) return;
-      const img = td.querySelector("img");
-      if (!img) return;
-      const srcMatch = img.src.match(/\/cpn\/([\w]+)\//);
-      if (!srcMatch) return;
-      const name = srcMatch[1];
-      if (petsMap[name]) return;
+    // Parse pets
+    const petsMap = {};
+    document.querySelectorAll("table").forEach(table => {
+        table.querySelectorAll("tr").forEach(tr => {
+            const td = tr.querySelector("td[align='center']");
+            if (!td) return;
+            const img = td.querySelector("img");
+            if (!img) return;
+            const srcMatch = img.src.match(/\/cpn\/([\w]+)\//);
+            if (!srcMatch) return;
+            const name = srcMatch[1];
+            if (petsMap[name]) return;
 
-      const text = td.innerText;
-        const pet = {
-            name,
-            Lvl: parseInt((text.match(/Lvl\s*:\s*(\d+)/) || [])[1]) || 0,
-            Str: parseInt((text.match(/Str\s*:\s*(\d+)/) || [])[1]) || 0,
-            Def: parseInt((text.match(/Def\s*:\s*(\d+)/) || [])[1]) || 0,
-            Mov: parseInt((text.match(/Mov\s*:\s*(\d+)/) || [])[1]) || 0,
-            Hp:  parseInt((text.match(/Hp\s*:\s*\d+\s*\/\s*(\d+)/) || [])[1]) || 0,
-            cancelForm: td.querySelector("form input[value='Cancel']")?.form,
-            completeForm: td.nextElementSibling?.querySelector("form input[name='type'][value='complete']")?.form,
-            isTraining: false,
-            needsPayment: false,
-            needsComplete: false,
-        };
+            const text = td.innerText;
+            const pet = {
+                name,
+                Lvl: parseInt((text.match(/Lvl\s*:\s*(\d+)/) || [])[1]) || 0,
+                Str: parseInt((text.match(/Str\s*:\s*(\d+)/) || [])[1]) || 0,
+                Def: parseInt((text.match(/Def\s*:\s*(\d+)/) || [])[1]) || 0,
+                Mov: parseInt((text.match(/Mov\s*:\s*(\d+)/) || [])[1]) || 0,
+                Hp:  parseInt((text.match(/Hp\s*:\s*\d+\s*\/\s*(\d+)/) || [])[1]) || 0,
+                cancelForm: td.querySelector("form input[value='Cancel']")?.form,
+                completeForm: td.nextElementSibling?.querySelector("form input[name='type'][value='complete']")?.form,
+                isTraining: false,
+                needsPayment: false,
+                needsComplete: false,
+            };
 
-        const parentTr = td.closest('tr');
-        const prevTr = parentTr?.previousElementSibling;
-        const statusTd = parentTr.querySelectorAll("td")[1];
+            const parentTr = td.closest('tr');
+            const prevTr = parentTr?.previousElementSibling;
+            const statusTd = parentTr.querySelectorAll("td")[1];
 
-        if (prevTr) {
-            const headerText = prevTr.textContent || '';
+            if (prevTr) {
+                const headerText = prevTr.textContent || '';
 
-            if (headerText.includes('is currently studying') && statusTd?.innerText.includes('Time till course finishes')) {
-                pet.isTraining = true;
-            } else if (headerText.includes('is currently studying') && statusTd?.innerText.includes('Course Finished')) {
-                pet.needsComplete = true;
-            } else if (headerText.includes('is currently studying')) {
-                pet.needsPayment = true;
+                if (headerText.includes('is currently studying') && statusTd?.innerText.includes('Time till course finishes')) {
+                    pet.isTraining = true;
+                } else if (headerText.includes('is currently studying') && statusTd?.innerText.includes('Course Finished')) {
+                    pet.needsComplete = true;
+                } else if (headerText.includes('is currently studying')) {
+                    pet.needsPayment = true;
+                }
             }
-        }
 
 
-      petsMap[name] = pet;
+            petsMap[name] = pet;
+        });
     });
-  });
 
-  // Filter eligible pets based on school
-  let levelFilter;
-  if (url.includes('pirates/academy')) levelFilter = p => p.Lvl <= 40;
-  else if (url.includes('island/training')) levelFilter = p => p.Lvl < 250;
-  else if (url.includes('island/fight_training')) levelFilter = p => p.Lvl >= 250;
-  else levelFilter = p => p.Lvl < 250;
+    // Filter eligible pets based on school
+    let levelFilter;
+    if (url.includes('pirates/academy')) levelFilter = p => p.Lvl <= 40;
+    else if (url.includes('island/training')) levelFilter = p => p.Lvl < 250;
+    else if (url.includes('island/fight_training')) levelFilter = p => p.Lvl >= 250;
+    else levelFilter = p => p.Lvl < 250;
 
-  const eligiblePets = Object.values(petsMap).filter(levelFilter);
-  const pets = eligiblePets;
-  if (!pets.length) return log("No eligible pets found.");
+    const eligiblePets = Object.values(petsMap).filter(levelFilter);
+    const pets = eligiblePets;
+    if (!pets.length) return log("No eligible pets found.");
 
     // Build table
     const tableWrapper = document.createElement("div");
@@ -176,7 +176,7 @@
     `;
     }).join("");
 
-  const checkAllRow = `
+    const checkAllRow = `
     <tr class="check-all">
       <td><b>Select All →</b></td>
       <td><input type="radio" name="checkall" value="Level"></td>
@@ -187,7 +187,7 @@
     </tr>
   `;
 
-  tableWrapper.innerHTML = `
+    tableWrapper.innerHTML = `
     <table class="training-table">
       <thead>
         <tr><th>Pet</th><th>Lvl</th><th>Str</th><th>Def</th><th>Mov</th><th>HP</th></tr>
@@ -207,129 +207,129 @@
     <div id="training-results"></div>
   `;
 
-  const statusHeader = [...document.querySelectorAll("b")].find(b => b.textContent.trim() === "Current Course Status");
-  if (statusHeader) statusHeader.parentElement.insertBefore(tableWrapper, statusHeader);
+    const statusHeader = [...document.querySelectorAll("b")].find(b => b.textContent.trim() === "Current Course Status");
+    if (statusHeader) statusHeader.parentElement.insertBefore(tableWrapper, statusHeader);
 
-  const resultsContainer = document.getElementById("training-results");
+    const resultsContainer = document.getElementById("training-results");
 
-  function updateProgress(current, total, message) {
-    resultsContainer.innerHTML = `
+    function updateProgress(current, total, message) {
+        resultsContainer.innerHTML = `
       <div>${message}</div>
       <div class="progress-bar">
         <div class="progress-fill" style="width: ${(current/total)*100}%"></div>
       </div>
       <small>${current}/${total} pets processed</small>
     `;
-  }
-
-  // Check all
-  document.querySelectorAll(".check-all input[type=radio]").forEach(radio => {
-    radio.addEventListener("change", () => {
-      const stat = radio.value;
-      pets.filter(p => !p.isTraining).forEach(p => {
-        const input = document.querySelector(`input[name="${p.name}"][value="${stat}"]`);
-        if (input) input.checked = true;
-      });
-    });
-  });
-
-  // Reset
-  document.getElementById("btn-reset").addEventListener("click", () => {
-    document.querySelectorAll(".training-table input[type=radio]").forEach(r => r.checked = false);
-    resultsContainer.innerHTML = "";
-    log("Reset all selections.");
-  });
-
-  // Train all
-  document.getElementById("btn-train-all").addEventListener("click", async () => {
-    const selectedPets = pets.filter(p => !p.isTraining && document.querySelector(`input[name="${p.name}"]:checked`));
-    if (!selectedPets.length) return alert("No available pets selected!");
-
-    const button = document.getElementById("btn-train-all");
-    button.disabled = true;
-
-    for (let i=0;i<selectedPets.length;i++){
-      const p = selectedPets[i];
-      const choice = document.querySelector(`input[name="${p.name}"]:checked`);
-      if (!choice) continue;
-      updateProgress(i, selectedPets.length, `Training ${p.name} in ${choice.value}...`);
-      const formData = new URLSearchParams({type:'start', course_type: choice.value, pet_name: p.name});
-
-      try {
-        const res = await fetch(processUrl, {method:'POST', body: formData, headers:{'Content-Type':'application/x-www-form-urlencoded'}});
-        const html = await res.text();
-        const errorMatch = html.match(/<b>Error: <\/b>([^<]+)/);
-        log(errorMatch ? `❌ ${p.name}: ${errorMatch[1]}` : `✅ ${p.name} training started`);
-      } catch(err){ log(`❌ ${p.name} network error`); }
-
-      await new Promise(r=>setTimeout(r, randomDelay(1200,2000)));
     }
 
-    updateProgress(selectedPets.length, selectedPets.length, "Training complete! Refreshing page...");
-    button.disabled = false;
-    setTimeout(()=>location.reload(),2000);
-  });
-
-  // Cancel all
-  document.getElementById("btn-cancel-all").addEventListener("click", async () => {
-    const cancellablePets = [];
-    document.querySelectorAll("form").forEach(form=>{
-      const cancelButton = form.querySelector("input[value='Cancel']");
-      const petNameInput = form.querySelector("input[name='pet_name']");
-      if(cancelButton && petNameInput) cancellablePets.push(petNameInput.value);
+    // Check all
+    document.querySelectorAll(".check-all input[type=radio]").forEach(radio => {
+        radio.addEventListener("change", () => {
+            const stat = radio.value;
+            pets.filter(p => !p.isTraining).forEach(p => {
+                const input = document.querySelector(`input[name="${p.name}"][value="${stat}"]`);
+                if (input) input.checked = true;
+            });
+        });
     });
-    if(!cancellablePets.length) return alert("No unpaid courses found.");
-    if(!confirm(`Cancel ${cancellablePets.length} unpaid courses?`)) return;
 
-    const button = document.getElementById("btn-cancel-all");
-    button.disabled = true;
+    // Reset
+    document.getElementById("btn-reset").addEventListener("click", () => {
+        document.querySelectorAll(".training-table input[type=radio]").forEach(r => r.checked = false);
+        resultsContainer.innerHTML = "";
+        log("Reset all selections.");
+    });
 
-    for(let i=0;i<cancellablePets.length;i++){
-      const petName = cancellablePets[i];
-      updateProgress(i, cancellablePets.length, `Cancelling course for ${petName}...`);
-      try{
-        await fetch(processUrl,{method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:`pet_name=${encodeURIComponent(petName)}&type=cancel`});
-        log(`✅ Cancelled course for ${petName}`);
-      }catch(err){ log(`❌ Error cancelling ${petName}`); }
-      await new Promise(r=>setTimeout(r, randomDelay(800,1500)));
-    }
+    // Train all
+    document.getElementById("btn-train-all").addEventListener("click", async () => {
+        const selectedPets = pets.filter(p => !p.isTraining && document.querySelector(`input[name="${p.name}"]:checked`));
+        if (!selectedPets.length) return alert("No available pets selected!");
 
-    updateProgress(cancellablePets.length, cancellablePets.length, "Cancellation complete! Refreshing page...");
-    button.disabled=false;
-    setTimeout(()=>location.reload(),2000);
-  });
+        const button = document.getElementById("btn-train-all");
+        button.disabled = true;
 
-  // Complete all
-  document.getElementById("btn-complete-all").addEventListener("click", async () => {
-    const completablePets = pets.filter(p=>p.completeForm);
-    if(!completablePets.length) return alert("No completed courses found!");
+        for (let i=0;i<selectedPets.length;i++){
+            const p = selectedPets[i];
+            const choice = document.querySelector(`input[name="${p.name}"]:checked`);
+            if (!choice) continue;
+            updateProgress(i, selectedPets.length, `Training ${p.name} in ${choice.value}...`);
+            const formData = new URLSearchParams({type:'start', course_type: choice.value, pet_name: p.name});
 
-    const button = document.getElementById("btn-complete-all");
-    button.disabled = true;
-    let resultsHTML = "<div><strong>Course Completion Results:</strong></div><br>";
+            try {
+                const res = await fetch(processUrl, {method:'POST', body: formData, headers:{'Content-Type':'application/x-www-form-urlencoded'}});
+                const html = await res.text();
+                const errorMatch = html.match(/<b>Error: <\/b>([^<]+)/);
+                log(errorMatch ? `❌ ${p.name}: ${errorMatch[1]}` : `✅ ${p.name} training started`);
+            } catch(err){ log(`❌ ${p.name} network error`); }
 
-    for(let i=0;i<completablePets.length;i++){
-      const p = completablePets[i];
-      updateProgress(i, completablePets.length, `Completing course for ${p.name}...`);
-      const formData = new URLSearchParams({type:'complete', pet_name:p.name});
-      try{
-        const res = await fetch(processUrl, {method:'POST', body:formData, headers:{'Content-Type':'application/x-www-form-urlencoded'}});
-        const html = await res.text();
-        const statMatch = html.match(/increased (\w+)/);
-        const stat = statMatch ? statMatch[1] : "Unknown";
-        let bonus=1;
-        if(html.includes("SUPER BONUS")){
-          const bonusMatch = html.match(/SUPER BONUS - You went up (\d+) points/);
-          bonus = bonusMatch?parseInt(bonusMatch[1]):2;
+            await new Promise(r=>setTimeout(r, randomDelay(1200,2000)));
         }
-        const errorMatch = html.match(/<b>Error: <\/b>([^<]+)/);
-        resultsHTML += errorMatch ? `<div>${p.name}: <span style="color:red">❌ ${errorMatch[1]}</span></div>` :
-          `<div>${p.name}: <span style="color:green">✅ +${bonus} ${stat}${bonus>1?' (SUPER BONUS!)':''}</span></div>`;
-      }catch(err){ resultsHTML+=`<div>${p.name}: <span style="color:red">❌ Network Error</span></div>`;}
-      await new Promise(r=>setTimeout(r, randomDelay(1200,2000)));
-    }
 
-      resultsContainer.innerHTML = resultsHTML + `
+        updateProgress(selectedPets.length, selectedPets.length, "Training complete! Refreshing page...");
+        button.disabled = false;
+        setTimeout(()=>location.reload(),2000);
+    });
+
+    // Cancel all
+    document.getElementById("btn-cancel-all").addEventListener("click", async () => {
+        const cancellablePets = [];
+        document.querySelectorAll("form").forEach(form=>{
+            const cancelButton = form.querySelector("input[value='Cancel']");
+            const petNameInput = form.querySelector("input[name='pet_name']");
+            if(cancelButton && petNameInput) cancellablePets.push(petNameInput.value);
+        });
+        if(!cancellablePets.length) return alert("No unpaid courses found.");
+        if(!confirm(`Cancel ${cancellablePets.length} unpaid courses?`)) return;
+
+        const button = document.getElementById("btn-cancel-all");
+        button.disabled = true;
+
+        for(let i=0;i<cancellablePets.length;i++){
+            const petName = cancellablePets[i];
+            updateProgress(i, cancellablePets.length, `Cancelling course for ${petName}...`);
+            try{
+                await fetch(processUrl,{method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:`pet_name=${encodeURIComponent(petName)}&type=cancel`});
+                log(`✅ Cancelled course for ${petName}`);
+            }catch(err){ log(`❌ Error cancelling ${petName}`); }
+            await new Promise(r=>setTimeout(r, randomDelay(800,1500)));
+        }
+
+        updateProgress(cancellablePets.length, cancellablePets.length, "Cancellation complete! Refreshing page...");
+        button.disabled=false;
+        setTimeout(()=>location.reload(),2000);
+    });
+
+    // Complete all
+    document.getElementById("btn-complete-all").addEventListener("click", async () => {
+        const completablePets = pets.filter(p=>p.completeForm);
+        if(!completablePets.length) return alert("No completed courses found!");
+
+        const button = document.getElementById("btn-complete-all");
+        button.disabled = true;
+        let resultsHTML = "<div><strong>Course Completion Results:</strong></div><br>";
+
+        for(let i=0;i<completablePets.length;i++){
+            const p = completablePets[i];
+            updateProgress(i, completablePets.length, `Completing course for ${p.name}...`);
+            const formData = new URLSearchParams({type:'complete', pet_name:p.name});
+            try{
+                const res = await fetch(processUrl, {method:'POST', body:formData, headers:{'Content-Type':'application/x-www-form-urlencoded'}});
+                const html = await res.text();
+                const statMatch = html.match(/increased (\w+)/);
+                const stat = statMatch ? statMatch[1] : "Unknown";
+                let bonus=1;
+                if(html.includes("SUPER BONUS")){
+                    const bonusMatch = html.match(/SUPER BONUS - You went up (\d+) points/);
+                    bonus = bonusMatch?parseInt(bonusMatch[1]):2;
+                }
+                const errorMatch = html.match(/<b>Error: <\/b>([^<]+)/);
+                resultsHTML += errorMatch ? `<div>${p.name}: <span style="color:red">❌ ${errorMatch[1]}</span></div>` :
+                `<div>${p.name}: <span style="color:green">✅ +${bonus} ${stat}${bonus>1?' (SUPER BONUS!)':''}</span></div>`;
+            }catch(err){ resultsHTML+=`<div>${p.name}: <span style="color:red">❌ Network Error</span></div>`;}
+            await new Promise(r=>setTimeout(r, randomDelay(1200,2000)));
+        }
+
+        resultsContainer.innerHTML = resultsHTML + `
   <div style="margin-top:10px;">
     <button id="btn-refresh" style="
       padding:8px 14px; border:none; border-radius:6px;
@@ -339,12 +339,12 @@
   </div>
 `;
 
-      // Add refresh button
-      document.getElementById("btn-refresh").addEventListener("click", () => {
-          location.reload();
-      });
-      button.disabled=false;
-  });
+        // Add refresh button
+        document.getElementById("btn-refresh").addEventListener("click", () => {
+            location.reload();
+        });
+        button.disabled=false;
+    });
 
     // Remove Cancel All button on fight_training page
     if (url.includes('island/fight_training')) {
@@ -353,99 +353,102 @@
     }
 
 
-// Pay All
-document.getElementById("btn-pay-all").addEventListener("click", async () => {
-    const payForms = [];
-    const addedPets = new Set(); // To prevent duplicates
+    // Pay All
+    document.getElementById("btn-pay-all").addEventListener("click", async () => {
+        const payForms = [];
+        const addedPets = new Set(); // To prevent duplicates
 
-    if (url.includes('island/fight_training')) {
-        // Fight training: look for unpaid course text in table cells
-        document.querySelectorAll("table").forEach(table => {
-            const tdWithText = [...table.querySelectorAll("td")].find(td => td.textContent.includes("This course has not been paid for yet"));
-            if (!tdWithText) return;
+        if (url.includes('island/fight_training')) {
+            // Fight training: look for unpaid course text in table cells
+            document.querySelectorAll("table").forEach(table => {
+                const tdsWithText = [...table.querySelectorAll("td")].filter(td => td.textContent.includes("This course has not been paid for yet"));
+                if (!tdsWithText) return;
 
-            const payLink = tdWithText.querySelector("a[href*='type=pay']");
-            if (!payLink) return;
+                tdsWithText.forEach(tdWithText => {
+                    const payLink = tdWithText.querySelector("a[href*='type=pay']");
+                    if (!payLink) return;
 
-            const urlParams = new URLSearchParams(payLink.href.split("?")[1]);
-            const petName = urlParams.get("pet_name");
-            if (!petName || addedPets.has(petName)) return;
+                    const hrefAttr = payLink.getAttribute("href");
+                    const urlParams = new URLSearchParams(hrefAttr.split("?")[1]);
+                    const petName = urlParams.get("pet_name");
+                    if (!petName || addedPets.has(petName)) return;
 
-            payForms.push({
-                action: "/island/process_fight_training.phtml",
-                method: "GET",
-                params: { type: "pay", pet_name: petName },
-                petName
-            });
+                    payForms.push({
+                        action: "/island/process_fight_training.phtml",
+                        method: "GET",
+                        params: { type: "pay", pet_name: petName },
+                        petName
+                    });
 
-            addedPets.add(petName);
-            log(`Found unpaid fight_training course for: ${petName}`);
-        });
-    } else {
-        // Other pages: look for Pay buttons
-        document.querySelectorAll("form").forEach(form => {
-            const petNameInput = form.querySelector("input[name='pet_name']");
-            if (!petNameInput) return;
-
-            const payButton = form.querySelector("input[value*='Pay']");
-            if (!payButton) return;
-
-            if (addedPets.has(petNameInput.value)) return; // skip duplicates
-
-            payForms.push({
-                form,
-                petName: petNameInput.value
-            });
-
-            addedPets.add(petNameInput.value);
-            log(`Found unpaid course for: ${petNameInput.value}`);
-        });
-    }
-
-    if (!payForms.length) {
-        alert("No unpaid courses found to pay.");
-        return;
-    }
-
-    if (!confirm(`Pay for ${payForms.length} unpaid course(s)?`)) return;
-
-    const button = document.getElementById("btn-pay-all");
-    button.disabled = true;
-
-    for (let i = 0; i < payForms.length; i++) {
-        const entry = payForms[i];
-        updateProgress(i, payForms.length, `Paying for ${entry.petName}...`);
-
-        try {
-            if (url.includes('island/fight_training')) {
-                // Fight training: use GET with query params
-                const queryStr = new URLSearchParams(entry.params).toString();
-                await fetch(`${entry.action}?${queryStr}`, { method: entry.method });
-            } else {
-                // Other pages: use POST form submission
-                const formData = new URLSearchParams();
-                entry.form.querySelectorAll("input").forEach(input => {
-                    if (input.name) formData.append(input.name, input.value);
+                    addedPets.add(petName);
+                    log(`Found unpaid fight_training course for: ${petName}`);
                 });
-                await fetch(entry.form.action, {
-                    method: entry.form.method || "POST",
-                    body: formData,
-                    headers: { "Content-Type": "application/x-www-form-urlencoded" }
-                });
-            }
+            });
+        } else {
+            // Other pages: look for Pay buttons
+            document.querySelectorAll("form").forEach(form => {
+                const petNameInput = form.querySelector("input[name='pet_name']");
+                if (!petNameInput) return;
 
-            log(`✅ Paid course for ${entry.petName}`);
-        } catch (err) {
-            log(`❌ Error paying course for ${entry.petName}: ${err}`);
+                const payButton = form.querySelector("input[value*='Pay']");
+                if (!payButton) return;
+
+                if (addedPets.has(petNameInput.value)) return; // skip duplicates
+
+                payForms.push({
+                    form,
+                    petName: petNameInput.value
+                });
+
+                addedPets.add(petNameInput.value);
+                log(`Found unpaid course for: ${petNameInput.value}`);
+            });
         }
 
-        // Random delay 1–3 seconds
-        await new Promise(r => setTimeout(r, 1000 + Math.random() * 2000));
-    }
+        if (!payForms.length) {
+            alert("No unpaid courses found to pay.");
+            return;
+        }
 
-    updateProgress(payForms.length, payForms.length, "All payments completed! Refreshing page...");
-    button.disabled = false;
-    setTimeout(() => location.reload(), 2000);
-});
+        if (!confirm(`Pay for ${payForms.length} unpaid course(s)?`)) return;
+
+        const button = document.getElementById("btn-pay-all");
+        button.disabled = true;
+
+        for (let i = 0; i < payForms.length; i++) {
+            const entry = payForms[i];
+            updateProgress(i, payForms.length, `Paying for ${entry.petName}...`);
+
+            try {
+                if (url.includes('island/fight_training')) {
+                    // Fight training: use GET with query params
+                    const queryStr = new URLSearchParams(entry.params).toString();
+                    await fetch(`${entry.action}?${queryStr}`, { method: entry.method });
+                } else {
+                    // Other pages: use POST form submission
+                    const formData = new URLSearchParams();
+                    entry.form.querySelectorAll("input").forEach(input => {
+                        if (input.name) formData.append(input.name, input.value);
+                    });
+                    await fetch(entry.form.action, {
+                        method: entry.form.method || "POST",
+                        body: formData,
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" }
+                    });
+                }
+
+                log(`✅ Paid course for ${entry.petName}`);
+            } catch (err) {
+                log(`❌ Error paying course for ${entry.petName}: ${err}`);
+            }
+
+            // Random delay 1–3 seconds
+            await new Promise(r => setTimeout(r, 1000 + Math.random() * 2000));
+        }
+
+        updateProgress(payForms.length, payForms.length, "All payments completed! Refreshing page...");
+        button.disabled = false;
+        setTimeout(() => location.reload(), 2000);
+    });
 
 })();
