@@ -3,6 +3,12 @@
 Just some scripts I made to help make life easier on Neopets, hope you find some use too!  Always ensure that your use of userscripts complies with Neopets' rules. Happy to hear any suggestions or improvements for new or existing scripts! :)
 
 
+# [Neopets Alerts/Notifications Bubble Count Fix](Neopets%20Alerts%20Bubble%20Count%20Fix.user.js)
+Fix the annoying Alerts/Notifications bubble count that is wrong. Makes it so that the correct count is displayed and nothing if there is none.
+
+![alertsfix](assets/alertsfix.png)
+
+
 # [Neopets Trading Post Helper](Neopets%20Trading%20Post%20Helper.user.js)
 Finds all username links and adds a "Neomail" button next to it that will open a new window with username pre-filled. It also automatically selects the "Newest" radio button.
 

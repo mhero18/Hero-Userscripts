@@ -3,8 +3,11 @@
 // @author       Hero
 // @version      1.4
 // @description  Fix alerts bubble count on page load without flashing wrong number.
+// @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
 // @match        *://*.neopets.com/*
 // @grant        none
+// @downloadURL  https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20Training%20Schools%20Helper.user.js
+// @updateURL    https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20Training%20Schools%20Helper.user.js
 // ==/UserScript==
 
 /*
