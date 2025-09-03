@@ -3,6 +3,12 @@
 Just some scripts I made to help make life easier on Neopets, hope you find some use too!  Always ensure that your use of userscripts complies with Neopets' rules. Happy to hear any suggestions or improvements for new or existing scripts! :)
 
 
+# [Kad Foods List Extractor](Kad%20Foods%20List%20Extractor.user.js)
+Collects food items from the Kadoatery page and displays them in a copyable textbox. Useful for those are who are timekeeping.
+
+![alertsfix](assets/kadfoods.png)
+
+
 # [Neopets Alerts/Notifications Bubble Count Fix](Neopets%20Alerts%20Bubble%20Count%20Fix.user.js)
 Fix the annoying Alerts/Notifications bubble count that is wrong. Makes it so that the correct count is displayed and nothing if there is none.
 
