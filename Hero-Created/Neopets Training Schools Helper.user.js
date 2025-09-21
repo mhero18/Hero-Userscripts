@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets Training Schools Helper
-// @version      1.6
+// @version      1.7
 // @author       Hero
 // @description  Improves Neopets training schools: train, complete, cancel, and pay for courses with bulk actions.
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -20,13 +20,15 @@
 
   - Clean table showing all pets, stats, and training status (Training, Need to Pay, Need to Complete)
   - Bulk select stats and train multiple pets at once
-  - Buttons to: Train Selected, Complete Courses, Cancel Unpaid, Pay All Unpaid, Check All, Reset selected
+  - Buttons to: Train Selected, Complete Courses, Cancel Unpaid, Get All Items from SDB, Pay All Unpaid, Check All, Reset selected
   - Shows progress bar and feedback during actions
   - Uses small random delays to mimic natural actions
   - Auto-refreshes page after operations finish
   - Displays stat increases after Completion
   --------------------------------
 */
+
+const SDB_PIN = "0"; // Set your SDB PIN here, or "0" if none
 
 
 (function() {
@@ -47,11 +49,13 @@
     .training-table .training-disabled:hover { background: #f5f5f5 !important; }
     .training-table .training-disabled input[type="radio"] { cursor: not-allowed; }
     .training-table .stat-value { color: #2e7d32; font-weight: bold; }
-    .training-actions { margin: 12px auto; text-align: center; }
+    .training-actions { margin: 12px auto; text-align: center; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;}
     .training-actions button {
       padding: 10px 16px; margin: 0 8px; border: none; border-radius: 6px;
       background: #5c9ded; color: #fff; cursor: pointer; font-size: 14px;
       transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      flex: 0 1 auto;
+      min-width: 120px;
     }
     .training-actions button:hover { background: #4a8cd4; transform: translateY(-1px); }
     .training-actions button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
@@ -59,6 +63,7 @@
     .training-actions .btn-danger:hover { background: #c82333; }
     .training-actions .btn-success { background: #28a745; }
     .training-actions .btn-success:hover { background: #218838; }
+
     #training-results {
       margin-top: 12px; text-align: center; font-family: Arial, sans-serif;
       font-size: 14px; padding: 10px; border-radius: 6px; background: #f8f9fa;
@@ -200,6 +205,7 @@
     <div class="training-actions">
       <button id="btn-train-all" class="btn-primary">🏋️ Train Selected</button>
       <button id="btn-complete-all" class="btn-success">✅ Complete Courses</button>
+      <button id="btn-get-items">📦 Get All Items</button>
       <button id="btn-cancel-all" class="btn-danger">❌ Cancel Unpaid</button>
       <button id="btn-pay-all" class="btn-primary">💰 Pay All Unpaid</button>
       <button id="btn-reset">🔄 Reset</button>
@@ -262,7 +268,7 @@
                 log(errorMatch ? `❌ ${p.name}: ${errorMatch[1]}` : `✅ ${p.name} training started`);
             } catch(err){ log(`❌ ${p.name} network error`); }
 
-            await new Promise(r=>setTimeout(r, randomDelay(1200,2000)));
+            await new Promise(r=>setTimeout(r, randomDelay(800,1500)));
         }
 
         updateProgress(selectedPets.length, selectedPets.length, "Training complete! Refreshing page...");
@@ -326,7 +332,7 @@
                 resultsHTML += errorMatch ? `<div>${p.name}: <span style="color:red">❌ ${errorMatch[1]}</span></div>` :
                 `<div>${p.name}: <span style="color:green">✅ +${bonus} ${stat}${bonus>1?' (SUPER BONUS!)':''}</span></div>`;
             }catch(err){ resultsHTML+=`<div>${p.name}: <span style="color:red">❌ Network Error</span></div>`;}
-            await new Promise(r=>setTimeout(r, randomDelay(1200,2000)));
+            await new Promise(r=>setTimeout(r, randomDelay(800,1500)));
         }
 
         resultsContainer.innerHTML = resultsHTML + `
@@ -449,6 +455,77 @@
         updateProgress(payForms.length, payForms.length, "All payments completed! Refreshing page...");
         button.disabled = false;
         setTimeout(() => location.reload(), 2000);
+    });
+
+
+    // Retrieve All Items from SDB
+    const itemID = {
+        "One Dubloon Coin": "12755", "Two Dubloon Coin": "12756", "Five Dubloon Coin": "12757",
+        "Mau Codestone": "7458", "Tai-Kai Codestone": "7459", "Lu Codestone": "7460", "Vo Codestone": "7461",
+        "Eo Codestone": "7462", "Main Codestone": "7463", "Zei Codestone": "7464", "Orn Codestone": "7465",
+        "Har Codestone": "7466", "Bri Codestone": "7467", "Mag Codestone": "22208", "Vux Codestone": "22209",
+        "Cui Codestone": "22210", "Kew Codestone": "22211", "Sho Codestone": "22212", "Zed Codestone": "22213"
+    };
+
+    async function getItemsFromSDB(array) {
+        let postData = {};
+        const itemCount = {};
+
+        for (let i = 0; i < array.length; i++) {
+            const id = itemID[array[i]];
+            if (!id) continue;
+            if (!itemCount[id]) itemCount[id] = 0;
+            itemCount[id]++;
+        }
+
+        // Construct POST data
+        for (const item in itemCount) {
+            postData[`back_to_inv[${item}]`] = itemCount[item];
+            postData["obj_name"] = array.find(name => itemID[name] == item);
+        }
+        postData["pin"] = SDB_PIN.toString();
+        postData["category"] = "0";
+        postData["offset"] = "0";
+
+        return new Promise(async resolve => {
+            // Random delay before sending request
+            await new Promise(r => setTimeout(r, randomDelay(800, 1500)));
+
+            $.ajax({
+                type: "POST",
+                url: "/process_safetydeposit.phtml?checksub=scan",
+                data: postData,
+                success: data => {
+                    const error = data.includes("Error:") ? "Error: " + data.split("<b>Error: </b>")[1].split("</div>")[0] : "Successful";
+                    resolve(error);
+                },
+                error: () => resolve("Error: SDB request failed")
+            });
+        });
+    }
+
+    document.getElementById("btn-get-items").addEventListener("click", async function() {
+        const getAllItems = [];
+        // Codestones
+        document.querySelectorAll("b").forEach(b => {
+            if (b.innerText.includes("Codestone")) getAllItems.push(b.innerText.trim());
+            if (b.innerText.includes("Dubloon Coin")) getAllItems.push(b.innerText.trim());
+        });
+        if (!getAllItems.length) return alert("No items found!");
+        this.disabled = true;
+
+        const status = await getItemsFromSDB(getAllItems);
+
+        if (!status.startsWith("Error:")) {
+            const summary = {};
+            getAllItems.forEach(i => summary[i] = (summary[i] || 0) + 1);
+            const itemList = Object.entries(summary)
+            .map(([name, count]) => `${name} (x${count})`)
+            .join("<br>");
+            resultsContainer.innerHTML = `<b>SDB Retrieval:</b> ${status}<br><br>Items retrieved:<br>${itemList}`;
+        } else {
+            resultsContainer.innerHTML = `<b>${status}</b>`;
+        }
     });
 
 })();
