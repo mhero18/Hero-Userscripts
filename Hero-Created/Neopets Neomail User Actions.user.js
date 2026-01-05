@@ -3,7 +3,7 @@
 // @version      1.0.0
 // @description  Adds quick action buttons for users in Neopets messages (trading post, auctions, shop, gallery)
 // @author       Hero
-// @match        *://*.neopets.com/neomessages.phtml
+// @match        *://*.neopets.com/neomessages.phtml*
 // @match        *://*.neopets.com/neomessages.phtml?type=read_message*
 // @require      http://code.jquery.com/jquery-latest.js
 // @grant        none

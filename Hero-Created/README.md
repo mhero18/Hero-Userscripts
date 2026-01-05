@@ -3,10 +3,22 @@
 Just some scripts I made to help make life easier on Neopets, hope you find some use too!  Always ensure that your use of userscripts complies with Neopets' rules. Happy to hear any suggestions or improvements for new or existing scripts! :)
 
 
+# [Neopets Sortable Shop Sales History Table](Neopets%20Sortable%20Shop%20Sales%20History%20Table.user.js)
+Make Shop Sales History Table sortable by any column.
+
+![salestable](assets/salestable.png)
+
+
+# [Neopets Edit Pet Description Better View](Neopets%20Edit%20Pet%20Description%20Better%20View.user.js)
+Replace the pet carousel with a full grid and adds 'View Lookup' links.
+
+![petdesc](assets/petdesc.png)
+
+
 # [Kad Foods List Extractor](Kad%20Foods%20List%20Extractor.user.js)
 Collects food items from the Kadoatery page and displays them in a copyable textbox. Useful for those are who are timekeeping.
 
-![alertsfix](assets/kadfoods.png)
+![kadfoods](assets/kadfoods.png)
 
 
 # [Neopets Alerts/Notifications Bubble Count Fix](Neopets%20Alerts%20Bubble%20Count%20Fix.user.js)
@@ -62,11 +74,6 @@ Fetches current item prices from itemDB API using item IDs. Displays each item's
 
 ![shopprice](assets/shopprice.png)
 
-# [Neopets Trophies Name Extractor](Neopets%20Trophies%20Name%20Extractor.user.js)
-
-Scans user lookup trophy table for trophy names. Collects unique names, sorts them alphabetically and displays results in a copyable textbox. Mainly used if you need a quick list of the trophies you have. Needs lots of enhancement lol.
-
-![trophylist](assets/trophylist.png)
 
 # [Jellyneo Item Names Extractor](Jellyneo%20Item%20Names%20Extractor.user.js)
 
