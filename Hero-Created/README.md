@@ -4,7 +4,7 @@ Just some scripts I made to help make life easier on Neopets, hope you find some
 
 
 # [Jellyneo Add DTI and itemDB Links](Jellyneo%20Add%20DTI%20and%20ItemDB%20Links.user.js)
-Make Shop Sales History Table sortable by any column.
+Adds an icon and link to DTI and itemDB in the sidebar on Jellyneo item pages. Only adds DTI if it's a wearable.
 
 ![jnlinks](assets/jnlinks.png)
 
