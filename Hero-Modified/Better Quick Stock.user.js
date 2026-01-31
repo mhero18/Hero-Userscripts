@@ -1,14 +1,81 @@
 // ==UserScript==
 // @name         Better Quick Stock
-// @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      1.1
 // @description  makes the quick stock in neopets a little bit better
-// @author       brunodemarchi
+// @author       brunodemarchi & hero
+// @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
 // @match        *://*.neopets.com/quickstock.phtml*
 // @grant        none
 // ==/UserScript==
 
 $(document).ready(function () {
+
+	// Add toggle button for Discard column
+	var toggleButton = $('<button type="button" style="margin: 10px; padding: 5px 10px; background: #6b5; color: white; border: none; border-radius: 3px; cursor: pointer;">Hide Discard Column</button>');
+	$('form[name="quickstock"]').before(toggleButton);
+
+	var discardCells = [];
+
+	// Load saved state from localStorage
+	var discardHidden = localStorage.getItem('discardColumnHidden') === 'true';
+
+	// Apply saved state on page load
+	if (discardHidden) {
+		hideDiscardColumn();
+	}
+
+	toggleButton.on('click', function () {
+		if (!discardHidden) {
+			hideDiscardColumn();
+		} else {
+			showDiscardColumn();
+		}
+	});
+
+    function hideDiscardColumn() {
+        discardCells = [];
+        var discardIndex = -1;
+
+        // Find the Discard column index from the first header
+        $('form[name="quickstock"] th').each(function (index) {
+            if ($(this).text().includes('Discard')) {
+                discardIndex = index;
+                return false;
+            }
+        });
+
+        if (discardIndex !== -1) {
+            // Hide all Discard headers (including subsection headers)
+            $('form[name="quickstock"] th').each(function (index) {
+                if ($(this).text().includes('Discard')) {
+                    discardCells.push($(this));
+                    $(this).hide();
+                }
+            });
+
+            // Hide the corresponding td in each row
+            $('form[name="quickstock"] tr').each(function () {
+                var cell = $(this).find('td').eq(discardIndex);
+                if (cell.length > 0) {
+                    discardCells.push(cell);
+                    cell.hide();
+                }
+            });
+        }
+
+        discardHidden = true;
+        localStorage.setItem('discardColumnHidden', 'true');
+        toggleButton.text('Show Discard Column').css('background', '#999');
+    }
+
+	function showDiscardColumn() {
+		discardCells.forEach(function (cell) {
+			cell.show();
+		});
+		discardHidden = false;
+		localStorage.setItem('discardColumnHidden', 'false');
+		toggleButton.text('Hide Discard Column').css('background', '#6b5');
+	}
 
 	//removes neopets treatment
 	$('[ondblclick]').each(function () {
@@ -145,4 +212,3 @@ function toggleChecked(el, check, uncheck) {
 		}
 	}
 }
-

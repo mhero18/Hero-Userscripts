@@ -16,3 +16,11 @@ Originally created by diceroll123, modified by itemDB, and updates from Hero!
 - Added search helper icons underneath Gallery items
 - Removed regular Shop Wizard icon because I always use SSW
 - Added "sort_by=newest" to TP icon so it opens newest by default
+
+
+
+# [Better Quick Stock](Better%20Quick%20Stock.user.js)
+
+Originally created by brunodemarchi, updates from Hero!
+
+- Added toggle to show/hide Discard column
