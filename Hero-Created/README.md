@@ -3,6 +3,13 @@
 Just some scripts I made to help make life easier on Neopets, hope you find some use too!  Always ensure that your use of userscripts complies with Neopets' rules. Happy to hear any suggestions or improvements for new or existing scripts! :)
 
 
+# [Neopets Petpet Lab Ray Grid Selector](Neopets%20Petpet%20Lab%20Ray%20Grid%20Selector.user.js)
+Replace the dropdown with a better visual grid of petpets. 
+
+![petpetlab](assets/petpetlab.png)
+
+
+
 # [Jellyneo Add DTI and itemDB Links](Jellyneo%20Add%20DTI%20and%20ItemDB%20Links.user.js)
 Adds an icon and link to DTI and itemDB in the sidebar on Jellyneo item pages. Only adds DTI if it's a wearable.
 
