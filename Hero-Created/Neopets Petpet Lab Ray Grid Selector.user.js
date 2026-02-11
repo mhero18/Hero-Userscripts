@@ -6,6 +6,8 @@
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
 // @match        *://*.neopets.com/petpetlab.phtml*
 // @grant        none
+// @downloadURL  https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20Petpet%20Lab%20Ray%20Grid%20Selector.user.js
+// @updateURL    https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20Petpet%20Lab%20Ray%20Grid%20Selector.user.js
 // ==/UserScript==
 
 (function() {
