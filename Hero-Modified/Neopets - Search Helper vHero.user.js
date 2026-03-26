@@ -19,7 +19,6 @@
 // @match        *://*.neopets.com/inventory.phtml*
 // @match        *://*.neopets.com/island/*training.phtml?*type=status*
 // @match        *://*.neopets.com/island/kitchen*.phtml*
-// @match        *://*.neopets.com/island/tradingpost.phtml*
 // @match        *://*.neopets.com/market.phtml*
 // @match        *://*.neopets.com/market_your.phtml*
 // @match        *://*.neopets.com/medieval/earthfaerie.phtml*
@@ -34,10 +33,10 @@
 // @match        *://*.neopets.com/winter/snowfaerie*.phtml*
 // @match        *://*.neopets.com/questlog/
 // @match        *://*.neopets.com/games/teatime/
-// @match        *://*.neopets.com/gallery/index.phtml*
+// @match        *://*.neopets.com/island/tradingpost.phtml/?type=view
 // @icon         https://www.neopets.com/favicon.ico
-// @downloadURL  https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Modified/Neopets%20-%20Search%20Helper%20vHero.user.js
-// @updateURL    https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Modified/Neopets%20-%20Search%20Helper%20vHero.user.js
+// @downloadURL  https://github.com/mhero18/Hero-Userscripts/blob/main/Hero-Modified/Neopets%20-%20Search%20Helper%20V3.js
+// @updateURL    https://github.com/mhero18/Hero-Userscripts/blob/main/Hero-Modified/Neopets%20-%20Search%20Helper%20V3.js
 // @grant        none
 // ==/UserScript==
 
@@ -73,6 +72,10 @@ const linkmap = { // for urls and images for each search type
     // if the image is not from images.neopets.com, base64 it
     ssw: {
         "img": "http://images.neopets.com/premium/shopwizard/ssw-icon.svg"
+    },
+    sw: {
+        "url": "https://www.neopets.com/shops/wizard.phtml?string=%s",
+        "img": "http://images.neopets.com/themes/h5/basic/images/shopwizard-icon.png"
     },
     tp: {
         "url": "https://www.neopets.com/island/tradingpost.phtml?type=browse&criteria=item_exact&sort_by=newest&search_string=%s",
@@ -174,6 +177,9 @@ function makelinks(item, extras) {
             // SSW
             if (premium) {
                 links += sswurl;
+            }else {
+                // Regular SW
+                links += combiner(name, linkmap.sw.url, linkmap.sw.img);
             }
         }
 

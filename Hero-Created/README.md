@@ -45,12 +45,6 @@ Fix the annoying Alerts/Notifications bubble count that is wrong. Makes it so th
 
 
 
-# [Neopets Trading Post Helper](Neopets%20Trading%20Post%20Helper.user.js)
-Finds all username links and adds a "Neomail" button next to it that will open a new window with username pre-filled. It also automatically selects the "Newest" radio button.
-
-![tradingposthelper](assets/tradingposthelper.png)
-
-
 
 # [Neopets Training Schools Helper](Neopets%20Training%20Schools%20Helper.user.js)
 
@@ -72,23 +66,6 @@ Adds quick-access action buttons next to usernames in Neomail for Trading Post, 
 
 ![neomailhelper1](assets/neomailhelper1.png)
 ![neomailhelper2](assets/neomailhelper2.png)
-
-
-
-# [Void BD Challenge Score Tracker](Void%20BD%20Challenge%20Score%20Tracker.js.user.js)
-
-Calculates current BD Challenge score for The Void Within Battledome Challenge and displays on your record page.
-Formula: total points = current score - starting score
-
-![voidbdtracker](assets/voidbdtracker.png)
-
-
-
-# [Neopets Item Price Values in Your Shop](Neopets%20Item%20Price%20Values%20in%20Your%20Shop.user.js)
-
-Fetches current item prices from itemDB API using item IDs. Displays each item's price below its name in red text. Calculates and displays the total value of all shop items on that page. Total is only for that page, each page has its own sum. Helps with pricing shop items without using Shop Wizard.
-
-![shopprice](assets/shopprice.png)
 
 
 

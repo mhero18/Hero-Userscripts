@@ -1,25 +1,22 @@
 // ==UserScript==
 // @name         Neopets Edit Pet Description Better View
 // @author       Hero
-// @version      1.2
+// @version      1.3
 // @description  Replace the pet carousel with a full grid and adds 'View Lookup' links.
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
+// @author       You
 // @match        *://*.neopets.com/neopet_desc.phtml*
 // @grant        none
 // ==/UserScript==
-
 (function() {
     'use strict';
-
     window.addEventListener("load", () => {
         const carousel = document.querySelector("#bxwrap");
         const petList = document.querySelector("#bxlist");
         if (!carousel || !petList) return;
-
         // Collect unique pet elements
         const petItems = [...petList.querySelectorAll("li")]
             .filter(li => !li.classList.contains("bx-clone"));
-
         // Create grid wrapper
         const grid = document.createElement("div");
         grid.style.display = "grid";
@@ -27,20 +24,24 @@
         grid.style.gap = "20px";
         grid.style.justifyItems = "center";
         grid.style.margin = "20px 0";
-
         // Extract current pet from URL (?edit_petname=...)
         const currentPet = new URLSearchParams(window.location.search).get("edit_petname");
-
         petItems.forEach(li => {
             const anchor = li.querySelector("a");
             const img = li.querySelector("img");
             const nameDiv = li.querySelector("div");
             if (!anchor || !img || !nameDiv) return;
-
             const petName = nameDiv.textContent.trim();
             const petBox = document.createElement("div");
             petBox.style.textAlign = "center";
+            petBox.style.padding = "10px";
+            petBox.style.borderRadius = "8px";
+            petBox.style.transition = "background-color 0.3s";
 
+            // Highlight if this is the current pet being edited
+            if (currentPet && petName.toLowerCase() === currentPet.toLowerCase()) {
+                petBox.style.backgroundColor = "#FFFACD";
+            }
             // Recreate clickable pet link (to load editdesc page)
             const petLink = anchor.cloneNode(true);
             const petImg = petLink.querySelector("img");
@@ -49,7 +50,6 @@
                 petImg.style.borderRadius = "0";
             }
             petBox.appendChild(petLink);
-
             // Add "View Lookup" link
             const lookup = document.createElement("a");
             lookup.href = `https://www.neopets.com/petlookup.phtml?pet=${encodeURIComponent(petName)}`;
@@ -64,10 +64,8 @@
             lookup.onmouseover = () => lookup.style.textDecoration = "underline";
             lookup.onmouseout = () => lookup.style.textDecoration = "none";
             petBox.appendChild(lookup);
-
             grid.appendChild(petBox);
         });
-
         // Replace carousel with the new grid
         carousel.replaceWith(grid);
     });
