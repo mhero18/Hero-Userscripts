@@ -24,6 +24,7 @@ const STORAGE_KEYS = {
 const ITEMDB_CHUNK_DELAY_MS = 2500;
 const ITEMDB_CHUNK_SIZE = 1000;
 const ITEMDB_REFRESH_AFTER_MS = 1000 * 60 * 60 * 24 * 7;
+const PRICE_REFRESH_AFTER_MS = 1000 * 60 * 60 * 24;
 const ITEMDB_RATE_LIMIT_COOLDOWN_MS = 1000 * 60 * 30;
 const PAGE_SCAN_DELAY_MIN_MS = 400;
 const PAGE_SCAN_DELAY_MAX_MS = 700;
@@ -62,6 +63,7 @@ function renderCollectorUI() {
             <li>Move this page to another window, NOT another tab. That way it can run while you do other stuff.</li>
             <li>First time setup: click <strong>Scan Full SDB Automatically</strong>. This visits every SDB page in the background and builds your full box data.</li>
             <li>Then click <strong>Update itemdb Data</strong> to add prices, rarity, item categories, and other extra item details.</li>
+            <li>If you just want updated price data later, click <strong>Refresh Prices</strong>. This uses your saved item ids and does not require a new full SDB scan.</li>
             <li>Optional: click <strong>Update Wearable Zoning Data</strong> if you want wearable zone info.</li>
             <li>Click <strong>Copy Full JSON Export</strong> after a full scan. Small exports copy to your clipboard, and large exports download as a JSON file.</li>
             <li>Later on, if you only revisit a few SDB pages, click <strong>Copy Partial JSON Export</strong> to update just the items from the pages you saw recently.</li>
@@ -74,6 +76,7 @@ function renderCollectorUI() {
       <div class="sdbvc-actions">
         <button type="button" id="sdbvcScanButton" class="sdbvc-btn scan">Scan Full SDB Automatically</button>
         <button type="button" id="sdbvcItemdbButton" class="sdbvc-btn itemdb">Update itemdb Data</button>
+        <button type="button" id="sdbvcRefreshPricesButton" class="sdbvc-btn prices">Refresh Prices</button>
         <button type="button" id="sdbvcZonesButton" class="sdbvc-btn zones">Update Wearable Zoning Data</button>
         <button type="button" id="sdbvcClearZonesButton" class="sdbvc-btn danger-soft">Clear Zoning Cache Only</button>
         <button type="button" id="sdbvcExportFullButton" class="sdbvc-btn export">Copy Full JSON Export</button>
@@ -189,6 +192,10 @@ function renderCollectorUI() {
       background: #eadffd;
       border-color: #b89add;
     }
+    .sdbvc-btn.prices {
+      background: #dff1ff;
+      border-color: #94bfeb;
+    }
     .sdbvc-btn.visualizer {
       background: #dff5f2;
       border-color: #98cfc8;
@@ -275,6 +282,7 @@ function renderCollectorUI() {
   const buttons = {
     scan: host.querySelector("#sdbvcScanButton"),
     itemdb: host.querySelector("#sdbvcItemdbButton"),
+    refreshPrices: host.querySelector("#sdbvcRefreshPricesButton"),
     zones: host.querySelector("#sdbvcZonesButton"),
     openVisualizer: host.querySelector("#sdbvcOpenVisualizerButton"),
     clearZones: host.querySelector("#sdbvcClearZonesButton"),
@@ -308,8 +316,13 @@ function renderCollectorUI() {
     const zonesCheckedCount = Object.values(itemDatabase).filter((item) => item?.zonesFetchedAt).length;
     const zonesCount = Object.values(itemDatabase).filter((item) => Array.isArray(item?.zones) && item.zones.length > 0).length;
     const lastFullScan = scanMeta.lastFullScanAt ? new Date(scanMeta.lastFullScanAt).toLocaleString() : "Never";
+    const lastPricesRefreshed = scanMeta.priceRefreshLastCompletedAt
+      ? new Date(scanMeta.priceRefreshLastCompletedAt).toLocaleString()
+      : "Never";
     const pendingItemdb = Array.isArray(scanMeta.itemdbPendingIds) ? scanMeta.itemdbPendingIds.length : 0;
+    const pendingPrices = Array.isArray(scanMeta.priceRefreshPendingIds) ? scanMeta.priceRefreshPendingIds.length : 0;
     const resumeAt = scanMeta.itemdbResumeAfter ? new Date(scanMeta.itemdbResumeAfter).toLocaleString() : "Ready now";
+    const priceResumeAt = scanMeta.priceRefreshResumeAfter ? new Date(scanMeta.priceRefreshResumeAfter).toLocaleString() : "Ready now";
     metaEl.style.whiteSpace = "pre";
     metaEl.textContent =
       `Logged ${items.length.toLocaleString("en-US")} unique items / ${totalQty.toLocaleString("en-US")} total quantity \n` +
@@ -317,6 +330,8 @@ function renderCollectorUI() {
       `itemdb entries: ${Object.keys(itemDatabase).length.toLocaleString("en-US")}\n` +
       `Wearables checked for zones: ${zonesCheckedCount.toLocaleString("en-US")} | With zones found: ${zonesCount.toLocaleString("en-US")}\n` +
       `itemdb remaining: ${pendingItemdb.toLocaleString("en-US")} | Resume: ${resumeAt}\n` +
+      `price refresh remaining: ${pendingPrices.toLocaleString("en-US")} | Resume: ${priceResumeAt}\n` +
+      `Last prices refreshed: ${lastPricesRefreshed}\n` +
       `Last full scan: ${lastFullScan}`;
   }
 
@@ -344,7 +359,7 @@ function renderCollectorUI() {
   buttons.scan.addEventListener("click", () => {
     runTask(buttons.scan, async () => {
       setStatus("Starting automatic full SDB scan...");
-      await scanEntireSdb({
+      const result = await scanEntireSdb({
         onProgress(progress) {
           const attemptLabel = progress.attempt ? ` (attempt ${progress.attempt}/${progress.attempts})` : "";
           setStatus(`Scanning page ${progress.pageIndex}/${progress.totalPages}${attemptLabel}...`);
@@ -357,7 +372,15 @@ function renderCollectorUI() {
         },
       });
       hideOverlay();
-      setStatus("Full SDB scan complete.");
+      if (result.failedPages.length) {
+        const listedPages = result.failedPages.slice(0, 12).map((page) => page.pageIndex).join(", ");
+        const moreLabel = result.failedPages.length > 12 ? ", ..." : "";
+        setStatus(
+          `Full SDB scan finished with ${result.failedPages.length} failed page(s). Saved all successful pages. Please manually visit page(s): ${listedPages}${moreLabel}.`,
+        );
+      } else {
+        setStatus("Full SDB scan complete.");
+      }
     }).catch((error) => {
       hideOverlay();
       setStatus(`Full SDB scan failed: ${error.message}`);
@@ -367,6 +390,7 @@ function renderCollectorUI() {
   buttons.itemdb.addEventListener("click", () => {
     runTask(buttons.itemdb, async () => {
       await updateItemdbData({
+        mode: "itemdb",
         onProgress(progress) {
           setStatus(`Updating itemdb chunk ${progress.chunkIndex}/${progress.totalChunks}...`);
           showOverlay({
@@ -382,6 +406,28 @@ function renderCollectorUI() {
     }).catch((error) => {
       hideOverlay();
       setStatus(`itemdb update failed: ${error.message}`);
+    });
+  });
+
+  buttons.refreshPrices.addEventListener("click", () => {
+    runTask(buttons.refreshPrices, async () => {
+      await updateItemdbData({
+        mode: "prices",
+        onProgress(progress) {
+          setStatus(`Refreshing price chunk ${progress.chunkIndex}/${progress.totalChunks}...`);
+          showOverlay({
+            title: "Refreshing prices",
+            text: `Requesting price refresh chunk ${progress.chunkIndex} of ${progress.totalChunks}.`,
+            current: progress.chunkIndex,
+            total: progress.totalChunks,
+          });
+        },
+      });
+      hideOverlay();
+      setStatus("Price refresh complete.");
+    }).catch((error) => {
+      hideOverlay();
+      setStatus(`Price refresh failed: ${error.message}`);
     });
   });
 
@@ -418,7 +464,12 @@ function renderCollectorUI() {
 
   buttons.exportPartial.addEventListener("click", () => {
     const payload = buildVisualizerExportPayload({ snapshotMode: "partial" });
+    if (!payload.items.length) {
+      setStatus("There are no new page changes waiting for a partial export.");
+      return;
+    }
     const result = exportVisualizerPayload(payload, "sdb-visualizer-partial");
+    clearPendingPartialExportPages(payload.pagesImported);
     setStatus(result.message);
   });
 
@@ -500,7 +551,8 @@ function hasAuthoritativeFullScan() {
   const scanMeta = getScanMeta();
   const visitedPages = getVisitedPages();
   const totalPages = scanMeta.totalPages || currentPageMeta.totalPages || 0;
-  return Boolean(scanMeta.lastFullScanAt) && totalPages > 0 && visitedPages.length >= totalPages;
+  const hasFailedPages = Array.isArray(scanMeta.failedScanPages) && scanMeta.failedScanPages.length > 0;
+  return Boolean(scanMeta.lastFullScanAt) && totalPages > 0 && visitedPages.length >= totalPages && !hasFailedPages;
 }
 
 function getCurrentPageMeta(doc) {
@@ -585,6 +637,14 @@ function recordCurrentPage(doc, pageNumber) {
 
   const pageMeta = getCurrentPageMeta(doc);
   const scanMeta = getScanMeta();
+  const pageItemIds = buildPageItemIdsMap(scanMeta.pageItemIdsByPage);
+  pageItemIds[String(pageNumber)] = items.map((item) => item.id);
+  const failedScanPages = Array.isArray(scanMeta.failedScanPages)
+    ? scanMeta.failedScanPages.filter((page) => page.pageIndex !== pageNumber)
+    : [];
+  const pagesChangedSinceFullScan = Array.isArray(scanMeta.pagesChangedSinceFullScan)
+    ? [...new Set([...scanMeta.pagesChangedSinceFullScan, pageNumber])].sort((a, b) => a - b)
+    : [pageNumber];
   setScanMeta({
     ...scanMeta,
     totalPages: pageMeta.totalPages,
@@ -593,6 +653,10 @@ function recordCurrentPage(doc, pageNumber) {
     username: pageMeta.username || scanMeta.username || null,
     lastPageRecordedAt: new Date().toISOString(),
     lastObservedPage: pageNumber,
+    pageItemIdsByPage: pageItemIds,
+    pagesChangedSinceFullScan,
+    failedScanPages,
+    lastFailedScanAt: failedScanPages.length ? scanMeta.lastFailedScanAt || new Date().toISOString() : null,
   });
 }
 
@@ -601,6 +665,7 @@ async function scanEntireSdb({ onProgress } = {}) {
   const offsets = Array.from({ length: pageMeta.totalPages }, (_, index) => index * 30);
   const collectedItems = [];
   const failedPages = [];
+  const pageItemIdsByPage = {};
 
   for (let index = 0; index < offsets.length; index += 1) {
     const offset = offsets[index];
@@ -611,6 +676,9 @@ async function scanEntireSdb({ onProgress } = {}) {
       onProgress,
     });
     collectedItems.push(...scanResult.items);
+    if (scanResult.valid) {
+      pageItemIdsByPage[String(index + 1)] = scanResult.items.map((item) => item.id);
+    }
     if (!scanResult.valid) {
       failedPages.push({
         pageIndex: index + 1,
@@ -621,24 +689,10 @@ async function scanEntireSdb({ onProgress } = {}) {
     await delay(randomBetween(PAGE_SCAN_DELAY_MIN_MS, PAGE_SCAN_DELAY_MAX_MS));
   }
 
-  if (failedPages.length) {
-    setScanMeta({
-      ...getScanMeta(),
-      failedScanPages: failedPages,
-      lastFailedScanAt: new Date().toISOString(),
-    });
-    const sample = failedPages
-      .slice(0, 5)
-      .map((page) => page.pageIndex)
-      .join(", ");
-    throw new Error(
-      `Full scan stopped because ${failedPages.length} page(s) did not validate. Example page(s): ${sample}. No incomplete full snapshot was saved.`,
-    );
-  }
-
   const uniqueItems = mergeItemsById([], collectedItems);
   setStoredItems(uniqueItems);
-  setVisitedPages(Array.from({ length: offsets.length }, (_, index) => index + 1));
+  const failedPageNumbers = new Set(failedPages.map((page) => page.pageIndex));
+  setVisitedPages(Array.from({ length: offsets.length }, (_, index) => index + 1).filter((pageNumber) => !failedPageNumbers.has(pageNumber)));
   setScanMeta({
     ...getScanMeta(),
     totalPages: pageMeta.totalPages,
@@ -647,9 +701,12 @@ async function scanEntireSdb({ onProgress } = {}) {
     username: pageMeta.username || getScanMeta().username || null,
     lastFullScanAt: new Date().toISOString(),
     lastObservedPage: 1,
-    failedScanPages: [],
-    lastFailedScanAt: null,
+    pageItemIdsByPage,
+    pagesChangedSinceFullScan: [],
+    failedScanPages: failedPages,
+    lastFailedScanAt: failedPages.length ? new Date().toISOString() : null,
   });
+  return { failedPages };
 }
 
 async function fetchAndParseSdbPage({ offset, pageIndex, totalPages, onProgress }) {
@@ -735,9 +792,19 @@ function buildVisualizerExportPayload({ snapshotMode = "partial" } = {}) {
   const scanMeta = getScanMeta();
   const itemDatabase = getItemDatabase();
   const items = getStoredItems();
-  const pagesImported = getVisitedPages();
+  const visitedPages = getVisitedPages();
   const totalPages = scanMeta.totalPages || pageMeta.totalPages;
+  const pageItemIdsByPage = buildPageItemIdsMap(scanMeta.pageItemIdsByPage);
+  const pagesImported = snapshotMode === "full"
+    ? visitedPages
+    : getPartialExportPages(scanMeta, pageMeta.currentPage, visitedPages, pageItemIdsByPage);
   const pageCoverage = totalPages > 0 ? pagesImported.length / totalPages : 0;
+  const exportedItemIds = new Set(
+    snapshotMode === "full"
+      ? items.map((item) => item.id)
+      : pagesImported.flatMap((pageNumber) => pageItemIdsByPage[String(pageNumber)] || []),
+  );
+  const exportItems = items.filter((item) => exportedItemIds.has(item.id));
   const categoryOptions = Array.from(document.querySelectorAll("select[name='category'] option"))
     .map((option) => ({
       value: option.value,
@@ -762,14 +829,66 @@ function buildVisualizerExportPayload({ snapshotMode = "partial" } = {}) {
     lastPageRecordedAt: scanMeta.lastPageRecordedAt || null,
     lastObservedPage: scanMeta.lastObservedPage || pageMeta.currentPage,
     categoryOptions,
-    items: items.map((item) => ({
+    items: exportItems.map((item) => ({
       ...item,
       itemdb: itemDatabase[item.id] || null,
     })),
   };
 }
 
-async function updateItemdbData({ onProgress } = {}) {
+function buildPageItemIdsMap(rawMap) {
+  if (!rawMap || typeof rawMap !== "object") return {};
+  return Object.fromEntries(
+    Object.entries(rawMap).map(([pageNumber, ids]) => [
+      String(pageNumber),
+      Array.isArray(ids)
+        ? ids.map((id) => Number(id)).filter((id) => Number.isFinite(id) && id > 0)
+        : [],
+    ]),
+  );
+}
+
+function getPartialExportPages(scanMeta, currentPage, visitedPages, pageItemIdsByPage) {
+  const changedPages = Array.isArray(scanMeta.pagesChangedSinceFullScan)
+    ? scanMeta.pagesChangedSinceFullScan.map((page) => Number(page)).filter((page) => Number.isFinite(page) && page > 0)
+    : [];
+  if (changedPages.length) {
+    return [...new Set(changedPages)].sort((a, b) => a - b);
+  }
+
+  const mappedPages = Object.keys(pageItemIdsByPage)
+    .map((page) => Number(page))
+    .filter((page) => Number.isFinite(page) && page > 0);
+  if (!scanMeta.lastFullScanAt && mappedPages.length) {
+    return [...new Set(mappedPages)].sort((a, b) => a - b);
+  }
+
+  if (visitedPages.includes(currentPage)) {
+    return [currentPage];
+  }
+  return [];
+}
+
+function clearPendingPartialExportPages(exportedPages) {
+  if (!Array.isArray(exportedPages) || !exportedPages.length) return;
+  const exportedPageSet = new Set(
+    exportedPages.map((page) => Number(page)).filter((page) => Number.isFinite(page) && page > 0),
+  );
+  const scanMeta = getScanMeta();
+  const remainingPages = Array.isArray(scanMeta.pagesChangedSinceFullScan)
+    ? scanMeta.pagesChangedSinceFullScan
+        .map((page) => Number(page))
+        .filter((page) => Number.isFinite(page) && page > 0 && !exportedPageSet.has(page))
+        .sort((a, b) => a - b)
+    : [];
+
+  setScanMeta({
+    ...scanMeta,
+    pagesChangedSinceFullScan: remainingPages,
+  });
+}
+
+async function updateItemdbData({ mode = "itemdb", onProgress } = {}) {
   const items = getStoredItems();
   if (!items.length) {
     throw new Error("No SDB items have been collected yet. Run a scan first.");
@@ -777,25 +896,35 @@ async function updateItemdbData({ onProgress } = {}) {
 
   let itemDatabase = getItemDatabase();
   const scanMeta = getScanMeta();
-  if (scanMeta.itemdbResumeAfter && Date.now() < scanMeta.itemdbResumeAfter) {
-    throw new Error(`itemdb rate limit is still cooling down. Try again after ${new Date(scanMeta.itemdbResumeAfter).toLocaleString()}.`);
+  const queueKey = mode === "prices" ? "priceRefreshPendingIds" : "itemdbPendingIds";
+  const resumeKey = mode === "prices" ? "priceRefreshResumeAfter" : "itemdbResumeAfter";
+  const lastCompletedKey = mode === "prices" ? "priceRefreshLastCompletedAt" : "itemdbLastCompletedAt";
+  const lastChunkKey = mode === "prices" ? "priceRefreshLastChunkAt" : "itemdbLastChunkAt";
+  const lastRateLimitKey = mode === "prices" ? "priceRefreshLastRateLimitAt" : "itemdbLastRateLimitAt";
+  const refreshAfterMs = mode === "prices" ? PRICE_REFRESH_AFTER_MS : ITEMDB_REFRESH_AFTER_MS;
+  const actionLabel = mode === "prices" ? "price refresh" : "itemdb update";
+  if (scanMeta[resumeKey] && Date.now() < scanMeta[resumeKey]) {
+    throw new Error(`${actionLabel} is still cooling down. Try again after ${new Date(scanMeta[resumeKey]).toLocaleString()}.`);
   }
 
-  let remainingIds = buildItemdbQueue(items, itemDatabase, scanMeta);
+  let remainingIds = buildItemdbQueue(items, itemDatabase, scanMeta, {
+    pendingKey: queueKey,
+    refreshAfterMs,
+  });
   if (!remainingIds.length) {
     setScanMeta({
       ...scanMeta,
-      itemdbPendingIds: [],
-      itemdbResumeAfter: null,
-      itemdbLastCompletedAt: new Date().toISOString(),
+      [queueKey]: [],
+      [resumeKey]: null,
+      [lastCompletedKey]: new Date().toISOString(),
     });
     return;
   }
 
   setScanMeta({
     ...scanMeta,
-    itemdbPendingIds: remainingIds,
-    itemdbResumeAfter: null,
+    [queueKey]: remainingIds,
+    [resumeKey]: null,
   });
 
   const chunks = [];
@@ -816,21 +945,21 @@ async function updateItemdbData({ onProgress } = {}) {
       remainingIds = remainingIds.slice(chunks[chunkIndex].length);
       setScanMeta({
         ...getScanMeta(),
-        itemdbPendingIds: remainingIds,
-        itemdbResumeAfter: null,
-        itemdbLastChunkAt: new Date().toISOString(),
+        [queueKey]: remainingIds,
+        [resumeKey]: null,
+        [lastChunkKey]: new Date().toISOString(),
       });
     } catch (error) {
       if (error.code === "RATE_LIMIT") {
         const resumeAfter = Date.now() + ITEMDB_RATE_LIMIT_COOLDOWN_MS;
         setScanMeta({
           ...getScanMeta(),
-          itemdbPendingIds: remainingIds,
-          itemdbLastRateLimitAt: new Date().toISOString(),
-          itemdbResumeAfter: resumeAfter,
+          [queueKey]: remainingIds,
+          [lastRateLimitKey]: new Date().toISOString(),
+          [resumeKey]: resumeAfter,
         });
         throw new Error(
-          `Reached itemdb's rate limit. Progress was saved and ${remainingIds.length.toLocaleString("en-US")} items remain. Try Update itemdb Data again after ${new Date(resumeAfter).toLocaleString()}.`,
+          `Reached itemdb's rate limit. Progress was saved and ${remainingIds.length.toLocaleString("en-US")} items remain. Try ${mode === "prices" ? "Refresh Prices" : "Update itemdb Data"} again after ${new Date(resumeAfter).toLocaleString()}.`,
         );
       }
       throw error;
@@ -842,9 +971,9 @@ async function updateItemdbData({ onProgress } = {}) {
 
   setScanMeta({
     ...getScanMeta(),
-    itemdbPendingIds: [],
-    itemdbResumeAfter: null,
-    itemdbLastCompletedAt: new Date().toISOString(),
+    [queueKey]: [],
+    [resumeKey]: null,
+    [lastCompletedKey]: new Date().toISOString(),
   });
 }
 
@@ -857,12 +986,12 @@ function getItemPriority(id, itemDatabase) {
   return age * Math.log(value + 11);
 }
 
-function buildItemdbQueue(items, itemDatabase, scanMeta) {
+function buildItemdbQueue(items, itemDatabase, scanMeta, { pendingKey = "itemdbPendingIds", refreshAfterMs = ITEMDB_REFRESH_AFTER_MS } = {}) {
   const knownIds = new Set(items.map((item) => parseInt(item.id, 10)).filter((id) => Number.isFinite(id)));
-  const pendingIds = Array.isArray(scanMeta.itemdbPendingIds)
-    ? scanMeta.itemdbPendingIds.filter((id) => knownIds.has(id))
+  const pendingIds = Array.isArray(scanMeta[pendingKey])
+    ? scanMeta[pendingKey].filter((id) => knownIds.has(id))
     : [];
-  const refreshBefore = Date.now() - ITEMDB_REFRESH_AFTER_MS;
+  const refreshBefore = Date.now() - refreshAfterMs;
   const staleOrMissingIds = Array.from(knownIds)
     .filter((id) => {
       const entry = itemDatabase[id];
