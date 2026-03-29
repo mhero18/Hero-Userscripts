@@ -1,7 +1,8 @@
 // ==UserScript==
 // @name        SDB Visualizer Collector
 // @author      Hero (special thanks to NeoQuest.Guide & itemDB)
-// @version     2026.03.29
+// @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
+// @version     2026.03.29-2
 // @match       *://*.neopets.com/safetydeposit.phtml*
 // @connect     itemdb.com.br
 // @grant       GM_setValue
@@ -45,7 +46,9 @@ renderCollectorUI();
 function renderCollectorUI() {
   const host = document.createElement("div");
   host.id = "sdbVisualizerCollector";
-  host.innerHTML = `
+  const isMainSdbPage = currentPageMeta.currentPage === 1;
+  host.innerHTML = isMainSdbPage
+    ? `
     <div class="sdbvc-panel">
       <div class="sdbvc-header">
         <div>
@@ -86,6 +89,11 @@ function renderCollectorUI() {
       </div>
       <div class="sdbvc-meta" id="sdbvcMeta"></div>
     </div>
+  `
+    : `
+    <div class="sdbvc-panel sdbvc-panel-compact">
+      <div class="sdbvc-status" id="sdbvcStatus"></div>
+    </div>
   `;
 
   const style = document.createElement("style");
@@ -98,6 +106,9 @@ function renderCollectorUI() {
     }
     .sdbvc-panel {
       font-family: Arial, sans-serif;
+    }
+    .sdbvc-panel-compact {
+      padding: 2px 0;
     }
     .sdbvc-header {
       display: flex;
@@ -275,6 +286,11 @@ function renderCollectorUI() {
   document.querySelector(".content").insertBefore(host, document.querySelector(".content").firstChild);
 
   const statusEl = host.querySelector("#sdbvcStatus");
+  if (!isMainSdbPage) {
+    setCompactStatus(statusEl);
+    return;
+  }
+
   const metaEl = host.querySelector("#sdbvcMeta");
   const helpToggle = host.querySelector("#sdbvcHelpToggle");
   const helpContent = host.querySelector("#sdbvcHelpContent");
@@ -496,6 +512,12 @@ function renderCollectorUI() {
 
   refreshMeta();
   setStatus(`Current page recorded: ${currentPageMeta.currentPage}/${currentPageMeta.totalPages}.`);
+}
+
+function setCompactStatus(statusEl) {
+  if (!statusEl) return;
+  statusEl.textContent = `Current page recorded: ${currentPageMeta.currentPage}/${currentPageMeta.totalPages}.`;
+  statusEl.classList.remove("is-error");
 }
 
 function getStoredItems() {
