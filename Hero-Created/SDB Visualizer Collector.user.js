@@ -2,7 +2,7 @@
 // @name        SDB Visualizer Collector
 // @author      Hero (special thanks to NeoQuest.Guide & itemDB)
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
-// @version     2026.03.29-2
+// @version     2026.03.29-3
 // @match       *://*.neopets.com/safetydeposit.phtml*
 // @connect     itemdb.com.br
 // @grant       GM_setValue
@@ -22,7 +22,7 @@ const STORAGE_KEYS = {
   helpCollapsed: "sdbVisualizerHelpCollapsed",
 };
 
-const ITEMDB_CHUNK_DELAY_MS = 2500;
+const ITEMDB_CHUNK_DELAY_MS = 1000;
 const ITEMDB_CHUNK_SIZE = 1000;
 const ITEMDB_REFRESH_AFTER_MS = 1000 * 60 * 60 * 24 * 7;
 const PRICE_REFRESH_AFTER_MS = 1000 * 60 * 60 * 24;
@@ -30,11 +30,12 @@ const ITEMDB_RATE_LIMIT_COOLDOWN_MS = 1000 * 60 * 30;
 const PAGE_SCAN_DELAY_MIN_MS = 400;
 const PAGE_SCAN_DELAY_MAX_MS = 700;
 const PAGE_SCAN_RETRY_LIMIT = 3;
-const WEARABLE_ZONE_DELAY_MS = 250;
-const WEARABLE_ZONE_CONCURRENCY = 3;
+const WEARABLE_ZONE_DELAY_MS = 200;
+const WEARABLE_ZONE_CONCURRENCY = 5;
 const WEARABLE_ZONE_RETRY_LIMIT = 3;
 const EXPORT_FILE_THRESHOLD_BYTES = 900000;
 const VISUALIZER_URL = "https://sdbvisualizer.pages.dev";
+let hasLoggedWearableApiSample = false;
 
 const scriptVersion = GM_info?.script?.version || "unknown";
 console.log("NQ.G/NEOPETS: SDB Visualizer Collector version:", scriptVersion);
@@ -330,7 +331,10 @@ function renderCollectorUI() {
     const scanMeta = getScanMeta();
     const totalQty = items.reduce((sum, item) => sum + (item.qty || 0), 0);
     const zonesCheckedCount = Object.values(itemDatabase).filter((item) => item?.zonesFetchedAt).length;
-    const zonesCount = Object.values(itemDatabase).filter((item) => Array.isArray(item?.zones) && item.zones.length > 0).length;
+    const zonesCount = Object.values(itemDatabase).filter((item) => {
+      const zones = item?.zones || [];
+      return Array.isArray(zones) && zones.length > 0;
+    }).length;
     const lastFullScan = scanMeta.lastFullScanAt ? new Date(scanMeta.lastFullScanAt).toLocaleString() : "Never";
     const lastPricesRefreshed = scanMeta.priceRefreshLastCompletedAt
       ? new Date(scanMeta.priceRefreshLastCompletedAt).toLocaleString()
@@ -853,8 +857,23 @@ function buildVisualizerExportPayload({ snapshotMode = "partial" } = {}) {
     categoryOptions,
     items: exportItems.map((item) => ({
       ...item,
-      itemdb: itemDatabase[item.id] || null,
+      itemdb: normalizeItemdbForExport(itemDatabase[item.id]) || null,
     })),
+  };
+}
+
+function normalizeItemdbForExport(itemdbEntry) {
+  if (!itemdbEntry) return null;
+  const zones = Array.isArray(itemdbEntry.zones) && itemdbEntry.zones.length
+    ? itemdbEntry.zones
+    : Array.isArray(itemdbEntry.occupies)
+      ? itemdbEntry.occupies
+      : [];
+  const zonesFetchedAt = itemdbEntry.zonesFetchedAt || itemdbEntry.occupiesFetchedAt || null;
+  return {
+    ...itemdbEntry,
+    zones,
+    zonesFetchedAt,
   };
 }
 
@@ -962,7 +981,20 @@ async function updateItemdbData({ mode = "itemdb", onProgress } = {}) {
     });
     try {
       const chunkData = await requestItemdbChunk(chunks[chunkIndex]);
-      itemDatabase = { ...itemDatabase, ...chunkData };
+      Object.entries(chunkData).forEach(([id, nextEntry]) => {
+        itemDatabase[id] = {
+          ...(itemDatabase[id] || {}),
+          ...nextEntry,
+          zones:
+            nextEntry.zonesFetchedAt != null
+              ? nextEntry.zones || nextEntry.occupies || []
+              : itemDatabase[id]?.zones || itemDatabase[id]?.occupies || [],
+          zonesFetchedAt:
+            nextEntry.zonesFetchedAt != null
+              ? nextEntry.zonesFetchedAt
+              : itemDatabase[id]?.zonesFetchedAt || itemDatabase[id]?.occupiesFetchedAt || null,
+        };
+      });
       setItemDatabase(itemDatabase);
       remainingIds = remainingIds.slice(chunks[chunkIndex].length);
       setScanMeta({
@@ -973,7 +1005,10 @@ async function updateItemdbData({ mode = "itemdb", onProgress } = {}) {
       });
     } catch (error) {
       if (error.code === "RATE_LIMIT") {
-        const resumeAfter = Date.now() + ITEMDB_RATE_LIMIT_COOLDOWN_MS;
+        const retryAfterMs = Number.isFinite(error.retryAfterMs) && error.retryAfterMs > 0
+          ? error.retryAfterMs
+          : ITEMDB_RATE_LIMIT_COOLDOWN_MS;
+        const resumeAfter = Date.now() + retryAfterMs;
         setScanMeta({
           ...getScanMeta(),
           [queueKey]: remainingIds,
@@ -1074,8 +1109,12 @@ function requestItemdbChunk(itemIds) {
               priceAddedAt: item.price?.addedAt || null,
               priceInflated: item.price?.inflated || false,
               comment: item.comment,
-              zones: Array.isArray(item.zones) ? item.zones : [],
-              zonesFetchedAt: null,
+              zones: Array.isArray(item.zones)
+                ? item.zones
+                : Array.isArray(item.occupies)
+                  ? item.occupies
+                  : [],
+              zonesFetchedAt: item.zonesFetchedAt || item.occupiesFetchedAt || null,
               fetchedAt,
             };
           });
@@ -1086,6 +1125,7 @@ function requestItemdbChunk(itemIds) {
         if (response.status === 429) {
           const error = new Error("Reached itemdb's item-based rate limit (429).");
           error.code = "RATE_LIMIT";
+          error.retryAfterMs = parseRetryAfterMs(response.responseHeaders);
           reject(error);
           return;
         }
@@ -1132,7 +1172,7 @@ async function updateWearableZones({ onProgress } = {}) {
       }),
     );
 
-    let hitRateLimit = false;
+    let rateLimitRetryAfterMs = null;
     let firstError = null;
 
     results.forEach((result) => {
@@ -1148,7 +1188,7 @@ async function updateWearableZones({ onProgress } = {}) {
         };
         completed += 1;
       } else if (result.reason?.code === "RATE_LIMIT") {
-        hitRateLimit = true;
+        rateLimitRetryAfterMs = result.reason.retryAfterMs || rateLimitRetryAfterMs;
       } else if (!firstError) {
         firstError = result.reason;
       }
@@ -1156,9 +1196,10 @@ async function updateWearableZones({ onProgress } = {}) {
 
     setItemDatabase(itemDatabase);
 
-    if (hitRateLimit) {
+    if (rateLimitRetryAfterMs != null) {
+      const retryAfterText = new Date(Date.now() + rateLimitRetryAfterMs).toLocaleString();
       throw new Error(
-        `Reached itemdb's zoning rate limit after saving ${completed.toLocaleString("en-US")} wearable updates. Run the zoning update again later to continue from where it stopped.`,
+        `Reached itemdb's zoning rate limit after saving ${completed.toLocaleString("en-US")} wearable updates. Run the zoning update again after ${retryAfterText} to continue from where it stopped.`,
       );
     }
 
@@ -1178,68 +1219,100 @@ async function updateWearableZones({ onProgress } = {}) {
 }
 
 function fetchWearableZones(item) {
-  const slug = item?.slug || slugifyItemdbName(item?.name);
-  if (!slug) {
+  const candidateIdentifiers = [
+    item?.internal_id,
+    item?.item_id,
+    item?.slug,
+    slugifyItemdbName(item?.name),
+  ]
+    .map((value) => String(value || "").trim())
+    .filter(Boolean)
+    .filter((value, index, list) => list.indexOf(value) === index);
+
+  if (!candidateIdentifiers.length) {
     return Promise.resolve([]);
   }
 
-  return fetchWearableZonesWithRetry(slug, WEARABLE_ZONE_RETRY_LIMIT);
+  return fetchWearableZonesWithRetry(candidateIdentifiers, WEARABLE_ZONE_RETRY_LIMIT);
 }
 
-async function fetchWearableZonesWithRetry(slug, attemptsLeft) {
+async function fetchWearableZonesWithRetry(candidateIdentifiers, attemptsLeft) {
+  const [itemIdentifier, ...remainingIdentifiers] = candidateIdentifiers;
   try {
-    return await requestWearableZones(slug);
+    return await requestWearableZones(itemIdentifier);
   } catch (error) {
     if (error.code === "RATE_LIMIT") {
       throw error;
     }
+    if ((error.code === "BAD_REQUEST" || error.code === "NOT_FOUND") && remainingIdentifiers.length) {
+      return fetchWearableZonesWithRetry(remainingIdentifiers, WEARABLE_ZONE_RETRY_LIMIT);
+    }
     if (error.code === "TRANSIENT" && attemptsLeft > 1) {
       const backoffMs = 500 * (WEARABLE_ZONE_RETRY_LIMIT - attemptsLeft + 1);
       await delay(backoffMs);
-      return fetchWearableZonesWithRetry(slug, attemptsLeft - 1);
+      return fetchWearableZonesWithRetry(candidateIdentifiers, attemptsLeft - 1);
+    }
+    if (error.code === "BAD_REQUEST" || error.code === "NOT_FOUND") {
+      return [];
     }
     throw error;
   }
 }
 
-function requestWearableZones(slug) {
+function requestWearableZones(itemIdentifier) {
   return new Promise((resolve, reject) => {
     GM_xmlhttpRequest({
+      responseType: "json",
       method: "GET",
-      url: `https://itemdb.com.br/item/${slug}`,
+      url: `https://itemdb.com.br/api/v1/items/${encodeURIComponent(itemIdentifier)}/wearable`,
       onload(response) {
         if (response.status === 429) {
           const error = new Error("Reached itemdb zoning rate limit (429).");
           error.code = "RATE_LIMIT";
+          error.retryAfterMs = parseRetryAfterMs(response.responseHeaders);
+          reject(error);
+          return;
+        }
+        if (response.status === 400) {
+          const error = new Error(`itemdb wearable API rejected identifier ${itemIdentifier}.`);
+          error.code = "BAD_REQUEST";
+          reject(error);
+          return;
+        }
+        if (response.status === 404) {
+          const error = new Error(`itemdb wearable data not found for ${itemIdentifier}.`);
+          error.code = "NOT_FOUND";
           reject(error);
           return;
         }
         if ([502, 503, 504].includes(response.status)) {
-          const error = new Error(`itemdb item page returned ${response.status}.`);
+          const error = new Error(`itemdb wearable API returned ${response.status}.`);
           error.code = "TRANSIENT";
           reject(error);
           return;
         }
         if (response.status !== 200) {
-          reject(new Error(`itemdb item page returned ${response.status}`));
+          reject(new Error(`itemdb wearable API returned ${response.status}`));
           return;
         }
 
         try {
-          const doc = new DOMParser().parseFromString(response.responseText, "text/html");
-          const zoneLabels = ["Occupies:", "Zones:"];
-          const zonesNode = Array.from(doc.querySelectorAll("p")).find((node) =>
-            zoneLabels.some((label) => node.textContent.includes(label)),
-          );
-          if (!zonesNode) {
-            resolve([]);
-            return;
+          const wearableData = response.response;
+          if (!hasLoggedWearableApiSample) {
+            hasLoggedWearableApiSample = true;
           }
-          const matchedLabel = zoneLabels.find((label) => zonesNode.textContent.includes(label));
-          const zones = (zonesNode.textContent.split(matchedLabel)[1] || "")
-            .split(",")
-            .map((entry) => entry.trim())
-            .filter(Boolean);
+          const zones = Array.isArray(wearableData)
+            ? Array.from(
+                new Set(
+                  wearableData
+                    .map((entry) => entry?.zone_label)
+                    .map((entry) => String(entry || "").trim())
+                    .filter(Boolean),
+                ),
+              )
+            : Array.isArray(wearableData?.zone_label)
+              ? wearableData.zone_label.map((entry) => String(entry).trim()).filter(Boolean)
+              : [];
           resolve(zones);
         } catch (error) {
           reject(error);
@@ -1250,6 +1323,22 @@ function requestWearableZones(slug) {
       },
     });
   });
+}
+
+function parseRetryAfterMs(responseHeaders) {
+  const match = String(responseHeaders || "").match(/retry-after:\s*([^\r\n]+)/i);
+  if (!match) return null;
+  const rawValue = match[1].trim();
+  const seconds = Number(rawValue);
+  console.log("Parsed Retry-After header value:", { rawValue, seconds });
+  if (Number.isFinite(seconds) && seconds >= 0) {
+    return seconds * 1000;
+  }
+  const retryDate = Date.parse(rawValue);
+  if (Number.isFinite(retryDate)) {
+    return Math.max(0, retryDate - Date.now());
+  }
+  return null;
 }
 
 function slugifyItemdbName(name) {
