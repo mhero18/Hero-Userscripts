@@ -2,7 +2,7 @@
 // @name        SDB Visualizer Collector
 // @author      Hero (special thanks to NeoQuest.Guide & itemDB)
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
-// @version     2026.03.31-1
+// @version     2026.03.31-2
 // @match       *://*.neopets.com/safetydeposit.phtml*
 // @connect     itemdb.com.br
 // @grant       GM_setValue
@@ -67,9 +67,10 @@ function renderCollectorUI() {
             <li>Move this page to another window, NOT another tab. That way it can run while you do other stuff.</li>
             <li>First time setup: click <strong>Scan Full SDB Automatically</strong>. This visits every SDB page in the background and builds your full box data.</li>
             <li>Then click <strong>Update itemdb Data</strong> to add prices, rarity, item categories, and other extra item details.</li>
-            <li>If you just want updated price data later, click <strong>Refresh Prices</strong>. This uses your saved item ids and does not require a new full SDB scan.</li>
             <li>Optional: click <strong>Update Wearable Zoning Data</strong> if you want wearable zone info.</li>
             <li>Click <strong>Copy Full JSON Export</strong> after a full scan. Small exports copy to your clipboard, and large exports download as a JSON file.</li>
+            <li>Click <strong>Open Visualizer Site</strong> and go to the Import section to paste or upload your JSON file.</li>
+            <li>Later on, click <strong>Refresh Prices</strong> to update price data only and do another Full Export, this won't need a full SDB scan. </li>
             <li>Later on, if you only revisit a few SDB pages, click <strong>Copy Partial JSON Export</strong> to update just the items from the pages you saw recently.</li>
             <li><strong>Clear Zoning Cache Only</strong> removes saved wearable zoning results so you can fetch again without deleting your scans or itemdb data.</li>
             <li><strong>Clear ALL Data</strong> wipes the saved collector data if you want to start over from scratch.</li>
