@@ -533,7 +533,15 @@ function setStoredItems(items) {
 }
 
 function getVisitedPages() {
-  return JSON.parse(GM_getValue(STORAGE_KEYS.visitedPages, "[]"));
+  const raw = JSON.parse(GM_getValue(STORAGE_KEYS.visitedPages, "[]"));
+  if (Array.isArray(raw)) {
+    return raw;
+  }
+  if (raw && typeof raw === "object" && raw.__scoped && raw.scopes && typeof raw.scopes === "object") {
+    const browsePages = raw.scopes.browse;
+    return Array.isArray(browsePages) ? browsePages : [];
+  }
+  return [];
 }
 
 function setVisitedPages(pages) {
@@ -549,7 +557,12 @@ function setItemDatabase(itemDatabase) {
 }
 
 function getScanMeta() {
-  return JSON.parse(GM_getValue(STORAGE_KEYS.scanMeta, "{}"));
+  const raw = JSON.parse(GM_getValue(STORAGE_KEYS.scanMeta, "{}"));
+  if (raw && typeof raw === "object" && raw.__scoped && raw.scopes && typeof raw.scopes === "object") {
+    const browseMeta = raw.scopes.browse;
+    return browseMeta && typeof browseMeta === "object" ? browseMeta : {};
+  }
+  return raw && typeof raw === "object" ? raw : {};
 }
 
 function setScanMeta(scanMeta) {
