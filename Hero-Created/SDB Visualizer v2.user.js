@@ -44,6 +44,7 @@ const VIEWER_SORT_OPTIONS = [
   { key: "rarity", label: "Rarity" },
   { key: "updated", label: "Recently Enriched" },
 ];
+
 const VIEWER_DEFAULT_FILTERS = {
   search: "",
   pageSize: "100",
@@ -842,10 +843,9 @@ function renderCollectorUI() {
       border: 0;
       cursor: pointer;
     }
-    .sdbvc-viewerLinkButtonText {
-      font-size: 21px;
-      font-weight: bold;
-      line-height: 1;
+    .sdbvc-viewerLinkButton .sdbvc-viewerLinkIcon {
+      background: transparent;
+      padding: 0;
     }
     .sdbvc-viewerAside {
       display: grid;
@@ -2770,7 +2770,7 @@ function renderContextualViewerDetail() {
       ${buildViewerDetailLinks(item)
         .map(
           (link) => link.action
-            ? `<button type="button" class="sdbvc-viewerLink sdbvc-viewerLinkButton" data-action="${escapeAttribute(link.action)}" data-item-id="${escapeAttribute(String(item.id))}" title="${escapeAttribute(link.label)}" aria-label="${escapeAttribute(link.label)}"><span class="sdbvc-viewerLinkButtonText">${escapeHtml(link.text || "-")}</span></button>`
+            ? `<button type="button" class="sdbvc-viewerLink sdbvc-viewerLinkButton" data-action="${escapeAttribute(link.action)}" data-item-id="${escapeAttribute(String(item.id))}" title="${escapeAttribute(link.label)}" aria-label="${escapeAttribute(link.label)}"><img class="sdbvc-viewerLinkIcon" src="${escapeAttribute(link.iconSrc)}" alt="${escapeAttribute(link.label)}" loading="lazy" /></button>`
             : `<a class="sdbvc-viewerLink" href="${escapeAttribute(link.href)}" target="_blank" rel="noopener noreferrer" title="${escapeAttribute(link.label)}" aria-label="${escapeAttribute(link.label)}"><img class="sdbvc-viewerLinkIcon" src="${escapeAttribute(link.iconSrc)}" alt="${escapeAttribute(link.label)}" loading="lazy" /></a>`,
         )
         .join("")}
@@ -3322,7 +3322,7 @@ function buildViewerDetailLinks(item) {
     {
       label: "Add to removal list",
       action: "add-to-removal-list",
-      text: "-",
+      iconSrc: "https://cdn-icons-png.flaticon.com/512/3687/3687412.png",
     },
     {
       label: "Safety Deposit Box",
@@ -3456,6 +3456,10 @@ function escapeHtml(value) {
 
 function escapeAttribute(value) {
   return escapeHtml(value).replaceAll("`", "&#96;");
+}
+
+function svgDataUri(svg) {
+  return `data:image/svg+xml;utf8,${svg}`;
 }
 
 function formatBytes(bytes) {
