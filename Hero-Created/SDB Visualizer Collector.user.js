@@ -2,7 +2,7 @@
 // @name        SDB Visualizer Collector
 // @author      Hero (special thanks to NeoQuest.Guide & itemDB)
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
-// @version     2026.03.30
+// @version     2026.03.29-3
 // @match       *://*.neopets.com/safetydeposit.phtml*
 // @connect     itemdb.com.br
 // @grant       GM_setValue
@@ -19,7 +19,6 @@ const STORAGE_KEYS = {
   visitedPages: "visitedSDBPages",
   itemDatabase: "itemDatabase",
   scanMeta: "sdbVisualizerScanMeta",
-  exportBaselineItems: "sdbVisualizerExportBaselineItems",
   helpCollapsed: "sdbVisualizerHelpCollapsed",
 };
 
@@ -36,7 +35,6 @@ const WEARABLE_ZONE_CONCURRENCY = 5;
 const WEARABLE_ZONE_RETRY_LIMIT = 3;
 const EXPORT_FILE_THRESHOLD_BYTES = 900000;
 const VISUALIZER_URL = "https://sdbvisualizer.pages.dev";
-const MAX_RENDERED_PENDING_DIFF_LINES = 100;
 let hasLoggedWearableApiSample = false;
 
 const scriptVersion = GM_info?.script?.version || "unknown";
@@ -237,66 +235,6 @@ function renderCollectorUI() {
     .is-hidden {
       display: none !important;
     }
-    #sdbvcPendingDiffs {
-      position: fixed;
-      right: 16px;
-      bottom: 30px;
-      width: min(360px, calc(100vw - 24px));
-      padding: 12px 14px;
-      border-radius: 12px;
-      border: 1px solid #ccb893;
-      background: rgba(255, 250, 240, 0.96);
-      box-shadow: 0 14px 38px rgba(33, 23, 10, 0.22);
-      z-index: 999997;
-      color: #4a372a;
-      font-size: 12px;
-      line-height: 1.35;
-      backdrop-filter: blur(4px);
-      max-height: min(60vh, 520px);
-      overflow-y: auto;
-    }
-    .sdbvc-diffTitle {
-      font-size: 12px;
-      font-weight: bold;
-      margin-bottom: 6px;
-    }
-    .sdbvc-diffSubtitle {
-      color: #7b5e4d;
-      margin-bottom: 8px;
-    }
-    .sdbvc-diffList {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .sdbvc-diffRow {
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-    }
-    .sdbvc-diffName {
-      min-width: 0;
-      flex: 1 1 auto;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .sdbvc-diffDelta {
-      flex: 0 0 auto;
-      font-weight: bold;
-    }
-    .sdbvc-diffDelta.is-positive {
-      color: #18794e;
-    }
-    .sdbvc-diffDelta.is-negative {
-      color: #b42318;
-    }
-    .sdbvc-diffEmpty {
-      color: #7b5e4d;
-    }
-    .sdbvc-diffRow.is-page-note .sdbvc-diffName {
-      white-space: normal;
-    }
     #sdbvcOverlay {
       position: fixed;
       inset: 0;
@@ -349,12 +287,8 @@ function renderCollectorUI() {
   document.querySelector(".content").insertBefore(host, document.querySelector(".content").firstChild);
 
   const statusEl = host.querySelector("#sdbvcStatus");
-  const pendingDiffHost = document.createElement("aside");
-  pendingDiffHost.id = "sdbvcPendingDiffs";
-  document.body.appendChild(pendingDiffHost);
   if (!isMainSdbPage) {
     setCompactStatus(statusEl);
-    renderPendingDiffPreview(pendingDiffHost);
     return;
   }
 
@@ -411,7 +345,6 @@ function renderCollectorUI() {
     const priceResumeAt = scanMeta.priceRefreshResumeAfter ? new Date(scanMeta.priceRefreshResumeAfter).toLocaleString() : "Ready now";
     metaEl.style.whiteSpace = "pre";
     metaEl.textContent =
-      `Scope: ${currentPageMeta.scopeLabel}\n` +
       `Logged ${items.length.toLocaleString("en-US")} unique items / ${totalQty.toLocaleString("en-US")} total quantity \n` +
       `Visited pages: ${visitedPages.length}/${currentPageMeta.totalPages}\n` +
       `itemdb entries: ${Object.keys(itemDatabase).length.toLocaleString("en-US")}\n` +
@@ -420,7 +353,6 @@ function renderCollectorUI() {
       `price refresh remaining: ${pendingPrices.toLocaleString("en-US")} | Resume: ${priceResumeAt}\n` +
       `Last prices refreshed: ${lastPricesRefreshed}\n` +
       `Last full scan: ${lastFullScan}`;
-    renderPendingDiffPreview(pendingDiffHost);
   }
 
   function setStatus(message) {
@@ -542,12 +474,11 @@ function renderCollectorUI() {
 
   buttons.exportFull.addEventListener("click", () => {
     if (!hasAuthoritativeFullScan()) {
-      setStatus("Full export requires a completed full SDB scan on the unfiltered SDB view first.");
+      setStatus("Full export requires a completed full SDB scan first.");
       return;
     }
     const payload = buildVisualizerExportPayload({ snapshotMode: "full" });
     const result = exportVisualizerPayload(payload, "sdb-visualizer-full");
-    commitExportBaseline("full", payload.pagesImported, payload.items);
     setStatus(result.message);
   });
 
@@ -558,12 +489,7 @@ function renderCollectorUI() {
       return;
     }
     const result = exportVisualizerPayload(payload, "sdb-visualizer-partial");
-    commitExportBaseline("partial", payload.pagesImported, payload.items);
-    if (currentPageMeta.isDefaultScope) {
-      clearAllPendingPartialExportPages();
-    } else {
-      clearPendingPartialExportPages(payload.pagesImported);
-    }
+    clearPendingPartialExportPages(payload.pagesImported);
     setStatus(result.message);
   });
 
@@ -606,43 +532,12 @@ function setStoredItems(items) {
   GM_setValue(STORAGE_KEYS.allItems, JSON.stringify(items));
 }
 
-function safeParseJson(rawValue, fallbackValue) {
-  try {
-    const parsed = JSON.parse(rawValue);
-    return parsed == null ? fallbackValue : parsed;
-  } catch {
-    return fallbackValue;
-  }
-}
-
-function getCurrentScopeKey() {
-  return currentPageMeta.scopeKey || "browse";
-}
-
 function getVisitedPages() {
-  const raw = safeParseJson(GM_getValue(STORAGE_KEYS.visitedPages, "null"), null);
-  const scopeKey = getCurrentScopeKey();
-  if (Array.isArray(raw)) {
-    return currentPageMeta.isDefaultScope ? raw : [];
-  }
-  if (raw?.__scoped && typeof raw.scopes === "object") {
-    return Array.isArray(raw.scopes[scopeKey]) ? raw.scopes[scopeKey] : [];
-  }
-  return [];
+  return JSON.parse(GM_getValue(STORAGE_KEYS.visitedPages, "[]"));
 }
 
 function setVisitedPages(pages) {
-  const normalizedPages = [...new Set((pages || []).map((page) => Number(page)).filter((page) => Number.isFinite(page) && page > 0))]
-    .sort((a, b) => a - b);
-  const raw = safeParseJson(GM_getValue(STORAGE_KEYS.visitedPages, "null"), null);
-  const scopeKey = getCurrentScopeKey();
-  const scopes = raw?.__scoped && typeof raw.scopes === "object"
-    ? { ...raw.scopes }
-    : Array.isArray(raw) && currentPageMeta.isDefaultScope
-      ? { [scopeKey]: raw }
-      : {};
-  scopes[scopeKey] = normalizedPages;
-  GM_setValue(STORAGE_KEYS.visitedPages, JSON.stringify({ __scoped: true, scopes }));
+  GM_setValue(STORAGE_KEYS.visitedPages, JSON.stringify(pages));
 }
 
 function getItemDatabase() {
@@ -653,47 +548,12 @@ function setItemDatabase(itemDatabase) {
   GM_setValue(STORAGE_KEYS.itemDatabase, JSON.stringify(itemDatabase));
 }
 
-function getExportBaselineItems() {
-  return safeParseJson(GM_getValue(STORAGE_KEYS.exportBaselineItems, "{}"), {});
-}
-
-function setExportBaselineItems(itemsById) {
-  GM_setValue(STORAGE_KEYS.exportBaselineItems, JSON.stringify(itemsById || {}));
-}
-
 function getScanMeta() {
-  const raw = safeParseJson(GM_getValue(STORAGE_KEYS.scanMeta, "null"), null);
-  const scopeKey = getCurrentScopeKey();
-  if (raw && !Array.isArray(raw) && !raw.__scoped) {
-    return currentPageMeta.isDefaultScope ? raw : {};
-  }
-  if (raw?.__scoped && typeof raw.scopes === "object") {
-    return raw.scopes[scopeKey] && typeof raw.scopes[scopeKey] === "object" ? raw.scopes[scopeKey] : {};
-  }
-  return {};
-}
-
-function getAllScanMetaScopes() {
-  const raw = safeParseJson(GM_getValue(STORAGE_KEYS.scanMeta, "null"), null);
-  if (raw?.__scoped && typeof raw.scopes === "object") {
-    return raw.scopes;
-  }
-  if (raw && !Array.isArray(raw) && typeof raw === "object") {
-    return { browse: raw };
-  }
-  return {};
+  return JSON.parse(GM_getValue(STORAGE_KEYS.scanMeta, "{}"));
 }
 
 function setScanMeta(scanMeta) {
-  const raw = safeParseJson(GM_getValue(STORAGE_KEYS.scanMeta, "null"), null);
-  const scopeKey = getCurrentScopeKey();
-  const scopes = raw?.__scoped && typeof raw.scopes === "object"
-    ? { ...raw.scopes }
-    : raw && !Array.isArray(raw) && currentPageMeta.isDefaultScope
-      ? { [scopeKey]: raw }
-      : {};
-  scopes[scopeKey] = scanMeta;
-  GM_setValue(STORAGE_KEYS.scanMeta, JSON.stringify({ __scoped: true, scopes }));
+  GM_setValue(STORAGE_KEYS.scanMeta, JSON.stringify(scanMeta));
 }
 
 function clearAllStoredData() {
@@ -714,9 +574,6 @@ function clearZoningCache() {
 }
 
 function hasAuthoritativeFullScan() {
-  if (!currentPageMeta.isDefaultScope) {
-    return false;
-  }
   const scanMeta = getScanMeta();
   const visitedPages = getVisitedPages();
   const totalPages = scanMeta.totalPages || currentPageMeta.totalPages || 0;
@@ -725,14 +582,6 @@ function hasAuthoritativeFullScan() {
 }
 
 function getCurrentPageMeta(doc) {
-  const searchInput = doc.querySelector("input[name='obj_name']");
-  const categorySelect = doc.querySelector("select[name='category']");
-  const searchTerm = normalizeScopeSearchTerm(searchInput?.value || new URLSearchParams(location.search).get("obj_name") || "");
-  const categoryValue = String(categorySelect?.value || new URLSearchParams(location.search).get("category") || "0");
-  const isDefaultScope = !searchTerm && (categoryValue === "0" || categoryValue === "");
-  const scopeKey = isDefaultScope
-    ? "browse"
-    : `filter:${categoryValue || "0"}:${searchTerm.toLowerCase()}`;
   const pageSelect = doc.querySelector("select[name='offset']");
   const totalPages = pageSelect ? pageSelect.options.length : 1;
   const currentOffset = pageSelect ? parseInt(pageSelect.value || "0", 10) : 0;
@@ -750,26 +599,7 @@ function getCurrentPageMeta(doc) {
     totalItems: totalsMatch ? parseInt(totalsMatch[1], 10) : null,
     totalQuantity: totalsMatch ? parseInt(totalsMatch[2], 10) : null,
     username,
-    searchTerm,
-    categoryValue,
-    isDefaultScope,
-    scopeKey,
-    scopeLabel: buildScopeLabel({ searchTerm, categoryValue, isDefaultScope }),
   };
-}
-
-function normalizeScopeSearchTerm(value) {
-  return String(value || "").replace(/\s+/g, " ").trim();
-}
-
-function buildScopeLabel({ searchTerm, categoryValue, isDefaultScope }) {
-  if (isDefaultScope) {
-    return "Full SDB";
-  }
-  if (searchTerm) {
-    return `Search: ${searchTerm}${categoryValue && categoryValue !== "0" ? ` | Category ${categoryValue}` : ""}`;
-  }
-  return `Category ${categoryValue}`;
 }
 
 function parseSdbRows(doc) {
@@ -819,99 +649,10 @@ function mergeItemsById(existingItems, nextItems) {
   return Array.from(byId.values()).sort((a, b) => a.name.localeCompare(b.name));
 }
 
-function normalizeStoredItem(item) {
-  return {
-    id: Number(item?.id || 0),
-    name: item?.name || "Unknown Item",
-    qty: Math.max(0, Number(item?.qty || 0)),
-    image: item?.image || "",
-    description: item?.description || "",
-    sdbType: item?.sdbType || "",
-  };
-}
-
-function buildPageItemsMap(rawMap) {
-  if (!rawMap || typeof rawMap !== "object") return {};
-  return Object.fromEntries(
-    Object.entries(rawMap).map(([pageNumber, items]) => [
-      String(pageNumber),
-      Array.isArray(items) ? items.map(normalizeStoredItem).filter((item) => item.id > 0) : [],
-    ]),
-  );
-}
-
-function buildStoredItemsFromPageSnapshots(pageSnapshotsByPage) {
-  return mergeItemsById([], Object.values(pageSnapshotsByPage).flat().map(normalizeStoredItem));
-}
-
-function buildItemsByIdMap(items) {
-  const mapped = {};
-  (items || []).forEach((item) => {
-    if (!item || !Number.isFinite(Number(item.id)) || Number(item.id) <= 0) return;
-    mapped[String(item.id)] = normalizeStoredItem(item);
-  });
-  return mapped;
-}
-
-function buildGlobalPendingExportItems(itemDatabase) {
-  const currentItemsById = buildItemsByIdMap(getStoredItems());
-  const exportBaselineItems = getExportBaselineItems();
-  const allIds = new Set([...Object.keys(currentItemsById), ...Object.keys(exportBaselineItems)]);
-  return Array.from(allIds)
-    .map((id) => {
-      const currentItem = currentItemsById[id];
-      const baselineItem = exportBaselineItems[id];
-      const currentQty = Number(currentItem?.qty || 0);
-      const baselineQty = Number(baselineItem?.qty || 0);
-      if (currentQty === baselineQty) {
-        return null;
-      }
-      const exportItem = currentItem || { ...baselineItem, qty: 0 };
-      return {
-        ...normalizeStoredItem(exportItem),
-        itemdb: normalizeItemdbForExport(itemDatabase[Number(id)]) || null,
-      };
-    })
-    .filter(Boolean)
-    .sort((a, b) => a.name.localeCompare(b.name));
-}
-
-function buildGlobalPendingQuantityDiffs() {
-  const currentItemsById = buildItemsByIdMap(getStoredItems());
-  const exportBaselineItems = getExportBaselineItems();
-  const scanMeta = getScanMeta();
-  const pageSnapshotsByPage = buildPageItemsMap(scanMeta.pageSnapshotsByPage);
-  const newDefaultPageIds = new Set(
-    getPendingPageNotes().flatMap((entry) => (pageSnapshotsByPage[String(entry.pageNumber)] || []).map((item) => String(item.id))),
-  );
-  const allIds = new Set([...Object.keys(currentItemsById), ...Object.keys(exportBaselineItems)]);
-  return Array.from(allIds)
-    .filter((id) => !newDefaultPageIds.has(String(id)))
-    .map((id) => {
-      const currentItem = currentItemsById[id];
-      const baselineItem = exportBaselineItems[id];
-      const delta = Number(currentItem?.qty || 0) - Number(baselineItem?.qty || 0);
-      if (!delta) return null;
-      return {
-        id: Number(id),
-        name: currentItem?.name || baselineItem?.name || `Item ${id}`,
-        delta,
-      };
-    })
-    .filter(Boolean)
-    .sort((a, b) => {
-      const byMagnitude = Math.abs(b.delta) - Math.abs(a.delta);
-      if (byMagnitude !== 0) return byMagnitude;
-      return a.name.localeCompare(b.name);
-    });
-}
-
 function recordCurrentPage(doc, pageNumber) {
   const items = parseSdbRows(doc);
-  const scanMeta = getScanMeta();
-  const pageSnapshotsByPage = buildPageItemsMap(scanMeta.pageSnapshotsByPage);
-  pageSnapshotsByPage[String(pageNumber)] = items.map(normalizeStoredItem);
-  setStoredItems(mergeItemsById(getStoredItems(), items));
+  const mergedItems = mergeItemsById(getStoredItems(), items);
+  setStoredItems(mergedItems);
 
   const visitedPages = getVisitedPages();
   if (!visitedPages.includes(pageNumber)) {
@@ -921,7 +662,9 @@ function recordCurrentPage(doc, pageNumber) {
   }
 
   const pageMeta = getCurrentPageMeta(doc);
-  const pageItemIds = buildPageItemIdsMap(pageSnapshotsByPage);
+  const scanMeta = getScanMeta();
+  const pageItemIds = buildPageItemIdsMap(scanMeta.pageItemIdsByPage);
+  pageItemIds[String(pageNumber)] = items.map((item) => item.id);
   const failedScanPages = Array.isArray(scanMeta.failedScanPages)
     ? scanMeta.failedScanPages.filter((page) => page.pageIndex !== pageNumber)
     : [];
@@ -936,7 +679,6 @@ function recordCurrentPage(doc, pageNumber) {
     username: pageMeta.username || scanMeta.username || null,
     lastPageRecordedAt: new Date().toISOString(),
     lastObservedPage: pageNumber,
-    pageSnapshotsByPage,
     pageItemIdsByPage: pageItemIds,
     pagesChangedSinceFullScan,
     failedScanPages,
@@ -947,8 +689,9 @@ function recordCurrentPage(doc, pageNumber) {
 async function scanEntireSdb({ onProgress } = {}) {
   const pageMeta = getCurrentPageMeta(document);
   const offsets = Array.from({ length: pageMeta.totalPages }, (_, index) => index * 30);
+  const collectedItems = [];
   const failedPages = [];
-  const pageSnapshotsByPage = {};
+  const pageItemIdsByPage = {};
 
   for (let index = 0; index < offsets.length; index += 1) {
     const offset = offsets[index];
@@ -958,8 +701,9 @@ async function scanEntireSdb({ onProgress } = {}) {
       totalPages: offsets.length,
       onProgress,
     });
+    collectedItems.push(...scanResult.items);
     if (scanResult.valid) {
-      pageSnapshotsByPage[String(index + 1)] = scanResult.items.map(normalizeStoredItem);
+      pageItemIdsByPage[String(index + 1)] = scanResult.items.map((item) => item.id);
     }
     if (!scanResult.valid) {
       failedPages.push({
@@ -971,33 +715,23 @@ async function scanEntireSdb({ onProgress } = {}) {
     await delay(randomBetween(PAGE_SCAN_DELAY_MIN_MS, PAGE_SCAN_DELAY_MAX_MS));
   }
 
-  if (pageMeta.isDefaultScope) {
-    setStoredItems(buildStoredItemsFromPageSnapshots(pageSnapshotsByPage));
-  } else {
-    setStoredItems(mergeItemsById(getStoredItems(), Object.values(pageSnapshotsByPage).flat()));
-  }
+  const uniqueItems = mergeItemsById([], collectedItems);
+  setStoredItems(uniqueItems);
   const failedPageNumbers = new Set(failedPages.map((page) => page.pageIndex));
   setVisitedPages(Array.from({ length: offsets.length }, (_, index) => index + 1).filter((pageNumber) => !failedPageNumbers.has(pageNumber)));
-  const pageItemIdsByPage = buildPageItemIdsMap(pageSnapshotsByPage);
-  const existingScanMeta = getScanMeta();
-  const nextScanMeta = {
-    ...existingScanMeta,
+  setScanMeta({
+    ...getScanMeta(),
     totalPages: pageMeta.totalPages,
     totalItems: pageMeta.totalItems,
     totalQuantity: pageMeta.totalQuantity,
-    username: pageMeta.username || existingScanMeta.username || null,
+    username: pageMeta.username || getScanMeta().username || null,
     lastFullScanAt: new Date().toISOString(),
     lastObservedPage: 1,
-    pageSnapshotsByPage,
     pageItemIdsByPage,
     pagesChangedSinceFullScan: [],
     failedScanPages: failedPages,
     lastFailedScanAt: failedPages.length ? new Date().toISOString() : null,
-  };
-  if (!existingScanMeta.exportBaselinePageSnapshotsByPage || !Object.keys(existingScanMeta.exportBaselinePageSnapshotsByPage).length) {
-    nextScanMeta.exportBaselinePageSnapshotsByPage = structuredClone(pageSnapshotsByPage);
-  }
-  setScanMeta(nextScanMeta);
+  });
   return { failedPages };
 }
 
@@ -1060,25 +794,10 @@ function validateSdbPage(doc, pageIndex, totalPages) {
 }
 
 function buildSdbPageUrl(offset) {
-  const params = new URLSearchParams();
-  if (currentPageMeta.categoryValue && currentPageMeta.categoryValue !== "0") {
-    params.set("category", currentPageMeta.categoryValue);
-  } else if (!currentPageMeta.isDefaultScope) {
-    params.set("category", currentPageMeta.categoryValue || "0");
-  }
-  if (currentPageMeta.searchTerm) {
-    params.set("obj_name", currentPageMeta.searchTerm);
-  } else if (!currentPageMeta.isDefaultScope) {
-    params.set("obj_name", "");
-  }
-  if (offset > 0) {
-    params.set("offset", String(offset));
-  }
-  const query = params.toString();
-  if (!query) {
+  if (offset === 0) {
     return `${location.origin}/safetydeposit.phtml`;
   }
-  return `${location.origin}/safetydeposit.phtml?${query}`;
+  return `${location.origin}/safetydeposit.phtml?category=0&obj_name=&offset=${offset}`;
 }
 
 async function fetchSdbPage(url) {
@@ -1099,33 +818,19 @@ function buildVisualizerExportPayload({ snapshotMode = "partial" } = {}) {
   const scanMeta = getScanMeta();
   const itemDatabase = getItemDatabase();
   const items = getStoredItems();
-  const exportBaselineItems = getExportBaselineItems();
   const visitedPages = getVisitedPages();
   const totalPages = scanMeta.totalPages || pageMeta.totalPages;
-  const pageSnapshotsByPage = buildPageItemsMap(scanMeta.pageSnapshotsByPage);
-  const baselinePageSnapshotsByPage = buildPageItemsMap(scanMeta.exportBaselinePageSnapshotsByPage);
-  const pageItemIdsByPage = buildPageItemIdsMap(pageSnapshotsByPage);
+  const pageItemIdsByPage = buildPageItemIdsMap(scanMeta.pageItemIdsByPage);
   const pagesImported = snapshotMode === "full"
     ? visitedPages
     : getPartialExportPages(scanMeta, pageMeta.currentPage, visitedPages, pageItemIdsByPage);
   const pageCoverage = totalPages > 0 ? pagesImported.length / totalPages : 0;
-  const exportItems = snapshotMode === "full"
-    ? items
-    : pageMeta.isDefaultScope
-      ? buildGlobalPendingExportItems(itemDatabase)
-    : !pageMeta.isDefaultScope
-      ? buildScopedPartialExportItems({
-          pagesImported,
-          pageSnapshotsByPage,
-          exportBaselineItems,
-          itemDatabase,
-        })
-    : buildPartialExportItems({
-        pagesImported,
-        pageSnapshotsByPage,
-        baselinePageSnapshotsByPage,
-        itemDatabase,
-      });
+  const exportedItemIds = new Set(
+    snapshotMode === "full"
+      ? items.map((item) => item.id)
+      : pagesImported.flatMap((pageNumber) => pageItemIdsByPage[String(pageNumber)] || []),
+  );
+  const exportItems = items.filter((item) => exportedItemIds.has(item.id));
   const categoryOptions = Array.from(document.querySelectorAll("select[name='category'] option"))
     .map((option) => ({
       value: option.value,
@@ -1150,12 +855,10 @@ function buildVisualizerExportPayload({ snapshotMode = "partial" } = {}) {
     lastPageRecordedAt: scanMeta.lastPageRecordedAt || null,
     lastObservedPage: scanMeta.lastObservedPage || pageMeta.currentPage,
     categoryOptions,
-    items: snapshotMode === "full"
-      ? exportItems.map((item) => ({
-          ...item,
-          itemdb: normalizeItemdbForExport(itemDatabase[item.id]) || null,
-        }))
-      : exportItems,
+    items: exportItems.map((item) => ({
+      ...item,
+      itemdb: normalizeItemdbForExport(itemDatabase[item.id]) || null,
+    })),
   };
 }
 
@@ -1180,55 +883,10 @@ function buildPageItemIdsMap(rawMap) {
     Object.entries(rawMap).map(([pageNumber, ids]) => [
       String(pageNumber),
       Array.isArray(ids)
-        ? ids
-            .map((entry) => typeof entry === "object" && entry !== null ? Number(entry.id) : Number(entry))
-            .filter((id) => Number.isFinite(id) && id > 0)
+        ? ids.map((id) => Number(id)).filter((id) => Number.isFinite(id) && id > 0)
         : [],
     ]),
   );
-}
-
-function buildPartialExportItems({ pagesImported, pageSnapshotsByPage, baselinePageSnapshotsByPage, itemDatabase }) {
-  const exportById = new Map();
-  pagesImported.forEach((pageNumber) => {
-    const pageKey = String(pageNumber);
-    const currentItems = pageSnapshotsByPage[pageKey] || [];
-    const baselineItems = baselinePageSnapshotsByPage[pageKey] || [];
-    const currentById = new Map(currentItems.map((item) => [item.id, normalizeStoredItem(item)]));
-    const baselineById = new Map(baselineItems.map((item) => [item.id, normalizeStoredItem(item)]));
-    const pageIds = new Set([...currentById.keys(), ...baselineById.keys()]);
-    pageIds.forEach((id) => {
-      const currentItem = currentById.get(id);
-      const baselineItem = baselineById.get(id);
-      const exportItem = currentItem || { ...baselineItem, qty: 0 };
-      exportById.set(id, {
-        ...exportItem,
-        itemdb: normalizeItemdbForExport(itemDatabase[id]) || null,
-      });
-    });
-  });
-  return Array.from(exportById.values()).sort((a, b) => a.name.localeCompare(b.name));
-}
-
-function buildScopedPartialExportItems({ pagesImported, pageSnapshotsByPage, exportBaselineItems, itemDatabase }) {
-  const exportById = new Map();
-  pagesImported.forEach((pageNumber) => {
-    const pageKey = String(pageNumber);
-    const currentItems = pageSnapshotsByPage[pageKey] || [];
-    currentItems.forEach((item) => {
-      const normalized = normalizeStoredItem(item);
-      const baselineItem = exportBaselineItems[String(normalized.id)];
-      const baselineQty = baselineItem ? Number(baselineItem.qty || 0) : 0;
-      if (normalized.qty === baselineQty) {
-        return;
-      }
-      exportById.set(normalized.id, {
-        ...normalized,
-        itemdb: normalizeItemdbForExport(itemDatabase[normalized.id]) || null,
-      });
-    });
-  });
-  return Array.from(exportById.values()).sort((a, b) => a.name.localeCompare(b.name));
 }
 
 function getPartialExportPages(scanMeta, currentPage, visitedPages, pageItemIdsByPage) {
@@ -1269,190 +927,6 @@ function clearPendingPartialExportPages(exportedPages) {
     ...scanMeta,
     pagesChangedSinceFullScan: remainingPages,
   });
-}
-
-function clearAllPendingPartialExportPages() {
-  const raw = safeParseJson(GM_getValue(STORAGE_KEYS.scanMeta, "null"), null);
-  if (raw?.__scoped && typeof raw.scopes === "object") {
-    const scopes = Object.fromEntries(
-      Object.entries(raw.scopes).map(([scopeKey, scopeMeta]) => [
-        scopeKey,
-        {
-          ...(scopeMeta || {}),
-          pagesChangedSinceFullScan: [],
-        },
-      ]),
-    );
-    GM_setValue(STORAGE_KEYS.scanMeta, JSON.stringify({ __scoped: true, scopes }));
-    return;
-  }
-  if (raw && !Array.isArray(raw) && typeof raw === "object") {
-    GM_setValue(STORAGE_KEYS.scanMeta, JSON.stringify({
-      ...raw,
-      pagesChangedSinceFullScan: [],
-    }));
-  }
-}
-
-function commitExportBaseline(snapshotMode, exportedPages, exportedItems = []) {
-  const scanMeta = getScanMeta();
-  const pageSnapshotsByPage = buildPageItemsMap(scanMeta.pageSnapshotsByPage);
-  const baselinePageSnapshotsByPage = buildPageItemsMap(scanMeta.exportBaselinePageSnapshotsByPage);
-  const exportBaselineItems = getExportBaselineItems();
-  const exportedItemsById = buildItemsByIdMap(exportedItems);
-  if (snapshotMode === "full") {
-    setExportBaselineItems(exportedItemsById);
-    setScanMeta({
-      ...scanMeta,
-      exportBaselinePageSnapshotsByPage: structuredClone(pageSnapshotsByPage),
-      exportBaselineUpdatedAt: new Date().toISOString(),
-    });
-    return;
-  }
-
-  const nextBaseline = structuredClone(baselinePageSnapshotsByPage);
-  exportedPages.forEach((pageNumber) => {
-    nextBaseline[String(pageNumber)] = structuredClone(pageSnapshotsByPage[String(pageNumber)] || []);
-  });
-  const nextExportBaselineItems = { ...exportBaselineItems };
-  (exportedItems || []).forEach((item) => {
-    const normalized = normalizeStoredItem(item);
-    if (normalized.qty <= 0) {
-      delete nextExportBaselineItems[String(normalized.id)];
-      return;
-    }
-    nextExportBaselineItems[String(normalized.id)] = normalized;
-  });
-  setExportBaselineItems(nextExportBaselineItems);
-  setScanMeta({
-    ...scanMeta,
-    exportBaselinePageSnapshotsByPage: nextBaseline,
-    exportBaselineUpdatedAt: new Date().toISOString(),
-  });
-}
-
-function getPendingQuantityDiffs() {
-  const scanMeta = getScanMeta();
-  const pageSnapshotsByPage = buildPageItemsMap(scanMeta.pageSnapshotsByPage);
-  const baselinePageSnapshotsByPage = buildPageItemsMap(scanMeta.exportBaselinePageSnapshotsByPage);
-  const exportBaselineItems = getExportBaselineItems();
-  const changedPages = Array.isArray(scanMeta.pagesChangedSinceFullScan)
-    ? [...new Set(scanMeta.pagesChangedSinceFullScan.map((page) => Number(page)).filter((page) => Number.isFinite(page) && page > 0))]
-    : [];
-  const diffById = new Map();
-
-  changedPages.forEach((pageNumber) => {
-    const pageKey = String(pageNumber);
-    if (!currentPageMeta.isDefaultScope) {
-      (pageSnapshotsByPage[pageKey] || []).forEach((item) => {
-        const normalized = normalizeStoredItem(item);
-        const baselineItem = exportBaselineItems[String(normalized.id)];
-        const delta = normalized.qty - Number(baselineItem?.qty || 0);
-        if (!delta) return;
-        diffById.set(normalized.id, {
-          id: normalized.id,
-          name: normalized.name || baselineItem?.name || `Item ${normalized.id}`,
-          delta,
-        });
-      });
-      return;
-    }
-    if (!Object.prototype.hasOwnProperty.call(baselinePageSnapshotsByPage, pageKey)) {
-      return;
-    }
-    const currentById = new Map((pageSnapshotsByPage[pageKey] || []).map((item) => [item.id, normalizeStoredItem(item)]));
-    const baselineById = new Map((baselinePageSnapshotsByPage[pageKey] || []).map((item) => [item.id, normalizeStoredItem(item)]));
-    const ids = new Set([...currentById.keys(), ...baselineById.keys()]);
-    ids.forEach((id) => {
-      const currentItem = currentById.get(id);
-      const baselineItem = baselineById.get(id);
-      const delta = (currentItem?.qty || 0) - (baselineItem?.qty || 0);
-      if (!delta) return;
-      const existing = diffById.get(id);
-      diffById.set(id, {
-        id,
-        name: currentItem?.name || baselineItem?.name || `Item ${id}`,
-        delta: (existing?.delta || 0) + delta,
-      });
-    });
-  });
-
-  return Array.from(diffById.values())
-    .filter((entry) => entry.delta !== 0)
-    .sort((a, b) => {
-      const byMagnitude = Math.abs(b.delta) - Math.abs(a.delta);
-      if (byMagnitude !== 0) return byMagnitude;
-      return a.name.localeCompare(b.name);
-    });
-}
-
-function getPendingPageNotes() {
-  if (!currentPageMeta.isDefaultScope) {
-    return [];
-  }
-  const scanMeta = getScanMeta();
-  const pageSnapshotsByPage = buildPageItemsMap(scanMeta.pageSnapshotsByPage);
-  const baselinePageSnapshotsByPage = buildPageItemsMap(scanMeta.exportBaselinePageSnapshotsByPage);
-  const changedPages = Array.isArray(scanMeta.pagesChangedSinceFullScan)
-    ? [...new Set(scanMeta.pagesChangedSinceFullScan.map((page) => Number(page)).filter((page) => Number.isFinite(page) && page > 0))]
-    : [];
-
-  return changedPages
-    .filter((pageNumber) => !Object.prototype.hasOwnProperty.call(baselinePageSnapshotsByPage, String(pageNumber)))
-    .filter((pageNumber) => (pageSnapshotsByPage[String(pageNumber)] || []).length > 0)
-    .sort((a, b) => a - b)
-    .map((pageNumber) => ({
-      type: "page-note",
-      pageNumber,
-      text: `Page ${pageNumber} added to tracking`,
-    }));
-}
-
-function renderPendingDiffPreview(host) {
-  if (!host) return;
-  const pageNotes = getPendingPageNotes();
-  const diffs = currentPageMeta.isDefaultScope ? buildGlobalPendingQuantityDiffs() : getPendingQuantityDiffs();
-  const scanMeta = getScanMeta();
-  const changedPages = currentPageMeta.isDefaultScope
-    ? Object.values(getAllScanMetaScopes()).reduce((sum, scopeMeta) => {
-        const count = Array.isArray(scopeMeta?.pagesChangedSinceFullScan) ? scopeMeta.pagesChangedSinceFullScan.length : 0;
-        return sum + count;
-      }, 0)
-    : Array.isArray(scanMeta.pagesChangedSinceFullScan) ? scanMeta.pagesChangedSinceFullScan.length : 0;
-  if (!changedPages && !diffs.length && !pageNotes.length) {
-    host.innerHTML = `
-      <div class="sdbvc-diffTitle">Pending Partial Changes</div>
-      <div class="sdbvc-diffEmpty">No quantity changes waiting for export yet.</div>
-    `;
-    return;
-  }
-
-  const entries = [...pageNotes, ...diffs];
-  const visibleEntries = entries.slice(0, MAX_RENDERED_PENDING_DIFF_LINES);
-  const hiddenCount = Math.max(0, entries.length - visibleEntries.length);
-  host.innerHTML = `
-    <div class="sdbvc-diffTitle">Pending Partial Changes</div>
-    <div class="sdbvc-diffSubtitle">${changedPages} page${changedPages === 1 ? "" : "s"} waiting to export</div>
-    <div class="sdbvc-diffList">
-      ${visibleEntries.map((entry) => {
-        if (entry.type === "page-note") {
-          return `
-            <div class="sdbvc-diffRow is-page-note">
-              <span class="sdbvc-diffName">${escapeHtml(entry.text)}</span>
-            </div>
-          `;
-        }
-        return `
-          <div class="sdbvc-diffRow">
-            <span class="sdbvc-diffName">${escapeHtml(entry.name)}</span>
-            <span class="sdbvc-diffDelta ${entry.delta > 0 ? "is-positive" : "is-negative"}">${entry.delta > 0 ? "+" : ""}${formatNumber(entry.delta)}</span>
-          </div>
-        `;
-      }).join("")}
-      ${hiddenCount ? `<div class="sdbvc-diffEmpty">Showing first ${formatNumber(MAX_RENDERED_PENDING_DIFF_LINES)} changes. ${formatNumber(hiddenCount)} more not shown.</div>` : ""}
-      ${!visibleEntries.length ? `<div class="sdbvc-diffEmpty">Only non-quantity metadata changed so far.</div>` : ""}
-    </div>
-  `;
 }
 
 async function updateItemdbData({ mode = "itemdb", onProgress } = {}) {
@@ -1924,19 +1398,6 @@ function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function formatNumber(value) {
-  return Number(value || 0).toLocaleString("en-US");
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
 }
 
 function randomBetween(min, max) {
