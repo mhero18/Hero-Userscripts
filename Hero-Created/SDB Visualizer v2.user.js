@@ -2,7 +2,7 @@
 // @name        SDB Visualizer v2
 // @author      Hero (special thanks to NeoQuest.Guide & itemDB)
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
-// @version     2026.03.31-10
+// @version     2026.04.01
 // @match       *://*.neopets.com/safetydeposit.phtml*
 // @connect     itemdb.com.br
 // @grant       GM_setValue
@@ -538,11 +538,13 @@ function renderCollectorUI() {
     }
     .sdbvc-viewerStatValue {
       margin-top: 8px;
-      font-size: 23px;
+      font-size: clamp(18px, 2vw, 23px);
       line-height: 1.15;
       font-weight: bold;
       color: var(--sdbvc-viewer-text);
-      white-space: nowrap;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
     .sdbvc-viewerFilters {
       display: grid;
@@ -666,6 +668,21 @@ function renderCollectorUI() {
       min-height: 132px;
       border-radius: 16px;
       background: var(--sdbvc-viewer-image-backdrop);
+    }
+    .sdbvc-viewerCardActionButton {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--sdbvc-viewer-border);
+      background: var(--sdbvc-viewer-badge);
+      color: var(--sdbvc-viewer-accent);
+      font: inherit;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
     }
     .sdbvc-viewerImage,
     .sdbvc-viewerDetailImage {
@@ -2569,6 +2586,14 @@ function updateContextualViewerFilter(event) {
 
 function selectContextualViewerItemFromEvent(event) {
   if (!viewerState) return;
+  const actionButton = event.target.closest('[data-action="add-to-removal-list"]');
+  if (actionButton) {
+    const actionItemId = Number(actionButton.getAttribute("data-item-id"));
+    if (Number.isFinite(actionItemId) && actionItemId > 0) {
+      addViewerItemToRemovalList(actionItemId);
+    }
+    return;
+  }
   const element = event.target.closest("[data-item-id]");
   if (!element) return;
   viewerState.selectedItemId = Number(element.getAttribute("data-item-id"));
@@ -3245,6 +3270,7 @@ function buildViewerCardMarkup(item) {
         <span class="sdbvc-viewerQty">x${escapeHtml(formatNumber(item.qty))}</span>
       </div>
       <div class="sdbvc-viewerCardTitle">${escapeHtml(item.name)}</div>
+      <button type="button" class="sdbvc-viewerCardActionButton" data-action="add-to-removal-list" data-item-id="${escapeAttribute(String(item.id))}">Add to Removal</button>
       <div class="sdbvc-viewerChips">
         <span class="sdbvc-viewerPill">${escapeHtml(item.sdbType || "Unknown Type")}</span>
         ${showCategoryBubble ? `<span class="sdbvc-viewerPill">${escapeHtml(item.itemdb.category)}</span>` : ""}
@@ -3456,10 +3482,6 @@ function escapeHtml(value) {
 
 function escapeAttribute(value) {
   return escapeHtml(value).replaceAll("`", "&#96;");
-}
-
-function svgDataUri(svg) {
-  return `data:image/svg+xml;utf8,${svg}`;
 }
 
 function formatBytes(bytes) {
