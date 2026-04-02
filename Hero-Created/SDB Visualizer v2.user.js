@@ -2,7 +2,7 @@
 // @name        SDB Visualizer v2
 // @author      Hero (special thanks to NeoQuest.Guide & itemDB)
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
-// @version     2026.04.01
+// @version     2026.04.01-1
 // @match       *://*.neopets.com/safetydeposit.phtml*
 // @connect     itemdb.com.br
 // @grant       GM_setValue
