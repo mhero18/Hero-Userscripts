@@ -529,6 +529,9 @@ function renderCollectorUI() {
       background: var(--sdbvc-viewer-surface-soft);
       border: 1px solid var(--sdbvc-viewer-border-soft);
     }
+    .sdbvc-viewerStat.is-np-total {
+      grid-column: span 2;
+    }
     .sdbvc-viewerStatLabel {
       font-size: 11px;
       letter-spacing: 0.06em;
@@ -543,8 +546,13 @@ function renderCollectorUI() {
       font-weight: bold;
       color: var(--sdbvc-viewer-text);
       white-space: normal;
-      overflow-wrap: anywhere;
-      word-break: break-word;
+      overflow-wrap: normal;
+      word-break: normal;
+    }
+    .sdbvc-viewerStat.is-np-total .sdbvc-viewerStatValue {
+      font-size: clamp(16px, 1.45vw, 20px);
+      letter-spacing: -0.02em;
+      white-space: nowrap;
     }
     .sdbvc-viewerFilters {
       display: grid;
@@ -1176,6 +1184,9 @@ function renderCollectorUI() {
       .sdbvc-viewerDetailImage {
         max-width: 120px;
         max-height: 120px;
+      }
+      .sdbvc-viewerStat.is-np-total {
+        grid-column: span 1;
       }
       .sdbvc-viewerRemovalEntry {
         grid-template-columns: 1fr;
@@ -2699,20 +2710,27 @@ function renderContextualViewerOverview() {
     ["Unique Items", formatNumber(items.length)],
     ["Total Quantity", formatNumber(totalQty)],
     ["Enriched Items", formatNumber(enriched.length)],
-    ["Est. Total NP Value", formatNp(totalValue)],
+    ["Est. Total NP Value", formatViewerOverviewStatValue("Est. Total NP Value", totalValue)],
     ["NC Items", formatNumber(ncCount)],
   ];
 
   visualizerOverlayElements.stats.innerHTML = stats
     .map(
       ([label, value]) => `
-        <article class="sdbvc-viewerStat">
+        <article class="sdbvc-viewerStat ${label === "Est. Total NP Value" ? "is-np-total" : ""}">
           <div class="sdbvc-viewerStatLabel">${escapeHtml(label)}</div>
-          <div class="sdbvc-viewerStatValue">${escapeHtml(value)}</div>
+          <div class="sdbvc-viewerStatValue">${value}</div>
         </article>
       `,
     )
     .join("");
+}
+
+function formatViewerOverviewStatValue(label, value) {
+  if (label === "Est. Total NP Value") {
+    return escapeHtml(formatNp(value));
+  }
+  return escapeHtml(String(value));
 }
 
 function renderContextualViewerResults() {
