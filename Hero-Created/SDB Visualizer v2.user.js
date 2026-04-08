@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name        SDB Visualizer v2
 // @author      Hero (special thanks to NeoQuest.Guide & itemDB)
-// @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
-// @version     2026.04.02
+// @icon        https://images.neopets.com/items/foo_gmc_herohotdog.gif
+// @version     2.2
 // @match       *://*.neopets.com/safetydeposit.phtml*
 // @connect     itemdb.com.br
 // @grant       GM_setValue
@@ -2292,7 +2292,7 @@ function delay(ms) {
 function openEmbeddedVisualizerReport({ status }) {
   const hasFullScan = hasAuthoritativeFullScan();
   const snapshotMode = hasFullScan ? "full" : "partial";
-  const payload = buildVisualizerExportPayload({ snapshotMode });
+  const payload = buildVisualizerExportPayload({ snapshotMode, itemScope: "stored" });
   if (!payload.items.length) {
     status("No stored SDB data yet. Run a scan first.");
     return;
@@ -2302,12 +2302,12 @@ function openEmbeddedVisualizerReport({ status }) {
   viewerState = createViewerState(payload);
   overlay.status.textContent = hasFullScan
     ? "Contextual report ready."
-    : "Contextual report ready. Data coverage is partial until you finish a full scan.";
+    : "Contextual report ready from your saved master dataset. Scan authority is partial until you finish a full scan.";
   overlay.host.classList.remove("is-hidden");
   document.body.style.overflow = "hidden";
   applyContextualViewerTheme();
   renderContextualViewer();
-  status(hasFullScan ? "Opening contextual full report..." : "Opening contextual partial report from saved collector data...");
+  status(hasFullScan ? "Opening contextual full report..." : "Opening contextual report from saved master dataset...");
 }
 
 function ensureVisualizerOverlay() {
