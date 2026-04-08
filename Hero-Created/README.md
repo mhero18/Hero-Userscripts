@@ -3,6 +3,11 @@
 Just some scripts I made to help make life easier on Neopets, hope you find some use too!  Always ensure that your use of userscripts complies with Neopets' rules. Happy to hear any suggestions or improvements for new or existing scripts! :)
 
 
+# [SDB Visualizer v2](SDB%20Visualizer%20v2.user.js)
+Better SDB Viewer / Visualizer with modern UI, dynamic search, multiple filters, and metadata retrieved from itemDB. Includes prices, additional categories, wearable zoning, and more. 
+
+![sdbvisualizer](assets/sdbvisualizer.png)
+
 # [Neopets Trading Post Helper](Neopets%20Trading%20Post%20Helper.user.js)
 Updated for new Trading Post. Added user action buttons under usernames (neomail, auctions, trades). And search helper icons under items (ssw, tp, auctions, sdb, jn, itemdb).
 
