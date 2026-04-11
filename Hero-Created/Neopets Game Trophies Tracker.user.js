@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets Game Trophies Tracker
-// @version      2.0
+// @version      2.1
 // @description  Modern Neopets trophy tracker UI with dynamic filtering.
 // @author       Hero
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -18,7 +18,10 @@
     mountId: 'ntt-root',
     themeStorageKey: 'ntt-theme',
     trackingListStorageKey: 'ntt-tracking-list',
+    lookupOwnedStorageKey: 'ntt-lookup-owned',
   };
+
+  const LOOKUP_ONLY_TROPHY_IDS = new Set(['1409', '1414']);
 
   const TROPHY_LEVELS = {
     gold: 3,
@@ -108,6 +111,25 @@
         .filter(Boolean)
         .join(' ')
         .toLowerCase(),
+    };
+  }
+
+  function applyLookupOwnedOverride(item, lookupOwnedMap) {
+    const trophyId = String(item.trophyId);
+    const variant = Number(lookupOwnedMap[trophyId]);
+    if (![1, 2, 3, 4].includes(variant)) {
+      return item;
+    }
+
+    const status = getStatusFromVariantAndText(variant, '', '');
+
+    return {
+      ...item,
+      trophyImage: `https://images.neopets.com/trophies/${trophyId}_${variant}.gif`,
+      statusValue: status.value,
+      statusKey: status.key,
+      statusLabel: status.label,
+      needsUpgrade: status.value === TROPHY_LEVELS.bronze || status.value === TROPHY_LEVELS.silver || status.value === TROPHY_LEVELS.runnerUp,
     };
   }
 
@@ -596,6 +618,48 @@
     }
   }
 
+  function loadLookupOwnedPreference() {
+    try {
+      const value = window.localStorage.getItem(CONFIG.lookupOwnedStorageKey);
+      const parsed = JSON.parse(value || '[]');
+      if (!parsed || typeof parsed !== 'object') {
+        return {};
+      }
+
+      return Object.fromEntries(
+        Object.entries(parsed)
+          .map(([trophyId, variant]) => [cleanText(trophyId), Number(variant)])
+          .filter(([trophyId, variant]) => LOOKUP_ONLY_TROPHY_IDS.has(trophyId) && [1, 2, 3, 4].includes(variant))
+      );
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function parseLookupOnlyTrophies() {
+    return Object.fromEntries(
+      Array.from(document.querySelectorAll('td.trophy_cell img[src*="/trophies/"]'))
+        .map((image) => {
+          const match = image.src.match(/\/trophies\/(\d+)_([1-4])\.(gif|png)/i);
+          if (!match) {
+            return null;
+          }
+          return [cleanText(match[1]), Number(match[2])];
+        })
+        .filter((entry) => entry && LOOKUP_ONLY_TROPHY_IDS.has(entry[0]))
+    );
+  }
+
+  function storeLookupOwnedTrophies() {
+    const ownedIds = parseLookupOnlyTrophies();
+    try {
+      window.localStorage.setItem(CONFIG.lookupOwnedStorageKey, JSON.stringify(ownedIds));
+    } catch (error) {
+      // Ignore storage failures and keep the lookup page usable.
+    }
+    return ownedIds;
+  }
+
   function ensureMount() {
     let mount = document.getElementById(CONFIG.mountId);
     if (!mount) {
@@ -684,7 +748,7 @@
 
   function getViewModel(state) {
     const itemsWithTracking = state.items.map((item) => ({
-      ...item,
+      ...applyLookupOwnedOverride(item, state.lookupOwned),
       isTracked: state.trackingList.includes(item.trophyId),
     }));
     const filteredItems = applyFilters(itemsWithTracking, state.filters);
@@ -951,6 +1015,7 @@
 
     if (window.location.pathname.includes('/userlookup.phtml')) {
       if (isOwnUserlookupPage()) {
+        storeLookupOwnedTrophies();
         ensureUserlookupPageButton();
       }
       return;
@@ -969,6 +1034,7 @@
       catalogError,
       filters: getDefaultFilters(),
       theme: loadThemePreference(),
+      lookupOwned: loadLookupOwnedPreference(),
       trackingList: loadTrackingListPreference(),
       trackingSelectedId: '',
       username: getCurrentUsername(),
