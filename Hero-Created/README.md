@@ -3,6 +3,11 @@
 Just some scripts I made to help make life easier on Neopets, hope you find some use too!  Always ensure that your use of userscripts complies with Neopets' rules. Happy to hear any suggestions or improvements for new or existing scripts! :)
 
 
+# [SDB Visualizer v2](Neopets%Game%20Trophies%20Tracker.user.js)
+Neopets game trophy tracker with modern UI, dynamic filtering, game links, and tracking list.
+
+![gametrophies](assets/gametrophies.png)
+
 # [SDB Visualizer v2](SDB%20Visualizer%20v2.user.js)
 Better SDB Viewer / Visualizer with modern UI, dynamic search, multiple filters, and metadata retrieved from itemDB. Includes prices, additional categories, wearable zoning, and more. 
 
