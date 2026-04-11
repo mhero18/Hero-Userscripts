@@ -13,6 +13,11 @@ Better SDB Viewer / Visualizer with modern UI, dynamic search, multiple filters,
 
 ![sdbvisualizer](assets/sdbvisualizer.png)
 
+# [Neopets Closet Visualizer](Neopets%20Closet%20Visualizer.user.js)
+Better Closet Viewer / Visualizer with modern UI, dynamic search, multiple filters, and metadata retrieved from itemDB. Includes prices, additional categories, wearable zoning, and more. 
+
+![closetvisualizer](assets/closetvisualizer.png)
+
 # [Neopets Trading Post Helper](Neopets%20Trading%20Post%20Helper.user.js)
 Updated for new Trading Post. Added user action buttons under usernames (neomail, auctions, trades). And search helper icons under items (ssw, tp, auctions, sdb, jn, itemdb).
 
