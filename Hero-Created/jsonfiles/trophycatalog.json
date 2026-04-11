@@ -5,7 +5,7 @@
     "6": {
       "gameName": "Gormball",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=gormball",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=6",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=6"
@@ -13,7 +13,7 @@
     "8": {
       "gameName": "Scorchy Slots",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=scorchy_slots",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=8",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=8"
@@ -21,7 +21,7 @@
     "10": {
       "gameName": "Dice-A-Roo",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=dice_a_roo",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=10",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=10"
@@ -29,14 +29,14 @@
     "18": {
       "gameName": "Armada",
       "category": "PVP",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=armada",
       "gameLink": "https://www.neopets.com/games/armada/armada.phtml"
     },
     "36": {
       "gameName": "Vending Machine",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=alien_aisha_vending_machine",
       "gameLink": "https://www.neopets.com/vending.phtml",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=36"
@@ -44,7 +44,7 @@
     "47": {
       "gameName": "Tyranu Evavu",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=tyranu_evavu",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=47",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=47"
@@ -52,7 +52,7 @@
     "48": {
       "gameName": "Grarrl Keno",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=grarrl_keno",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=48",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=48"
@@ -60,7 +60,7 @@
     "54": {
       "gameName": "NeggSweeper",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=neggsweeper",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=54",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=54"
@@ -68,21 +68,21 @@
     "55": {
       "gameName": "Snow Wars",
       "category": "Non-Competitive",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=snow_wars",
       "gameLink": "http://www.neopets.com/games/snowwars.phtml"
     },
     "58": {
       "gameName": "The Neopian Lottery",
       "category": "Non-Competitive",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=neopian_lottery",
       "gameLink": "http://www.neopets.com/games/lottery.phtml"
     },
     "67": {
       "gameName": "Pyramids (Cumulative)",
       "category": "Cumulative",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=pyramids",
       "gameLink": "https://www.neopets.com/games/pyramids/index.phtml",
       "highScoreLink": "https://www.neopets.com/gamescores.phtml?game_id=67"
@@ -90,14 +90,14 @@
     "68": {
       "gameName": "Pyramid Bonus",
       "category": "Non-Competitive",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=pyramids",
       "gameLink": "http://www.neopets.com/games/pyramids/index.phtml"
     },
     "69": {
       "gameName": "Scarab 21 (Cumulative)",
       "category": "Cumulative",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=scarab_21",
       "gameLink": "https://www.neopets.com/games/scarab21/index.phtml",
       "highScoreLink": "https://www.neopets.com/gamescores.phtml?game_id=69"
@@ -105,7 +105,7 @@
     "70": {
       "gameName": "Scarab 21",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=scarab_21",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=70",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=70"
@@ -113,14 +113,14 @@
     "75": {
       "gameName": "Brain Tree Quest",
       "category": "Dailies/Random Events",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=braintree",
       "gameLink": "https://www.neopets.com/halloween/braintree.phtml"
     },
     "76": {
       "gameName": "Sakhmet Solitaite (Cumulative)",
       "category": "Cumulative",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=sakhmet_solitaire",
       "gameLink": "http://www.neopets.com/games/sakhmet_solitaire/index.phtml",
       "highScoreLink": "https://www.neopets.com/gamescores.phtml?game_id=76"
@@ -128,14 +128,14 @@
     "77": {
       "gameName": "Sakhmet Solitaire Bonus",
       "category": "Non-Competitive",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=sakhmet_solitaire",
       "gameLink": "http://www.neopets.com/games/sakhmet_solitaire/index.phtml"
     },
     "81": {
       "gameName": "Splat-A-Sloth",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=splat_a_sloth",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=81",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=81"
@@ -143,7 +143,7 @@
     "82": {
       "gameName": "Deckball",
       "category": "Standard (Highest Scores)",
-      "technology": "Flash Workaround (i.e. Pale Moon + Fiddler)",
+      "technology": "Flash Workaround",
       "guideLink": "https://www.jellyneo.net/?go=deckball",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=82",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=82"
@@ -151,7 +151,7 @@
     "84": {
       "gameName": "Neggsweeper (Cumulative)",
       "category": "Cumulative",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=neggsweeper",
       "gameLink": "http://www.neopets.com/games/neggsweeper/index.phtml",
       "highScoreLink": "https://www.neopets.com/gamescores.phtml?game_id=84"
@@ -159,20 +159,20 @@
     "88": {
       "gameName": "Food Club",
       "category": "Cumulative",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=food_club",
       "gameLink": "https://www.neopets.com/pirates/foodclub.phtml?type=bet"
     },
     "91": {
       "gameName": "Neoquest",
       "category": "Non-Competitive",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "gameLink": "http://www.neopets.com/games/neoquest/neoquest.phtml"
     },
     "97": {
       "gameName": "Fetch!",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=fetch",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=97",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=97"
@@ -180,98 +180,98 @@
     "100": {
       "gameName": "Caption Competition",
       "category": "Creative (Spotlight/Contest)",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=caption_contest",
       "gameLink": "https://www.neopets.com/games/new_caption.phtml"
     },
     "102": {
       "gameName": "Picture Competition",
       "category": "Creative (Spotlight/Contest)",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=artgallery",
       "gameLink": "https://www.neopets.com/art/gallery.phtml"
     },
     "103": {
       "gameName": "Poetry Competition",
       "category": "Creative (Spotlight/Contest)",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=poetry_contest",
       "gameLink": "https://www.neopets.com/contributions_poems.phtml"
     },
     "104": {
       "gameName": "Storytelling Competition",
       "category": "Creative (Spotlight/Contest)",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=storytelling_contest",
       "gameLink": "https://www.neopets.com/art/storytell.phtml"
     },
     "105": {
       "gameName": "Mystery Pic",
       "category": "Creative (Spotlight/Contest)",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=mystery_pic",
       "gameLink": "https://www.neopets.com/games/mysterypic.phtml"
     },
     "106": {
       "gameName": "Lenny Conundrum",
       "category": "Retired",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=lenny_conundrum",
       "gameLink": "https://www.neopets.com/games/conundrum.phtml"
     },
     "107": {
       "gameName": "Neopian Times",
       "category": "Creative (Spotlight/Contest)",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=neopiantimes",
       "gameLink": "https://www.neopets.com/ntimes/"
     },
     "108": {
       "gameName": "Go! Go! Go!",
       "category": "Non-Competitive",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=go_go_go",
       "gameLink": "http://www.neopets.com/prehistoric/gogogo/index.phtml"
     },
     "109": {
       "gameName": "Cheat!",
       "category": "Non-Competitive",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=cheat",
       "gameLink": "http://www.neopets.com/games/cheat/index.phtml"
     },
     "111": {
       "gameName": "Kacheekers",
       "category": "PVP",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=kacheekers",
       "gameLink": "https://www.neopets.com/games/kacheekers/kacheekers.phtml"
     },
     "112": {
       "gameName": "Better Than You",
       "category": "Retired",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=better_than_you",
       "gameLink": "https://www.neopets.com/games/betterthanyou.phtml"
     },
     "113": {
       "gameName": "Geos",
       "category": "PVP",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=geos",
       "gameLink": "https://www.neopets.com/games/geos/geos.phtml"
     },
     "115": {
       "gameName": "Beating Punchbag Bob",
       "category": "Non-Competitive",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "http://battlepedia.jellyneo.net/index.php?go=showchallenger&id=42",
       "gameLink": "https://www.neopets.com/dome/fight.phtml"
     },
     "126": {
       "gameName": "Jhudoras Bluff",
       "category": "Dailies/Random Events",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=jhudoras_cloud",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=126",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=126"
@@ -279,7 +279,7 @@
     "149": {
       "gameName": "Extreme Herder",
       "category": "Standard (Highest Scores)",
-      "technology": "Flash Workaround (i.e. Pale Moon + Fiddler)",
+      "technology": "Flash Workaround",
       "guideLink": "https://www.jellyneo.net/?go=extreme_herder",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=149",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=149"
@@ -287,7 +287,7 @@
     "151": {
       "gameName": "Shapeshifter",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=shapeshifter",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=151",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=151"
@@ -295,7 +295,7 @@
     "154": {
       "gameName": "Kiss the Mortog",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=kiss_the_mortog",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=154",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=154"
@@ -303,7 +303,7 @@
     "155": {
       "gameName": "Cheeseroller",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=cheeseroller",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=155",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=155"
@@ -311,7 +311,7 @@
     "157": {
       "gameName": "Sewage Surfer",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=sewage_surfer",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=157",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=157"
@@ -319,7 +319,7 @@
     "159": {
       "gameName": "Gadgadsgame",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=gadgadsgame",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=159",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=159"
@@ -327,7 +327,7 @@
     "160": {
       "gameName": "Illusens Glade",
       "category": "Dailies/Random Events",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=illusens_glade",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=160",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=160"
@@ -335,14 +335,14 @@
     "170": {
       "gameName": "Plushie Tycoon",
       "category": "Non-Competitive",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=plushie_tycoon",
       "gameLink": "https://www.neopets.com/games/tycoon/index.phtml"
     },
     "177": {
       "gameName": "Round Table Poker",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=round_table_poker",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=177",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=177"
@@ -350,21 +350,27 @@
     "178": {
       "gameName": "Double or Nothing",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=double_or_nothing",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=178",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=178"
     },
+    "182": {
+      "gameName": "Invasion of Meridell",
+      "category": "Retired",
+      "technology": "Normal Browser",
+      "guideLink": "https://www.jellyneo.net/?go=invasion_of_meridell",
+    },
     "196": {
       "gameName": "Tax Beast",
       "category": "Dailies/Random Events",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=tax_beast"
     },
     "197": {
       "gameName": "Escape from Meridell Castle",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=escape_from_meridell_castle",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=197",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=197"
@@ -372,7 +378,7 @@
     "198": {
       "gameName": "TNT Staff Smasher",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=tnt_staff_smasher",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=198",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=198"
@@ -380,7 +386,7 @@
     "201": {
       "gameName": "Attack of the Marblemen",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=attack_of_the_marblemen",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=201",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=201"
@@ -388,7 +394,7 @@
     "202": {
       "gameName": "Spell-Or-Starve",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=spell_or_starve",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=202",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=202"
@@ -396,7 +402,7 @@
     "204": {
       "gameName": "Advert Attack",
       "category": "Standard (Highest Scores)",
-      "technology": "Flash Workaround (i.e. Pale Moon + Fiddler)",
+      "technology": "Flash Workaround",
       "guideLink": "https://www.jellyneo.net/?go=advert_attack",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=204",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=204"
@@ -404,7 +410,7 @@
     "207": {
       "gameName": "Zurroball",
       "category": "Standard (Highest Scores)",
-      "technology": "Flash Workaround (i.e. Pale Moon + Fiddler)",
+      "technology": "Flash Workaround",
       "guideLink": "https://www.jellyneo.net/?go=zurroball",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=207",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=207"
@@ -412,7 +418,7 @@
     "212": {
       "gameName": "Grand Theft Ummagine",
       "category": "Exceptional Eight",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=grand_theft_ummagine",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=212",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=212"
@@ -420,21 +426,21 @@
     "216": {
       "gameName": "Cellblock",
       "category": "Non-Competitive",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=cellblock",
       "gameLink": "https://www.neopets.com/games/cellblock/cellblock.phtml"
     },
     "218": {
       "gameName": "Grumpy Old King",
       "category": "Dailies/Random Events",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=grumpy_old_king",
       "gameLink": "https://www.neopets.com/medieval/grumpyking.phtml"
     },
     "220": {
       "gameName": "Rink Runner",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=rink_runner",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=220",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=220"
@@ -442,14 +448,14 @@
     "222": {
       "gameName": "Gallery Spotlight",
       "category": "Creative (Spotlight/Contest)",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=spotlights#gallery",
       "gameLink": "https://www.neopets.com/gallery.phtml"
     },
     "226": {
       "gameName": "Extreme Potato Counter",
       "category": "Standard (Highest Scores)",
-      "technology": "Flash Workaround (i.e. Pale Moon + Fiddler)",
+      "technology": "Flash Workaround",
       "guideLink": "https://www.jellyneo.net/?go=extreme_potato_counter",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=226",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=226"
@@ -457,7 +463,7 @@
     "228": {
       "gameName": "Petpet Rescue",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=petpet_rescue",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=228",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=228"
@@ -465,7 +471,7 @@
     "229": {
       "gameName": "Word Poker",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=word_poker",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=229",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=229"
@@ -473,7 +479,7 @@
     "230": {
       "gameName": "The Castle of Eliv Thade",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=castle_of_eliv_thade",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=230",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=230"
@@ -481,7 +487,7 @@
     "231": {
       "gameName": "Petpet Battles",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=petpet_battles",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=231",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=231"
@@ -489,7 +495,7 @@
     "239": {
       "gameName": "Chemistry for Beginners",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=chemistry_for_beginners",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=239",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=239"
@@ -497,7 +503,7 @@
     "248": {
       "gameName": "Raiders of Maraqua",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=raiders_of_maraqua",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=248",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=248"
@@ -505,7 +511,7 @@
     "258": {
       "gameName": "Defender Trainer",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=defender_trainer",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=258",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=258"
@@ -513,7 +519,7 @@
     "305": {
       "gameName": "Warf Rescue Team",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=warf_rescue_team",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=305",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=305"
@@ -521,7 +527,7 @@
     "306": {
       "gameName": "Sutek's Tomb",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=suteks_tomb",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=306",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=306"
@@ -529,7 +535,7 @@
     "307": {
       "gameName": "The Buzzer Game",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=the_buzzer_game",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=307",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=307"
@@ -545,7 +551,7 @@
     "314": {
       "gameName": "Hubrid's Hero Heist",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=hubrids_hero_heist",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=314",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=314"
@@ -553,7 +559,7 @@
     "315": {
       "gameName": "Mynci Beach Volleyball",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=mynci_beach_volleyball",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=315",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=315"
@@ -569,14 +575,14 @@
     "331": {
       "gameName": "Test Your Strength",
       "category": "Dailies/Random Events",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=test_your_strength",
       "gameLink": "https://www.neopets.com/halloween/strtest/index.phtml"
     },
     "340": {
       "gameName": "Skies Over Meridell",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=[none]",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=340",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=340"
@@ -584,19 +590,19 @@
     "341": {
       "gameName": "Sloth's Invasion Tax",
       "category": "Dailies/Random Events",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=sloths_invasion_tax"
     },
     "342": {
       "gameName": "Neobard Avatar Collector",
       "category": "Cumulative",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=avatar_collecting"
     },
     "346": {
       "gameName": "Stamp Collector",
       "category": "Cumulative",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=stamps"
     },
     "349": {
@@ -610,7 +616,7 @@
     "353": {
       "gameName": "Web of Vernax",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=[none]",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=353",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=353"
@@ -626,7 +632,7 @@
     "358": {
       "gameName": "Faerie Bubbles",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=faerie_bubbles",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=358",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=358"
@@ -634,7 +640,7 @@
     "359": {
       "gameName": "Jelly Blobs of Doom",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=jelly_blobs_of_doom",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=359",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=359"
@@ -642,7 +648,7 @@
     "366": {
       "gameName": "Turmac Roll",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=turmac_roll",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=366",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=366"
@@ -650,7 +656,7 @@
     "367": {
       "gameName": "Toy Box Escape",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=toy_box_escape",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=367",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=367"
@@ -658,7 +664,7 @@
     "368": {
       "gameName": "Hasee Bounce",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=hasee_bounce",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=368",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=368"
@@ -666,7 +672,7 @@
     "371": {
       "gameName": "Trouble at the National Neopian",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=trouble_at_the_neopian_bank",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=371",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=371"
@@ -674,14 +680,14 @@
     "372": {
       "gameName": "Neoquest II",
       "category": "Non-Competitive",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=neoquest2",
       "gameLink": "http://www.neopets.com/games/nq2/index.phtml"
     },
     "373": {
       "gameName": "NeoQuest II Race",
       "category": "Cumulative",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=neoquest2",
       "gameLink": "https://www.neopets.com/games/nq2/index.phtml",
       "highScoreLink": "https://www.neopets.com/games/nq2/index.phtml?act=fastest"
@@ -689,7 +695,7 @@
     "379": {
       "gameName": "Meepit Juice Break",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=meepit_juice_break",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=379",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=379"
@@ -697,7 +703,7 @@
     "381": {
       "gameName": "Kass Basher",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=kass_basher",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=381",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=381"
@@ -713,7 +719,7 @@
     "390": {
       "gameName": "Freaky Factory",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=freaky_factory",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=390",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=390"
@@ -721,7 +727,7 @@
     "396": {
       "gameName": "Mootix Drop",
       "category": "Standard (Highest Scores)",
-      "technology": "Flash Workaround (i.e. Pale Moon + Fiddler)",
+      "technology": "Flash Workaround",
       "guideLink": "https://www.jellyneo.net/?go=mootix_drop",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=396",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=396"
@@ -729,7 +735,7 @@
     "400": {
       "gameName": "Escape to Kreludor",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=escape_to_kreludor",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=400",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=400"
@@ -737,7 +743,7 @@
     "404": {
       "gameName": "Kreludan Mining Corp.",
       "category": "Standard (Highest Scores)",
-      "technology": "Flash Workaround (i.e. Pale Moon + Fiddler)",
+      "technology": "Flash Workaround",
       "guideLink": "https://www.jellyneo.net/?go=kreludan_mining_corp",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=404",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=404"
@@ -745,7 +751,7 @@
     "412": {
       "gameName": "Snowmuncher",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=snowmuncher",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=412",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=412"
@@ -753,7 +759,7 @@
     "428": {
       "gameName": "Petpetsitter",
       "category": "Standard (Highest Scores)",
-      "technology": "Flash Workaround (i.e. Pale Moon + Fiddler)",
+      "technology": "Flash Workaround",
       "guideLink": "https://www.jellyneo.net/?go=petpetsitter",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=428",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=428"
@@ -769,7 +775,7 @@
     "444": {
       "gameName": "Moon Rock Rampage",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=moon_rock_rampage",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=444",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=444"
@@ -777,13 +783,13 @@
     "448": {
       "gameName": "Slots Big Losers",
       "category": "Cumulative",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=448"
     },
     "467": {
       "gameName": "Lookup of the Week",
       "category": "Creative (Spotlight/Contest)",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=spotlights#lookup",
       "gameLink": "http://www.neopets.com/ul_spotlight.phtml"
     },
@@ -798,7 +804,7 @@
     "479": {
       "gameName": "Random Contest",
       "category": "Retired",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=randomcontests",
       "gameLink": "https://www.neopets.com/spotlight_subs/random_contest.phtml"
     },
@@ -813,13 +819,13 @@
     "487": {
       "gameName": "Angry Tax Beast",
       "category": "Dailies/Random Events",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=tax_beast"
     },
     "489": {
       "gameName": "Faerie Caves II - Fyora's Quest",
       "category": "Exceptional Eight",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=faerie_caves_2",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=489",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=489"
@@ -827,14 +833,14 @@
     "493": {
       "gameName": "Wise Old King",
       "category": "Dailies/Random Events",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=wise_old_king",
       "gameLink": "https://www.neopets.com/medieval/wiseking.phtml"
     },
     "500": {
       "gameName": "Meerca Chase II",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=meerca_chase_2",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=500",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=500"
@@ -842,7 +848,7 @@
     "507": {
       "gameName": "Ice Cream Machine",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=ice_cream_machine_flash",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=507",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=507"
@@ -850,7 +856,7 @@
     "519": {
       "gameName": "Kiko Match II",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=kiko_match_2",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=519",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=519"
@@ -858,7 +864,7 @@
     "527": {
       "gameName": "Attack of the Revenge",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=attack_of_the_revenge",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=527",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=527"
@@ -866,7 +872,7 @@
     "532": {
       "gameName": "Bouncy Supreme",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=bouncy_supreme",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=532",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=532"
@@ -874,7 +880,7 @@
     "536": {
       "gameName": "Time Tunnel",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=time_tunnel",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=536",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=536"
@@ -882,7 +888,7 @@
     "538": {
       "gameName": "Hungry Skeith",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=hungry_skeith",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=538",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=538"
@@ -890,7 +896,7 @@
     "539": {
       "gameName": "Chia Bomber 2",
       "category": "Exceptional Eight",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=chia_bomber_2",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=539",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=539"
@@ -898,7 +904,7 @@
     "540": {
       "gameName": "Meepit vs. Feepit",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=meepit_vs_feepit",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=540",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=540"
@@ -906,7 +912,7 @@
     "544": {
       "gameName": "Snow Wars II",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=snow_wars_2",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=544",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=544"
@@ -914,7 +920,7 @@
     "552": {
       "gameName": "Neverending Boss Battle",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=neverending_boss_battle",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=552",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=552"
@@ -922,7 +928,7 @@
     "553": {
       "gameName": "Petpet Cannonball",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=petpet_cannonball",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=553",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=553"
@@ -930,7 +936,7 @@
     "562": {
       "gameName": "Swarm - The Bugs Strike Back",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=swarm_2",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=562",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=562"
@@ -938,7 +944,7 @@
     "570": {
       "gameName": "Flycatcher",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=flycatcher",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=570",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=570"
@@ -946,7 +952,7 @@
     "571": {
       "gameName": "Magma Blaster",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=magma_blaster",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=571",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=571"
@@ -954,7 +960,7 @@
     "574": {
       "gameName": "Typing Terror",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=typing_terror",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=574",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=574"
@@ -962,7 +968,7 @@
     "575": {
       "gameName": "Word Pyramid",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=word_pyramid",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=575",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=575"
@@ -970,7 +976,7 @@
     "585": {
       "gameName": "Evil Fuzzles from Beyond the Stars",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=evil_fuzzles_from_beyond_the_stars",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=585",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=585"
@@ -978,7 +984,7 @@
     "586": {
       "gameName": "Faerie Cloud Racers",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=faerie_cloud_racers",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=586",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=586"
@@ -986,7 +992,7 @@
     "587": {
       "gameName": "Pterattack",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=pterattack",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=587",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=587"
@@ -994,7 +1000,7 @@
     "600": {
       "gameName": "Ruins Rampage",
       "category": "Exceptional Eight",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=ruins_rampage",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=600",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=600"
@@ -1002,7 +1008,7 @@
     "606": {
       "gameName": "Tubular Kiko Racing",
       "category": "Standard (Highest Scores)",
-      "technology": "Flash Workaround (i.e. Pale Moon + Fiddler)",
+      "technology": "Flash Workaround",
       "guideLink": "https://www.jellyneo.net/?go=tubular_kiko_racing",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=606",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=606"
@@ -1010,7 +1016,7 @@
     "614": {
       "gameName": "Ghost Bopper",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=ghost_bopper",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=614",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=614"
@@ -1018,7 +1024,7 @@
     "615": {
       "gameName": "Jolly Jugglers",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=jolly_jugglers",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=615",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=615"
@@ -1026,7 +1032,7 @@
     "619": {
       "gameName": "Jubble Bubble",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=jubble_bubble",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=619",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=619"
@@ -1034,7 +1040,7 @@
     "627": {
       "gameName": "Caves and Corridors: Mystery Island",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=caves_and_corridors",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=627",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=627"
@@ -1042,7 +1048,7 @@
     "633": {
       "gameName": "Snowball Fight",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=snowball_fight",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=633",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=633"
@@ -1050,7 +1056,7 @@
     "645": {
       "gameName": "Feed Florg",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=feed_florg",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=645",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=645"
@@ -1058,7 +1064,7 @@
     "648": {
       "gameName": "Tyrannian Mini Golf",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=tyrannian_mini_golf",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=648",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=648"
@@ -1066,7 +1072,7 @@
     "656": {
       "gameName": "Imperial Exam",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=imperial_exam",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=656",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=656"
@@ -1074,7 +1080,7 @@
     "659": {
       "gameName": "Sophie's Stew",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=sophies_stew",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=659",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=659"
@@ -1082,7 +1088,7 @@
     "660": {
       "gameName": "The Great Qasalan Caper",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=the_great_qasalan_caper",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=660",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=660"
@@ -1090,7 +1096,7 @@
     "668": {
       "gameName": "Gwyl's Great Escape",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=gwyls_great_escape",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=668",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=668"
@@ -1098,7 +1104,7 @@
     "676": {
       "gameName": "Igloo Garage Sale - The Game",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=igloo_garage_sale_2",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=676",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=676"
@@ -1106,7 +1112,7 @@
     "685": {
       "gameName": "Attack of the Gummy Dice",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=attack_of_the_gummy_dice",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=685",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=685"
@@ -1114,7 +1120,7 @@
     "707": {
       "gameName": "Kou-Jong",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=kou_jong",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=707",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=707"
@@ -1122,7 +1128,7 @@
     "713": {
       "gameName": "Itchy Invasion",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=itchy_invasion",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=713",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=713"
@@ -1130,7 +1136,7 @@
     "720": {
       "gameName": "Eye of the Storm",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=eye_of_the_storm",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=720",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=720"
@@ -1138,7 +1144,7 @@
     "726": {
       "gameName": "Ugga Smash",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=ugga_smash",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=726",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=726"
@@ -1146,7 +1152,7 @@
     "734": {
       "gameName": "Bruno's Backwoods Breakaway",
       "category": "Exceptional Eight",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=brunos_backwoods_breakaway",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=734",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=734"
@@ -1154,7 +1160,7 @@
     "760": {
       "gameName": "Scourge of the Lab Jellies",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=scourge_of_the_lab_jellies",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=760",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=760"
@@ -1162,7 +1168,7 @@
     "761": {
       "gameName": "Volcano Run II",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=volcano_run_ii",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=761",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=761"
@@ -1170,7 +1176,7 @@
     "763": {
       "gameName": "MAGAX: Destroyer II",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=magax_destroyer_2",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=763",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=763"
@@ -1178,7 +1184,7 @@
     "771": {
       "gameName": "Wingoball",
       "category": "Standard (Highest Scores)",
-      "technology": "Flash Workaround (i.e. Pale Moon + Fiddler)",
+      "technology": "Flash Workaround",
       "guideLink": "https://www.jellyneo.net/?go=wingoball",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=771",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=771"
@@ -1186,7 +1192,7 @@
     "772": {
       "gameName": "Dubloon Disaster",
       "category": "Standard (Highest Scores)",
-      "technology": "Flash Workaround (i.e. Pale Moon + Fiddler)",
+      "technology": "Flash Workaround",
       "guideLink": "https://www.jellyneo.net/?go=dubloon_disaster_2",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=772",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=772"
@@ -1194,7 +1200,7 @@
     "773": {
       "gameName": "Crisis Courier",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=crisis_courier",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=773",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=773"
@@ -1202,7 +1208,7 @@
     "774": {
       "gameName": "Lost in Space Fungus",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=lost_in_space_fungus",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=774",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=774"
@@ -1210,7 +1216,7 @@
     "786": {
       "gameName": "Shenkuu Warrior",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=shenkuu_warrior",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=786",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=786"
@@ -1218,7 +1224,7 @@
     "789": {
       "gameName": "The Usul Suspects",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=the_usul_suspects",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=789",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=789"
@@ -1226,7 +1232,7 @@
     "794": {
       "gameName": "Revel Roundup",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=revel_roundup",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=794",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=794"
@@ -1234,7 +1240,7 @@
     "796": {
       "gameName": "Cooty Wars",
       "category": "Standard (Highest Scores)",
-      "technology": "Flash Workaround (i.e. Pale Moon + Fiddler)",
+      "technology": "Flash Workaround",
       "guideLink": "https://www.jellyneo.net/?go=cooty_wars",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=796",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=796"
@@ -1242,7 +1248,7 @@
     "799": {
       "gameName": "Bumble Beams",
       "category": "Standard (Highest Scores)",
-      "technology": "Flash Workaround (i.e. Pale Moon + Fiddler)",
+      "technology": "Flash Workaround",
       "guideLink": "https://www.jellyneo.net/?go=bumble_beams",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=799",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=799"
@@ -1250,7 +1256,7 @@
     "801": {
       "gameName": "Korbats Lab",
       "category": "Standard (Highest Scores)",
-      "technology": "Flash Workaround (i.e. Pale Moon + Fiddler)",
+      "technology": "Flash Workaround",
       "guideLink": "https://www.jellyneo.net/?go=korbats_lab",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=801",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=801"
@@ -1258,7 +1264,7 @@
     "818": {
       "gameName": "Snowbeast Snackrifice",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=snowbeast_snackrifice",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=818",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=818"
@@ -1266,7 +1272,7 @@
     "820": {
       "gameName": "Roodoku",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=roodoku",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=820",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=820"
@@ -1274,7 +1280,7 @@
     "821": {
       "gameName": "Edna's Shadow",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=ednas_shadow",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=821",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=821"
@@ -1282,7 +1288,7 @@
     "830": {
       "gameName": "The Great Desert Race",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=great_desert_race",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=830",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=830"
@@ -1290,7 +1296,7 @@
     "852": {
       "gameName": "Stowaway Sting",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=stowaway_sting",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=852",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=852"
@@ -1298,7 +1304,7 @@
     "874": {
       "gameName": "The Search for Princess Lunara",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=search_for_lunara",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=874",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=874"
@@ -1314,7 +1320,7 @@
     "881": {
       "gameName": "Wicked Wocky Wobble",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=wicked_wocky_wobble",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=881",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=881"
@@ -1322,7 +1328,7 @@
     "884": {
       "gameName": "Usuki Frenzy",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=usuki_frenzy_2",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=884",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=884"
@@ -1330,7 +1336,7 @@
     "885": {
       "gameName": "Maths Nightmare",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=maths_nightmare",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=885",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=885"
@@ -1338,7 +1344,7 @@
     "887": {
       "gameName": "Goparokko",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=goparokko",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=887",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=887"
@@ -1346,7 +1352,7 @@
     "895": {
       "gameName": "Dar-BLAT!!!",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=darblat",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=895",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=895"
@@ -1354,7 +1360,7 @@
     "902": {
       "gameName": "Carnival of Terror",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=carnival_of_terror",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=902",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=902"
@@ -1362,7 +1368,7 @@
     "903": {
       "gameName": "Ultimate Bullseye II",
       "category": "Standard (Highest Scores)",
-      "technology": "Flash Workaround (i.e. Pale Moon + Fiddler)",
+      "technology": "Flash Workaround",
       "guideLink": "https://www.jellyneo.net/?go=ultimate_bullseye_2",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=903",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=903"
@@ -1370,7 +1376,7 @@
     "904": {
       "gameName": "Mop 'n' Bop",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=mop_n_bop",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=904",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=904"
@@ -1378,7 +1384,7 @@
     "909": {
       "gameName": "Tug 'O' War",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=tug_o_war_2",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=909",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=909"
@@ -1402,7 +1408,7 @@
     "927": {
       "gameName": "Whirlpool",
       "category": "Standard (Highest Scores)",
-      "technology": "Flash Workaround (i.e. Pale Moon + Fiddler)",
+      "technology": "Flash Workaround",
       "guideLink": "https://www.jellyneo.net/?go=whirlpool",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=927",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=927"
@@ -1410,7 +1416,7 @@
     "933": {
       "gameName": "Smug Bug Smite",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=smug_bug_smite",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=933",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=933"
@@ -1418,7 +1424,7 @@
     "934": {
       "gameName": "Ready to Roll",
       "category": "Standard (Highest Scores)",
-      "technology": "Flash Workaround (i.e. Pale Moon + Fiddler)",
+      "technology": "Flash Workaround",
       "guideLink": "https://www.jellyneo.net/?go=ready_to_roll",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=934",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=934"
@@ -1426,7 +1432,7 @@
     "941": {
       "gameName": "Biscuit Brigade: Hagan's Last Stand",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=biscuit_brigade",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=941",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=941"
@@ -1434,7 +1440,7 @@
     "962": {
       "gameName": "Dungeon Dash",
       "category": "Exceptional Eight",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=dungeon_dash",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=962",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=962"
@@ -1442,7 +1448,7 @@
     "964": {
       "gameName": "Spacerocked!",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=spacerocked",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=964",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=964"
@@ -1450,7 +1456,7 @@
     "965": {
       "gameName": "Hot Dog Hero",
       "category": "Standard (Highest Scores)",
-      "technology": "Flash Workaround (i.e. Pale Moon + Fiddler)",
+      "technology": "Flash Workaround",
       "guideLink": "https://www.jellyneo.net/?go=hot_dog_hero",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=965",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=965"
@@ -1458,7 +1464,7 @@
     "968": {
       "gameName": "Berry Bash",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=berry_bash",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=968",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=968"
@@ -1466,7 +1472,7 @@
     "970": {
       "gameName": "Let It Slide",
       "category": "Standard (Highest Scores)",
-      "technology": "Flash Workaround (i.e. Pale Moon + Fiddler)",
+      "technology": "Flash Workaround",
       "guideLink": "https://www.jellyneo.net/?go=let_it_slide",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=970",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=970"
@@ -1474,7 +1480,7 @@
     "973": {
       "gameName": "Piper Panic",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=piper_panic",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=973",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=973"
@@ -1482,7 +1488,7 @@
     "987": {
       "gameName": "200m Peanut Dash",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=200m_peanut_dash",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=987",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=987"
@@ -1490,7 +1496,7 @@
     "999": {
       "gameName": "Destruct-O-Match III",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=destruct_o_match_3",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=999",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=999"
@@ -1498,7 +1504,7 @@
     "1000": {
       "gameName": "Techo Says",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=techo_says",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1000",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1000"
@@ -1506,7 +1512,7 @@
     "1026": {
       "gameName": "Barf Boat",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=barf_boat",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1026",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1026"
@@ -1514,7 +1520,7 @@
     "1042": {
       "gameName": "Mutant Graveyard of Doom II",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=mutant_graveyard_of_doom_ii",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1042",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1042"
@@ -1522,7 +1528,7 @@
     "1048": {
       "gameName": "Nimmos Pond",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=nimmos_pond",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1048",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1048"
@@ -1530,7 +1536,7 @@
     "1061": {
       "gameName": "Super Hasee Bounce",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=super_hasee_bounce",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1061",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1061"
@@ -1538,7 +1544,7 @@
     "1064": {
       "gameName": "Jungle Raiders",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=jungle_raiders",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1064",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1064"
@@ -1546,7 +1552,7 @@
     "1075": {
       "gameName": "Shenkuu Tangram",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=shenkuu_tangram",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1075",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1075"
@@ -1554,7 +1560,7 @@
     "1076": {
       "gameName": "Snow Roller",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=snow_roller",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1076",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1076"
@@ -1562,7 +1568,7 @@
     "1078": {
       "gameName": "Petpet Plunge",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=petpet_plunge",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1078",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1078"
@@ -1570,7 +1576,7 @@
     "1080": {
       "gameName": "Wheeler's Wild Ride",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=wheelers_wild_ride",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1080",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1080"
@@ -1578,7 +1584,7 @@
     "1095": {
       "gameName": "Top Chop",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=top_chop",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1095",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1095"
@@ -1586,7 +1592,7 @@
     "1099": {
       "gameName": "Black Pawkeet Slots",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=black_pawkeet_slots",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1099",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1099"
@@ -1594,7 +1600,7 @@
     "1100": {
       "gameName": "Snot Splatter",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=snot_splatter",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1100",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1100"
@@ -1602,7 +1608,7 @@
     "1108": {
       "gameName": "Lost City Lanes",
       "category": "Standard (Highest Scores)",
-      "technology": "Flash Workaround (i.e. Pale Moon + Fiddler)",
+      "technology": "Flash Workaround",
       "guideLink": "https://www.jellyneo.net/?go=lost_city_lanes",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1108",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1108"
@@ -1610,7 +1616,7 @@
     "1117": {
       "gameName": "Extreme Herder 2",
       "category": "Standard (Highest Scores)",
-      "technology": "Flash Workaround (i.e. Pale Moon + Fiddler)",
+      "technology": "Flash Workaround",
       "guideLink": "https://www.jellyneo.net/?go=extreme_herder_2",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1117",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1117"
@@ -1618,7 +1624,7 @@
     "1118": {
       "gameName": "Legends of Pinball",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=legends_of_pinball",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1118",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1118"
@@ -1626,7 +1632,7 @@
     "1121": {
       "gameName": "Brucey B Slots",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=brucey_b_slots",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1121",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1121"
@@ -1634,7 +1640,7 @@
     "1126": {
       "gameName": "Dice of Destiny",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=dice_of_destiny",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1126",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1126"
@@ -1642,7 +1648,7 @@
     "1134": {
       "gameName": "Spinacles",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=spinacles",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1134",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1134"
@@ -1650,7 +1656,7 @@
     "1139": {
       "gameName": "Darigan Dodgeball",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=darigan_dodgeball",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1139",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1139"
@@ -1658,7 +1664,7 @@
     "1146": {
       "gameName": "Slorgs in Space",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=slorgs_in_space",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1146",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1146"
@@ -1666,7 +1672,7 @@
     "1148": {
       "gameName": "Chariot Chase",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=chariot_chase",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1148",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1148"
@@ -1674,7 +1680,7 @@
     "1149": {
       "gameName": "Cloud Raiders",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=cloud_raiders",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1149",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1149"
@@ -1682,7 +1688,7 @@
     "1155": {
       "gameName": "Extreme Faerie Cloud Racers",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=extreme_faerie_cloud_racers",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1155",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1155"
@@ -1690,7 +1696,7 @@
     "1156": {
       "gameName": "Cave Glider",
       "category": "Standard (Highest Scores)",
-      "technology": "Flash Workaround (i.e. Pale Moon + Fiddler)",
+      "technology": "Flash Workaround",
       "guideLink": "https://www.jellyneo.net/?go=cave_glider",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1156",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1156"
@@ -1698,7 +1704,7 @@
     "1157": {
       "gameName": "Spellseeker",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=spellseeker",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1157",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1157"
@@ -1706,7 +1712,7 @@
     "1173": {
       "gameName": "Clockwork Codebreaker",
       "category": "Exceptional Eight",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=clockwork_codebreaker",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1173",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1173"
@@ -1714,7 +1720,7 @@
     "1175": {
       "gameName": "Tunnel Tumble",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=tunnel_tumble",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1175",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1175"
@@ -1722,7 +1728,7 @@
     "1182": {
       "gameName": "Dueling Decks",
       "category": "Standard (Highest Scores)",
-      "technology": "Flash Workaround (i.e. Pale Moon + Fiddler)",
+      "technology": "Flash Workaround",
       "guideLink": "https://www.jellyneo.net/?go=dueling_decks",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1182",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1182"
@@ -1730,7 +1736,7 @@
     "1189": {
       "gameName": "Kookia",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=kookia",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1189",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1189"
@@ -1738,7 +1744,7 @@
     "1191": {
       "gameName": "Jumpin' Gem Heist",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=jumpin_gem_heist",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1191",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1191"
@@ -1746,7 +1752,7 @@
     "1202": {
       "gameName": "Sorcerers' Skirmish",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=sorcerers_skirmish",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1202",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1202"
@@ -1754,7 +1760,7 @@
     "1204": {
       "gameName": "Ugga Drop",
       "category": "Exceptional Eight",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=ugga_drop",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1204",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1204"
@@ -1762,7 +1768,7 @@
     "1205": {
       "gameName": "Island Chef Academy",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=island_chef_academy",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1205",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1205"
@@ -1770,7 +1776,7 @@
     "1221": {
       "gameName": "Neopian Battlefield Legends",
       "category": "Standard (Highest Scores)",
-      "technology": "Flash Workaround (i.e. Pale Moon + Fiddler)",
+      "technology": "Flash Workaround",
       "guideLink": "https://www.jellyneo.net/?go=neopian_battlefield_legends",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1221",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1221"
@@ -1778,7 +1784,7 @@
     "1223": {
       "gameName": "Nova Defender",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=nova_defender",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1223",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1223"
@@ -1786,7 +1792,7 @@
     "1229": {
       "gameName": "Hannah and the Wardrobe of Adventure",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=hannah_and_the_wardrobe_of_adventure",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1229",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1229"
@@ -1802,7 +1808,7 @@
     "1266": {
       "gameName": "Shenkuu Warrior II",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=shenkuu_warrior_2",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1266",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1266"
@@ -1810,7 +1816,7 @@
     "1269": {
       "gameName": "Wrath of the Snowager",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=wrath_of_the_snowager",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1269",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1269"
@@ -1818,7 +1824,7 @@
     "1292": {
       "gameName": "S.M.E.L.T.",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=smelt",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1292",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1292"
@@ -1826,13 +1832,13 @@
     "1329": {
       "gameName": "Card Collector",
       "category": "Cumulative",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=neodeck"
     },
     "1330": {
       "gameName": "Invasion: Blastoids",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=invasion_blastoids",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1330",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1330"
@@ -1840,7 +1846,7 @@
     "1347": {
       "gameName": "Assignment 53",
       "category": "Standard (Highest Scores)",
-      "technology": "Flash Workaround (i.e. Pale Moon + Fiddler)",
+      "technology": "Flash Workaround",
       "guideLink": "https://www.jellyneo.net/?go=assignment_53",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1347",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1347"
@@ -1848,7 +1854,7 @@
     "1369": {
       "gameName": "Pakiko",
       "category": "Standard (Highest Scores)",
-      "technology": "Flash Workaround (i.e. Pale Moon + Fiddler)",
+      "technology": "Flash Workaround",
       "guideLink": "https://www.jellyneo.net/?go=pakiko",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1369",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1369"
@@ -1864,7 +1870,7 @@
     "1375": {
       "gameName": "AAA's Revenge",
       "category": "Standard (Highest Scores)",
-      "technology": "Standard Flash (i.e. only Ruffle)",
+      "technology": "Flash (Ruffle)",
       "guideLink": "https://www.jellyneo.net/?go=aaa_revenge",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1375",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1375"
@@ -1872,20 +1878,20 @@
     "1386": {
       "gameName": "Legends & Letters: Challenge of Challenges Participant",
       "category": "Retired",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=legends_and_letters&id=challenge_of_challenges"
     },
     "1409": {
       "gameName": "Cosy Campfire Collection",
       "category": "Non-Competitive",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=the_void_within&id=cosy_campfire_collection",
       "gameLink": "https://www.neopets.com/games/cosycampfire/"
     },
     "1414": {
       "gameName": "Doglefetch",
       "category": "Non-Competitive",
-      "technology": "Standard Browser (PHP-based Games)",
+      "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=the_void_within&id=doglefetch",
       "gameLink": "https://www.neopets.com/games/doglefetch/"
     }
