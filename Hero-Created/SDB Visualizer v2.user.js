@@ -2,7 +2,7 @@
 // @name        SDB Visualizer v2
 // @author      Hero (special thanks to NeoQuest.Guide & itemDB)
 // @icon        https://images.neopets.com/items/foo_gmc_herohotdog.gif
-// @version     2.2
+// @version     3.0
 // @match       *://*.neopets.com/safetydeposit.phtml*
 // @connect     itemdb.com.br
 // @grant       GM_setValue
@@ -614,6 +614,18 @@ function renderCollectorUI() {
       justify-content: flex-end;
       margin-left: auto;
     }
+    .sdbvc-viewerBulkActionRow {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .sdbvc-viewerBulkActionNote {
+      color: var(--sdbvc-viewer-muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
     .sdbvc-viewerResultsIntro {
       min-width: 0;
       text-align: left;
@@ -905,6 +917,15 @@ function renderCollectorUI() {
       display: grid;
       gap: 10px;
     }
+    .sdbvc-viewerRemovalEntries {
+      display: grid;
+      gap: 10px;
+    }
+    .sdbvc-viewerRemovalEntries.is-scrollable {
+      max-height: 620px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
     .sdbvc-viewerRemovalEmpty {
       color: var(--sdbvc-viewer-muted);
       font-size: 14px;
@@ -967,7 +988,14 @@ function renderCollectorUI() {
       text-transform: uppercase;
       letter-spacing: 0.06em;
     }
+    .sdbvc-viewerRemovalPrimaryRow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: end;
+    }
     .sdbvc-viewerRemovalPinInput {
+      width: 76px;
       padding: 10px 12px;
       border-radius: 14px;
       border: 1px solid var(--sdbvc-viewer-border);
@@ -981,6 +1009,11 @@ function renderCollectorUI() {
       flex-wrap: wrap;
       gap: 10px;
       align-items: center;
+    }
+    .sdbvc-viewerRemovalQueueMeta {
+      color: var(--sdbvc-viewer-muted);
+      font-size: 13px;
+      line-height: 1.5;
     }
     .sdbvc-viewerRemovalActionButton {
       border: 1px solid var(--sdbvc-viewer-border);
@@ -1193,6 +1226,9 @@ function renderCollectorUI() {
       }
       .sdbvc-viewerRemovalActions {
         flex-direction: column;
+        align-items: stretch;
+      }
+      .sdbvc-viewerRemovalPrimaryRow {
         align-items: stretch;
       }
     }
@@ -2404,6 +2440,10 @@ function ensureVisualizerOverlay() {
                   </div>
                 </div>
               </div>
+              <div class="sdbvc-viewerBulkActionRow">
+                <button type="button" class="sdbvc-viewerButton" data-action="add-filtered-to-removal-list">Add All Filtered Items in View to Removal</button>
+                <span class="sdbvc-viewerBulkActionNote">max 100 unique items</span>
+              </div>
               <div class="sdbvc-viewerChips" data-role="chips"></div>
               <div class="sdbvc-viewerEmpty is-hidden" data-role="empty">No items match your current filters.</div>
               <div data-role="grid"></div>
@@ -2449,6 +2489,7 @@ function ensureVisualizerOverlay() {
   host.querySelector('[data-action="reset-filters"]')?.addEventListener("click", resetContextualViewerFilters);
   host.querySelector('[data-action="view-grid"]')?.addEventListener("click", () => setContextualViewerView("grid"));
   host.querySelector('[data-action="view-table"]')?.addEventListener("click", () => setContextualViewerView("table"));
+  host.querySelector('[data-action="add-filtered-to-removal-list"]')?.addEventListener("click", addFilteredItemsToRemovalList);
   host.querySelector('[data-action="theme-select"]')?.addEventListener("change", updateContextualViewerTheme);
   host.querySelectorAll("[data-filter]").forEach((element) => {
     const eventName = element.tagName === "SELECT" ? "change" : "input";
@@ -2826,29 +2867,34 @@ function renderContextualViewerRemovalList() {
   const entries = getViewerRemovalEntries();
   const totalRequested = entries.reduce((sum, entry) => sum + entry.qty, 0);
   const statusClass = viewerState.removalStatusIsError ? "sdbvc-viewerRemovalStatus is-error" : "sdbvc-viewerRemovalStatus";
+  const entryContainerClass = entries.length > 10 ? "sdbvc-viewerRemovalEntries is-scrollable" : "sdbvc-viewerRemovalEntries";
 
   visualizerOverlayElements.removalList.innerHTML = `
     <div class="sdbvc-viewerRemovalList">
       ${entries.length
-        ? entries.map((entry) => `
+        ? `<div class="${entryContainerClass}">${entries.map((entry) => `
           <div class="sdbvc-viewerRemovalEntry">
             <div class="sdbvc-viewerRemovalEntryName">
               <strong>${escapeHtml(entry.name)}</strong>
               <span>Available: ${escapeHtml(formatNumber(entry.availableQty))} | Item ID ${escapeHtml(String(entry.id))}</span>
             </div>
             <input class="sdbvc-viewerRemovalQty" type="number" min="1" max="${escapeAttribute(String(entry.availableQty))}" value="${escapeAttribute(String(entry.qty))}" data-action="removal-qty" data-item-id="${escapeAttribute(String(entry.id))}" />
-            <button type="button" class="sdbvc-viewerRemovalRemove" data-action="remove-removal-entry" data-item-id="${escapeAttribute(String(entry.id))}">Remove</button>
+            <button type="button" class="sdbvc-viewerRemovalRemove" data-action="remove-removal-entry" data-item-id="${escapeAttribute(String(entry.id))}">Delete</button>
           </div>
-        `).join("")
+        `).join("")}</div>`
         : `<div class="sdbvc-viewerRemovalEmpty">Use the new quick action in Item Detail to add items here. Quantities must stay within the amount currently saved in your SDB snapshot.</div>`}
       <div class="sdbvc-viewerRemovalControls">
-        <label class="sdbvc-viewerRemovalPinRow">
-          <span>SDB PIN</span>
-          <input class="sdbvc-viewerRemovalPinInput" type="password" inputmode="numeric" autocomplete="off" placeholder="0 if no PIN" value="${escapeAttribute(viewerState.removalPin)}" data-action="removal-pin" />
-        </label>
-        <div class="sdbvc-viewerRemovalActions">
+        <div class="sdbvc-viewerRemovalPrimaryRow">
+          <label class="sdbvc-viewerRemovalPinRow">
+            <span>SDB PIN</span>
+            <input class="sdbvc-viewerRemovalPinInput" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="0000" value="${escapeAttribute(viewerState.removalPin)}" data-action="removal-pin" />
+          </label>
           <button type="button" class="sdbvc-viewerRemovalActionButton" data-action="submit-removal-list" ${!entries.length || viewerState.isRemovingItems ? "disabled" : ""}>${viewerState.isRemovingItems ? "Removing..." : "Remove All Items"}</button>
-          <span>${escapeHtml(formatNumber(totalRequested))} item${totalRequested === 1 ? "" : "s"} queued</span>
+        </div>
+        <div class="sdbvc-viewerRemovalQueueMeta">${escapeHtml(formatNumber(totalRequested))} item${totalRequested === 1 ? "" : "s"} queued</div>
+        <div class="sdbvc-viewerRemovalActions">
+          <button type="button" class="sdbvc-viewerRemovalActionButton" data-action="max-removal-list" ${!entries.length || viewerState.isRemovingItems ? "disabled" : ""}>Max Qty All Items</button>
+          <button type="button" class="sdbvc-viewerRemovalActionButton" data-action="clear-removal-list" ${!entries.length || viewerState.isRemovingItems ? "disabled" : ""}>Clear List</button>
         </div>
         <div class="${statusClass}">${escapeHtml(viewerState.removalStatus || "")}</div>
       </div>
@@ -2914,6 +2960,14 @@ function handleContextualViewerRemovalListClick(event) {
     removeViewerRemovalListEntry(itemId);
     return;
   }
+  if (action === "max-removal-list") {
+    setViewerRemovalListToMaxQuantities();
+    return;
+  }
+  if (action === "clear-removal-list") {
+    clearViewerRemovalList();
+    return;
+  }
   if (action === "submit-removal-list") {
     submitViewerRemovalList();
   }
@@ -2947,6 +3001,55 @@ function addViewerItemToRemovalList(itemId) {
   }
   viewerState.removalList[itemId] = existingQty + 1;
   setViewerRemovalStatus(`${item.name} added to the removal list.`, false);
+  syncViewerRemovalDraft();
+  renderContextualViewerRemovalList();
+}
+
+function addFilteredItemsToRemovalList() {
+  if (!viewerState) return;
+  const filteredItems = getViewerFilteredItems();
+  const queuedIds = new Set(Object.keys(viewerState.removalList).map((id) => Number(id)));
+  const remainingSlots = Math.max(0, 100 - queuedIds.size);
+  if (remainingSlots <= 0) {
+    setViewerRemovalStatus("The removal list already has the maximum 100 unique items queued.", true);
+    renderContextualViewerRemovalList();
+    return;
+  }
+  const itemsToAdd = filteredItems
+    .filter((item) => Number(item.qty || 0) > 0 && !queuedIds.has(item.id))
+    .slice(0, remainingSlots);
+
+  if (!itemsToAdd.length) {
+    setViewerRemovalStatus("No additional filtered items are available to add right now.", true);
+    renderContextualViewerRemovalList();
+    return;
+  }
+
+  itemsToAdd.forEach((item) => {
+    viewerState.removalList[item.id] = 1;
+  });
+  setViewerRemovalStatus(
+    `${formatNumber(itemsToAdd.length)} filtered item${itemsToAdd.length === 1 ? "" : "s"} added to the removal list${remainingSlots === itemsToAdd.length && filteredItems.filter((item) => Number(item.qty || 0) > 0 && !queuedIds.has(item.id)).length > itemsToAdd.length ? " (list capped at 100 unique items)." : "."}`,
+    false,
+  );
+  syncViewerRemovalDraft();
+  renderContextualViewerRemovalList();
+}
+
+function setViewerRemovalListToMaxQuantities() {
+  const entries = getViewerRemovalEntries();
+  if (!entries.length) return;
+  entries.forEach((entry) => {
+    viewerState.removalList[entry.id] = entry.availableQty;
+  });
+  setViewerRemovalStatus("All queued items set to their max available quantities.", false);
+  syncViewerRemovalDraft();
+  renderContextualViewerRemovalList();
+}
+
+function clearViewerRemovalList() {
+  viewerState.removalList = {};
+  clearViewerRemovalStatus();
   syncViewerRemovalDraft();
   renderContextualViewerRemovalList();
 }
