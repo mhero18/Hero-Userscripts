@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets Game Trophies Tracker
-// @version      2.1
+// @version      2.2
 // @description  Modern Neopets trophy tracker UI with dynamic filtering.
 // @author       Hero
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -94,11 +94,12 @@
 
   function buildMissingCatalogItem(trophyId, metadata) {
     const links = buildLinks(trophyId, metadata);
+    const category = normalizeCategoryLabel(metadata.category || '');
     return {
       trophyId: String(trophyId),
       trophyImage: `https://images.neopets.com/trophies/${trophyId}_1.gif`,
       gameName: metadata.gameName || `Game ${trophyId}`,
-      category: normalizeCategoryLabel(metadata.category || ''),
+      category,
       technology: simplifyTechnologyLabel(metadata.technology || ''),
       gameLink: links.gameLink,
       guideLink: links.guideLink,
@@ -112,6 +113,13 @@
         .join(' ')
         .toLowerCase(),
     };
+  }
+
+  function getNeedsUpgrade(statusValue, category) {
+    if (category === 'Retired' || category === 'PVP') {
+      return false;
+    }
+    return statusValue === TROPHY_LEVELS.bronze || statusValue === TROPHY_LEVELS.silver || statusValue === TROPHY_LEVELS.runnerUp;
   }
 
   function applyLookupOwnedOverride(item, lookupOwnedMap) {
@@ -129,7 +137,7 @@
       statusValue: status.value,
       statusKey: status.key,
       statusLabel: status.label,
-      needsUpgrade: status.value === TROPHY_LEVELS.bronze || status.value === TROPHY_LEVELS.silver || status.value === TROPHY_LEVELS.runnerUp,
+      needsUpgrade: getNeedsUpgrade(status.value, item.category),
     };
   }
 
@@ -147,12 +155,13 @@
     const status = getStatusFromVariantAndText(variant, alt, rawText);
     const inferredName = metadata.gameName || extractGameName(alt, rawText, trophyId);
     const links = buildLinks(trophyId, metadata);
+    const category = normalizeCategoryLabel(metadata.category || '');
 
     return {
       trophyId,
       trophyImage: normalizeImageSrc(image.getAttribute('src')),
       gameName: inferredName,
-      category: normalizeCategoryLabel(metadata.category || ''),
+      category,
       technology: simplifyTechnologyLabel(metadata.technology || ''),
       gameLink: links.gameLink,
       guideLink: links.guideLink,
@@ -160,7 +169,7 @@
       statusValue: status.value,
       statusKey: status.key,
       statusLabel: status.label,
-      needsUpgrade: status.value === TROPHY_LEVELS.bronze || status.value === TROPHY_LEVELS.silver || status.value === TROPHY_LEVELS.runnerUp,
+      needsUpgrade: getNeedsUpgrade(status.value, category),
       searchHaystack: [trophyId, inferredName, alt, rawText, metadata.category, metadata.technology]
         .filter(Boolean)
         .join(' ')
@@ -351,11 +360,14 @@
   }
 
   function getSummary(allItems, filteredItems) {
+    const countedItems = allItems.filter((item) => item.includeInPrimaryCounts);
     return {
-      total: allItems.length,
+      total: countedItems.length,
       owned: allItems.filter((item) => item.statusValue > TROPHY_LEVELS.none).length,
-      missing: allItems.filter((item) => item.statusValue === TROPHY_LEVELS.none).length,
+      missing: countedItems.filter((item) => item.statusValue === TROPHY_LEVELS.none).length,
       gold: allItems.filter((item) => item.statusValue === TROPHY_LEVELS.gold).length,
+      silver: allItems.filter((item) => item.statusValue === TROPHY_LEVELS.silver).length,
+      bronze: allItems.filter((item) => item.statusValue === TROPHY_LEVELS.bronze).length,
       upgrades: allItems.filter((item) => item.needsUpgrade).length,
       filtered: filteredItems.length,
     };
@@ -363,7 +375,8 @@
 
   function renderCard(item) {
     const statusClass = `status-${item.statusKey}`;
-    const showTrackingAction = item.statusValue === TROPHY_LEVELS.none || item.needsUpgrade;
+    const canTrack = item.category !== 'Retired' && item.category !== 'PVP';
+    const showTrackingAction = canTrack && (item.statusValue === TROPHY_LEVELS.none || item.needsUpgrade);
     const isTracked = item.isTracked;
     return `
       <article class="ntt-card ${statusClass}">
@@ -582,7 +595,15 @@
       category: 'all',
       technology: 'all',
       sort: 'name',
+      includeSpecialCounts: false,
     };
+  }
+
+  function shouldIncludeInPrimaryCounts(item, includeSpecialCounts) {
+    if (includeSpecialCounts) {
+      return true;
+    }
+    return item.category !== 'PVP' && item.category !== 'Retired';
   }
 
   function getDefaultTheme() {
@@ -750,6 +771,7 @@
     const itemsWithTracking = state.items.map((item) => ({
       ...applyLookupOwnedOverride(item, state.lookupOwned),
       isTracked: state.trackingList.includes(item.trophyId),
+      includeInPrimaryCounts: shouldIncludeInPrimaryCounts(item, state.filters.includeSpecialCounts),
     }));
     const filteredItems = applyFilters(itemsWithTracking, state.filters);
     const summary = getSummary(itemsWithTracking, filteredItems);
@@ -767,7 +789,16 @@
       state.trackingSelectedId = '';
     }
 
-    return { filteredItems, summary, categories, technologies, catalogError: state.catalogError, trackingItems, selectedTrackingItem };
+    return {
+      filteredItems,
+      summary,
+      categories,
+      technologies,
+      catalogError: state.catalogError,
+      trackingItems,
+      selectedTrackingItem,
+      includeSpecialCounts: state.filters.includeSpecialCounts,
+    };
   }
 
   function renderResults(viewModel) {
@@ -782,13 +813,17 @@
             ${renderStat('Owned', summary.owned)}
             ${renderStat('Missing', summary.missing)}
             ${renderStat('Gold', summary.gold)}
-            ${renderStat('Upgrades', summary.upgrades)}
-            ${renderStat('Shown', summary.filtered)}
+            ${renderStat('Silver', summary.silver)}
+            ${renderStat('Bronze', summary.bronze)}
           </section>
 
           <section>
             <div class="ntt-results-head">
               <p>${escapeHtml(`${summary.filtered} trophies shown`)}</p>
+              <label class="ntt-check-field ntt-results-toggle">
+                <input type="checkbox" name="includeSpecialCounts" ${viewModel.includeSpecialCounts ? 'checked' : ''} />
+                <span>Include PVP/Retired In Counts</span>
+              </label>
             </div>
             ${
               filteredItems.length
@@ -872,6 +907,17 @@
     }
 
     function bindResultEvents() {
+      mount.querySelectorAll('.ntt-results-head input').forEach((field) => {
+        field.addEventListener('input', () => {
+          state.filters[field.name] = field.type === 'checkbox' ? field.checked : field.value;
+          rerender({ resultsOnly: true });
+        });
+        field.addEventListener('change', () => {
+          state.filters[field.name] = field.type === 'checkbox' ? field.checked : field.value;
+          rerender({ resultsOnly: true });
+        });
+      });
+
       mount.querySelectorAll('[data-action="toggle-track"]').forEach((element) => {
         element.addEventListener('click', () => {
           const trophyId = element.getAttribute('data-trophy-id') || '';
@@ -1343,6 +1389,20 @@
         margin-bottom: 18px;
       }
       .ntt-field, .ntt-toggle { display: flex; flex-direction: column; gap: 8px; color: var(--ntt-muted); font: 600 12px/1.2 var(--ntt-sans); }
+      .ntt-check-field {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 38px;
+        padding: 0 4px;
+        color: var(--ntt-muted);
+        font: 600 12px/1.2 var(--ntt-sans);
+      }
+      .ntt-check-field input {
+        width: 16px;
+        height: 16px;
+        margin: 0;
+      }
       .ntt-search { grid-column: span 2; }
       .ntt-field input, .ntt-field select {
         width: 100%;
@@ -1355,6 +1415,10 @@
       }
       .ntt-toggle { flex-direction: row; align-items: center; justify-content: flex-end; align-self: end; gap: 10px; color: var(--ntt-ink); }
       .ntt-results-head { align-items: center; margin-bottom: 14px; }
+      .ntt-results-toggle {
+        margin-left: auto;
+        white-space: nowrap;
+      }
       .ntt-results-head p, .ntt-sub { color: var(--ntt-muted); font: 500 13px/1.3 var(--ntt-sans); }
       .ntt-card {
         display: grid;
@@ -1536,6 +1600,7 @@
         .ntt-header, .ntt-results-head { flex-direction: column; align-items: flex-start; }
         .ntt-header-actions { width: 100%; flex-wrap: wrap; align-items: stretch; }
         .ntt-theme-field { min-width: 0; width: 100%; }
+        .ntt-results-toggle { margin-left: 0; white-space: normal; }
         .ntt-results-layout { grid-template-columns: 1fr; }
         .ntt-tracking-panel { position: static; }
         .ntt-card-links { grid-template-columns: 1fr; }

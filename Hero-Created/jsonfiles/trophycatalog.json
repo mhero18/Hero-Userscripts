@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "updatedAt": "2026-04-11",
+  "version": 2,
+  "updatedAt": "2026-04-13",
   "trophies": {
     "6": {
       "gameName": "Gormball",
@@ -183,6 +183,12 @@
       "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=caption_contest",
       "gameLink": "https://www.neopets.com/games/new_caption.phtml"
+    },
+    "101": {
+      "gameName": "Site Spotlight",
+      "category": "Retired",
+      "technology": "Normal Browser",
+      "gameLink": "https://www.neopets.com/sitespotlight.phtml"
     },
     "102": {
       "gameName": "Picture Competition",
@@ -492,6 +498,13 @@
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=231",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=231"
     },
+    "240": {
+      "gameName": "Neopian Adventure Generator",
+      "category": "Retired",
+      "technology": "Normal Browser",
+      "guideLink": "https://www.jellyneo.net/?go=adventure_generator",
+      "gameLink": "https://www.neopets.com/ul_spotlight.phtml"
+    },
     "239": {
       "gameName": "Chemistry for Beginners",
       "category": "Standard (Highest Scores)",
@@ -605,6 +618,13 @@
       "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=stamps"
     },
+    "348": {
+      "gameName": "Neohome Spotlight",
+      "category": "Retired",
+      "technology": "Normal Browser",
+      "guideLink": "https://www.jellyneo.net/?go=neohome2",
+      "gameLink": "https://www.neopets.com/homespotlight.phtml"
+    },
     "349": {
       "gameName": "Hannah and the Pirate Caves",
       "category": "Standard (Highest Scores)",
@@ -612,6 +632,22 @@
       "guideLink": "https://www.jellyneo.net/?go=hannah_and_the_pirate_caves",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=349",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=349"
+    },
+    "351": {
+      "gameName": "Bilge Dice",
+      "category": "Retired",
+      "technology": "Normal Browser",
+      "guideLink": "https://www.jellyneo.net/?go=bilge_dice",
+      "gameLink": "https://www.neopets.com/pirates/bilge.phtml",
+      "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=351"
+    },
+    "352": {
+      "gameName": "Bilge Dice Streak",
+      "category": "Retired",
+      "technology": "Normal Browser",
+      "guideLink": "https://www.jellyneo.net/?go=bilge_dice",
+      "gameLink": "https://www.neopets.com/pirates/bilge.phtml",
+      "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=351"
     },
     "353": {
       "gameName": "Web of Vernax",
@@ -644,6 +680,13 @@
       "guideLink": "https://www.jellyneo.net/?go=jelly_blobs_of_doom",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=359",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=359"
+    },
+    "361": {
+      "gameName": "Pirate Caves Spotlight",
+      "category": "Retired",
+      "technology": "Normal Browser",
+      "guideLink": "https://www.jellyneo.net/?go=hannah_and_the_pirate_caves",
+      "gameLink": "https://www.neopets.com/piratespotlight.phtml"
     },
     "366": {
       "gameName": "Turmac Roll",
@@ -756,6 +799,13 @@
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=412",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=412"
     },
+    "425": {
+      "gameName": "Tyrannian Mini Golf Spotlight",
+      "category": "Retired",
+      "technology": "Normal Browser",
+      "guideLink": "https://www.jellyneo.net/?go=tyrannian_mini_golf",
+      "gameLink": "https://www.neopets.com/games/minigolf/minigolfspotlight.phtml"
+    },
     "428": {
       "gameName": "Petpetsitter",
       "category": "Standard (Highest Scores)",
@@ -763,6 +813,13 @@
       "guideLink": "https://www.jellyneo.net/?go=petpetsitter",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=428",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=428"
+    },
+    "432": {
+      "gameName": "Meridell Castle Spotlight",
+      "category": "Retired",
+      "technology": "Normal Browser",
+      "guideLink": "https://www.jellyneo.net/?go=escape_from_meridell_castle",
+      "gameLink": "https://www.neopets.com/games/meridell/meridellspotlight.phtml"
     },
     "430": {
       "gameName": "Castle Battles",
@@ -788,10 +845,17 @@
     },
     "467": {
       "gameName": "Lookup of the Week",
-      "category": "Creative (Spotlight/Contest)",
+      "category": "Retired",
       "technology": "Normal Browser",
       "guideLink": "https://www.jellyneo.net/?go=spotlights#lookup",
       "gameLink": "http://www.neopets.com/ul_spotlight.phtml"
+    },
+    "469": {
+      "gameName": "Faerie Caves II Spotlight",
+      "category": "Retired",
+      "technology": "Normal Browser",
+      "guideLink": "https://www.jellyneo.net/?go=faerie_caves_2",
+      "gameLink": "https://www.neopets.com/games/faeriecaves/faeriecavesspotlight.phtml"
     },
     "473": {
       "gameName": "Hannah and the Ice Caves",
@@ -1300,6 +1364,13 @@
       "guideLink": "https://www.jellyneo.net/?go=stowaway_sting",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=852",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=852"
+    },
+    "867": {
+      "gameName": "Neovision Director",
+      "category": "Retired",
+      "technology": "Normal Browser",
+      "guideLink": "https://bookofages.jellyneo.net/history/neovision/",
+      "gameLink": "https://www.neopets.com/video/index.phtml"
     },
     "874": {
       "gameName": "The Search for Princess Lunara",
@@ -1858,6 +1929,13 @@
       "guideLink": "https://www.jellyneo.net/?go=pakiko",
       "gameLink": "https://www.neopets.com/games/game.phtml?game_id=1369",
       "highScoreLink": "https://www.neopets.com/games/hiscores.phtml?game_id=1369"
+    },
+    "1365": {
+      "gameName": "Kreludor Caves Spotlight",
+      "category": "Retired",
+      "technology": "Normal Browser",
+      "guideLink": "https://www.jellyneo.net/?go=hannah_and_the_kreludor_caves",
+      "gameLink": "https://www.neopets.com/kreludorcaves/"
     },
     "1370": {
       "gameName": "Coal War Tactics",
