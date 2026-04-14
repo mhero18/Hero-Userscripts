@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets Game Trophies Tracker
-// @version      2.3
+// @version      2.4
 // @description  Modern Neopets trophy tracker UI with dynamic filtering.
 // @author       Hero
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -22,6 +22,26 @@
   };
 
   const LOOKUP_ONLY_TROPHY_IDS = new Set(['1409', '1414']);
+  const GLOWING_TROPHY_IDS = new Set([
+    '170',  // Plushie Tycoon
+    '229',  // Word Poker
+    '231',  // Petpet Battles
+    '314',  // Hubrid's Hero Heist
+    '331',  // Test Your Strength
+    '342',  // NeoBoard Avatar Collector
+    '351',  // Bilge Dice
+    '352',  // Bilge Dice Streak
+    '356',  // Dice Escape
+    '358',  // Faerie Bubbles
+    '368',  // Hasee Bounce
+    '381',  // Kass Basher
+    '404',  // Kreludan Mining Corp.
+    '412',  // Snowmuncher
+    '726',  // Ugga Smash
+    '734',  // Bruno's Backwoods Breakaway
+    '1134', // Spinacles
+    '202',  // Spell-Or-Starve
+  ]);
 
   const TROPHY_LEVELS = {
     gold: 3,
@@ -104,6 +124,7 @@
       gameLink: links.gameLink,
       guideLink: links.guideLink,
       highScoreLink: links.highScoreLink,
+      isGlowing: GLOWING_TROPHY_IDS.has(String(trophyId)),
       statusValue: TROPHY_LEVELS.none,
       statusKey: LEVEL_META[0].key,
       statusLabel: LEVEL_META[0].label,
@@ -170,6 +191,7 @@
       gameLink: links.gameLink,
       guideLink: links.guideLink,
       highScoreLink: links.highScoreLink,
+      isGlowing: GLOWING_TROPHY_IDS.has(String(trophyId)),
       statusValue: status.value,
       statusKey: status.key,
       statusLabel: status.label,
@@ -333,7 +355,10 @@
         if (filters.type !== 'all' && item.statusKey !== filters.type) {
           return false;
         }
-        if (filters.category !== 'all' && item.category !== filters.category) {
+        if (filters.category === 'Glowing' && !item.isGlowing) {
+          return false;
+        }
+        if (filters.category !== 'all' && filters.category !== 'Glowing' && item.category !== filters.category) {
           return false;
         }
         if (filters.technology !== 'all' && item.technology !== filters.technology) {
@@ -779,7 +804,11 @@
     }));
     const filteredItems = applyFilters(itemsWithTracking, state.filters);
     const summary = getSummary(itemsWithTracking, filteredItems);
-    const categories = uniqueValues(itemsWithTracking.map((item) => item.category));
+    const categories = uniqueValues(
+      itemsWithTracking
+        .map((item) => item.category)
+        .concat(itemsWithTracking.some((item) => item.isGlowing) ? ['Glowing'] : [])
+    );
     const technologies = uniqueValues(itemsWithTracking.map((item) => item.technology));
     const trackingItems = state.trackingList
       .map((trophyId) => itemsWithTracking.find((item) => item.trophyId === trophyId))
