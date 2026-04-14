@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets Game Trophies Tracker
-// @version      2.2
+// @version      2.3
 // @description  Modern Neopets trophy tracker UI with dynamic filtering.
 // @author       Hero
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -116,10 +116,14 @@
   }
 
   function getNeedsUpgrade(statusValue, category) {
-    if (category === 'Retired' || category === 'PVP') {
+    if (isSpecialCategory(category)) {
       return false;
     }
     return statusValue === TROPHY_LEVELS.bronze || statusValue === TROPHY_LEVELS.silver || statusValue === TROPHY_LEVELS.runnerUp;
+  }
+
+  function isSpecialCategory(category) {
+    return category === 'Retired' || category === 'PVP';
   }
 
   function applyLookupOwnedOverride(item, lookupOwnedMap) {
@@ -341,7 +345,7 @@
         if (filters.status === 'needs-upgrade' && !item.needsUpgrade) {
           return false;
         }
-        if (filters.status === 'missing' && item.statusValue !== TROPHY_LEVELS.none) {
+        if (filters.status === 'missing' && (item.statusValue !== TROPHY_LEVELS.none || isSpecialCategory(item.category))) {
           return false;
         }
         return true;
@@ -375,7 +379,7 @@
 
   function renderCard(item) {
     const statusClass = `status-${item.statusKey}`;
-    const canTrack = item.category !== 'Retired' && item.category !== 'PVP';
+    const canTrack = !isSpecialCategory(item.category);
     const showTrackingAction = canTrack && (item.statusValue === TROPHY_LEVELS.none || item.needsUpgrade);
     const isTracked = item.isTracked;
     return `
@@ -395,7 +399,7 @@
           </div>
         </div>
         <div class="ntt-card-tags">
-          ${item.statusValue === TROPHY_LEVELS.none ? '<span class="ntt-pill ntt-pill-missing">Missing</span>' : ''}
+          ${item.statusValue === TROPHY_LEVELS.none && !isSpecialCategory(item.category) ? '<span class="ntt-pill ntt-pill-missing">Missing</span>' : ''}
           ${item.needsUpgrade ? '<span class="ntt-pill ntt-pill-upgrade">Needs Upgrade</span>' : ''}
           ${item.statusValue === TROPHY_LEVELS.gold ? '<span class="ntt-pill">Maxed</span>' : ''}
           ${
