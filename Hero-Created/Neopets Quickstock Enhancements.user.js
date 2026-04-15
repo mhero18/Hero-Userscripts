@@ -9,6 +9,8 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @connect      itemdb.com.br
+// @downloadURL  https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20Quickstock%20Enhancements.user.js
+// @updateURL    https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20Quickstock%20Enhancements.user.js
 // ==/UserScript==
 
 // Enhancements:
