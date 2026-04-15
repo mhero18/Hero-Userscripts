@@ -41,6 +41,7 @@
     '734',  // Bruno's Backwoods Breakaway
     '1134', // Spinacles
     '202',  // Spell-Or-Starve
+    '216',  // Cellblock
   ]);
 
   const TROPHY_LEVELS = {
