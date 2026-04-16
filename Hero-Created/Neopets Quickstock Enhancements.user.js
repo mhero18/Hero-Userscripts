@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets Quickstock Enhancements
-// @version      1.1
+// @version      2.0
 // @description  Enhances the new Quickstock page.
 // @author       Hero
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -9,6 +9,7 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @connect      itemdb.com.br
+// @run-at       document-start
 // @downloadURL  https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20Quickstock%20Enhancements.user.js
 // @updateURL    https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20Quickstock%20Enhancements.user.js
 // ==/UserScript==
@@ -17,7 +18,8 @@
 // - Adds item images column
 // - Adds compact view
 // - Adds Donate/Discard column visibility toggles
-// - Mirrors the Check All row under the column headers
+// - Shows up to 70 Quickstock items on one page 
+// - Makes the table header and Check All row sticky while scrolling
 // - Mirrors pagination above the Quickstock table
 // - Adds quick search links for SSW, TP, Auction Genie, SDB, JellyNeo, and ItemDB
 // - Adds a navigation menu on empty quickstock page
@@ -30,20 +32,42 @@
     const CACHE_PREFIX = 'qs_img_';
     const CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
     const ITEMDB_API = 'https://itemdb.com.br/api/v1/items/many';
+    const TARGET_PAGE_SIZE = 70;
 
     const STATE_COMPACT = 'qs_compact_view';
     const STATE_DONATE = 'qs_show_donate';
     const STATE_DISCARD = 'qs_show_discard';
-    const MENU_LINK_HREFS = [
-        '/inventory.phtml',
-        '/closet.phtml',
-        '/safetydeposit.phtml',
-        '/dome/neopets.phtml',
-        '/neohome/shed',
-        '/gallery/index.phtml',
-        '/stamps.phtml?type=album',
-        '/tcg/album.phtml'
-    ];
+    // --- Page size patch ----------------------------------------------------------
+    function installQuickstockPageSizePatch() {
+        const patchObserver = new MutationObserver(() => {
+            const appMount = document.getElementById('quickstock-app');
+            if (!appMount) return;
+
+            const script = [...document.querySelectorAll('script')].find(s =>
+                s.textContent.includes('const PAGE_SIZE = 20;') &&
+                s.textContent.includes("window.app.component('quickstock-page'")
+            );
+            if (!script) return;
+
+            patchObserver.disconnect();
+
+            const patchedScript = document.createElement('script');
+            patchedScript.textContent = script.textContent.replace(
+                'const PAGE_SIZE = 20;',
+                `const PAGE_SIZE = ${TARGET_PAGE_SIZE};`
+            );
+            script.replaceWith(patchedScript);
+        });
+
+        patchObserver.observe(document.documentElement, {
+            childList: true,
+            subtree: true
+        });
+
+        setTimeout(() => patchObserver.disconnect(), 10000);
+    }
+
+    installQuickstockPageSizePatch();
 
     // --- Cache helpers ------------------------------------------------------------
     function getCached(name) {
@@ -278,14 +302,20 @@
       body.qs-hide-donate [data-qs-action="donate"] { display: none !important; }
       body.qs-hide-discard [data-qs-action="discard"] { display: none !important; }
 
-      .qs-top-checkall-row {
-        background-color: #fde68a;
-        font-weight: bold;
-        border-top: 2px solid #c48a10;
+      #quickstock-table-container {
+        overflow: unset !important;
       }
 
-      .qs-top-checkall-row td {
-        border-bottom: 1px solid #c48a10;
+      table.quickstock-table thead {
+        inset-block-start: 50px;
+        position: sticky;
+        z-index: 100;
+      }
+
+      table.quickstock-table tbody tr:last-of-type {
+        inset-block-end: 0;
+        position: sticky;
+        z-index: 100;
       }
 
       .qs-enhancer-page-header {
@@ -523,39 +553,6 @@
     }
 
     // --- Nav bar ------------------------------------------------------------------
-    function normalizeMenuHref(anchor) {
-        const rawHref = anchor.getAttribute('href');
-        if (!rawHref) return '';
-
-        try {
-            const url = new URL(rawHref, location.origin);
-            if (url.origin === location.origin) {
-                return `${url.pathname}${url.search}`;
-            }
-        } catch {
-            // Fall through to the raw href.
-        }
-
-        return rawHref;
-    }
-
-    function hasExistingQuickstockMenu(root = document) {
-        if (root.querySelector('.qs-menubar:not(.qs-enhancer-menubar)')) return true;
-
-        const expectedLinks = new Set(MENU_LINK_HREFS);
-        const possibleMenus = root.querySelectorAll(
-            'nav, [role="navigation"], ul, .menubar, .menu, .nav, .navsub, .nav-menu, #nav, #navigation'
-        );
-
-        return [...possibleMenus].some(menu => {
-            const foundLinks = [...menu.querySelectorAll('a[href]')]
-                .map(normalizeMenuHref)
-                .filter(href => expectedLinks.has(href));
-
-            return new Set(foundLinks).size >= 3;
-        });
-    }
-
     function removeFallbackMenuIfOriginalExists() {
         if (!document.querySelector('.qs-menubar:not(.qs-enhancer-menubar)')) return false;
 
@@ -565,22 +562,27 @@
     }
 
     function findEmptyQuickstockMessage() {
-        return [...document.querySelectorAll('center, b, p, div')]
+        return [...document.querySelectorAll('center, b')]
             .find(el => el.textContent.includes('You do not have any items :('));
     }
 
-    function getQuickstockContentRoot(tableContainer, table, emptyMessage) {
-        return tableContainer?.parentElement ||
-            table?.parentElement ||
-            emptyMessage?.closest('#container__2020, #content td.content, .content, #main') ||
-            document.querySelector('#container__2020') ||
-            document.querySelector('#content td.content') ||
-            document.querySelector('.content') ||
-            document.querySelector('#main') ||
-            document.body;
+    function hasFallbackMenu() {
+        const fallbackHeaders = [...document.querySelectorAll('.qs-enhancer-page-header')];
+        if (!fallbackHeaders.length) return false;
+
+        fallbackHeaders.forEach((header, index) => {
+            if (index === 0) {
+                header.id = 'qs-enhancer-empty-header';
+            } else {
+                header.remove();
+            }
+        });
+        return true;
     }
 
     function ensureMenuBar() {
+        if (hasFallbackMenu()) return;
+        if (document.getElementById('qs-enhancer-empty-header')) return;
         if (removeFallbackMenuIfOriginalExists()) return;
 
         const tableContainer = document.querySelector('#quickstock-table-container');
@@ -591,11 +593,10 @@
 
         if (!hasQuickstockTable && !hasNoItemsMessage) return;
 
-        const contentRoot = getQuickstockContentRoot(tableContainer, table, emptyMessage);
-
-        if (hasExistingQuickstockMenu(contentRoot)) return;
+        if (document.querySelector('.qs-menubar:not(.qs-enhancer-menubar)')) return;
 
         const header = document.createElement('div');
+        header.id = 'qs-enhancer-empty-header';
         header.className = 'qs-page-header qs-enhancer-page-header';
         header.innerHTML = `
     <div class="qs-title-container">
@@ -629,14 +630,17 @@
         if (tableContainer) {
             tableContainer.before(header);
         } else if (emptyMessage) {
+            const contentRoot = document.querySelector('#container__2020') || emptyMessage.parentElement || document.body;
             const navBuffer = contentRoot.querySelector('#navsub-buffer__2020');
             if (navBuffer?.parentElement === contentRoot) {
                 navBuffer.after(header);
             } else {
                 emptyMessage.before(header);
             }
+        } else if (table?.parentNode) {
+            table.parentNode.insertBefore(header, table);
         } else {
-            contentRoot.prepend(header);
+            document.body.prepend(header);
         }
     }
 
@@ -723,7 +727,7 @@
     }
 
     function fixCheckAllRow(tbody) {
-        const checkAllRow = [...tbody.querySelectorAll('tr:not(.qs-top-checkall-row)')].find(
+        const checkAllRow = [...tbody.querySelectorAll('tr')].find(
             tr => tr.querySelector('td strong')?.textContent.trim() === 'Check All'
         );
         if (!checkAllRow) return;
@@ -732,66 +736,6 @@
             const imgTd = document.createElement('td');
             imgTd.className = 'qs-img-cell';
             checkAllRow.prepend(imgTd);
-        }
-    }
-
-    function getOriginalCheckAllRow(tbody) {
-        return [...tbody.querySelectorAll('tr:not(.qs-top-checkall-row)')].find(
-            tr => tr.querySelector('td strong')?.textContent.trim() === 'Check All'
-        );
-    }
-
-    function syncTopCheckAllRow(tbody) {
-        const originalRow = getOriginalCheckAllRow(tbody);
-        let topRow = tbody.querySelector('tr.qs-top-checkall-row');
-
-        if (!originalRow) {
-            topRow?.remove();
-            return;
-        }
-
-        const firstBodyRow = tbody.querySelector('tr:not(.qs-top-checkall-row)');
-        if (!topRow) {
-            topRow = originalRow.cloneNode(true);
-            topRow.classList.add('qs-top-checkall-row');
-            topRow.querySelectorAll('input').forEach(input => {
-                input.removeAttribute('onclick');
-                input.removeAttribute('name');
-            });
-            tbody.insertBefore(topRow, firstBodyRow);
-        } else if (topRow.nextElementSibling !== firstBodyRow) {
-            tbody.insertBefore(topRow, firstBodyRow);
-        }
-
-        const originalInputs = [...originalRow.querySelectorAll('input')];
-        const topInputs = [...topRow.querySelectorAll('input')];
-
-        topInputs.forEach((input, index) => {
-            const originalInput = originalInputs[index];
-            input.checked = !!originalInput?.checked;
-            input.disabled = !originalInput || originalInput.disabled;
-        });
-
-        if (!topRow.dataset.qsTopCheckAllBound) {
-            topRow.addEventListener('click', e => {
-                const input = e.target.closest('input');
-                if (!input || !topRow.contains(input)) return;
-
-                e.preventDefault();
-                e.stopPropagation();
-
-                const currentTopInputs = [...topRow.querySelectorAll('input')];
-                const inputIndex = currentTopInputs.indexOf(input);
-                const currentOriginalRow = getOriginalCheckAllRow(tbody);
-                const matchingInput = currentOriginalRow?.querySelectorAll('input')[inputIndex];
-
-                if (matchingInput && !matchingInput.disabled) {
-                    matchingInput.click();
-                    input.checked = matchingInput.checked;
-                    scheduleEnhance();
-                }
-            });
-            topRow.dataset.qsTopCheckAllBound = 'true';
         }
     }
 
@@ -959,7 +903,6 @@
         });
 
         fixCheckAllRow(tbody);
-        syncTopCheckAllRow(tbody);
         markColumns(thead, tbody);
 
         addSearchHelpers(tbody);
@@ -967,9 +910,8 @@
     }
 
     // --- Reactive watcher for Vue pagination / view updates -----------------------
-    pruneExpiredCache();
-
     let qsEnhanceTimer = null;
+    let qsStarted = false;
 
     function scheduleEnhance() {
         clearTimeout(qsEnhanceTimer);
@@ -977,8 +919,6 @@
             enhanceQuickstockTable();
         }, 80);
     }
-
-    scheduleEnhance();
 
     const observer = new MutationObserver((mutations) => {
         let shouldEnhance = false;
@@ -1002,9 +942,23 @@
         }
     });
 
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-        characterData: true
-    });
+    function startEnhancer() {
+        if (qsStarted || !document.body) return;
+        qsStarted = true;
+
+        pruneExpiredCache();
+        scheduleEnhance();
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+            characterData: true
+        });
+    }
+
+    if (document.body) {
+        startEnhancer();
+    } else {
+        document.addEventListener('DOMContentLoaded', startEnhancer, { once: true });
+    }
 })();
