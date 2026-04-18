@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets Quickstock Enhancements
-// @version      3.0
+// @version      3.1
 // @description  Enhances the new Quickstock page.
 // @author       Hero
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -22,6 +22,7 @@
 // - Keeps the Check All row sticky while scrolling
 // - Mirrors pagination above the Quickstock table
 // - Adds quick search links for SSW, TP, Auction Genie, SDB, JellyNeo, and ItemDB
+// - Add My Shop link to the nav bar
 
 
 (function () {
@@ -843,12 +844,39 @@
         return clone.textContent.replace(/\u00d7\d+\s*$/, '').trim();
     }
 
+    function ensureQuickstockNavLinks() {
+        const desktopMenu = document.querySelector('.qs-menubar .qs-menulinks:not(.mobile)');
+        if (desktopMenu && !desktopMenu.querySelector('a[href="/market.phtml?type=your"]')) {
+            const item = document.createElement('li');
+            item.innerHTML = '<a href="/market.phtml?type=your">Shop</a>';
+            const inventoryItem = desktopMenu.querySelector('a[href="/inventory.phtml"]')?.closest('li');
+            if (inventoryItem?.parentNode === desktopMenu) {
+                inventoryItem.insertAdjacentElement('afterend', item);
+            } else {
+                desktopMenu.appendChild(item);
+            }
+        }
+
+        const mobileMenu = document.querySelector('.qs-menubar .qs-menulinks.mobile');
+        if (mobileMenu && !mobileMenu.querySelector('a[href="/market.phtml?type=your"]')) {
+            const item = document.createElement('li');
+            item.innerHTML = '<a href="/market.phtml?type=your"><img alt="Shop" src="https://images.neopets.com/themes/h5/basic/images/myshop-icon.png"></a>';
+            const inventoryItem = mobileMenu.querySelector('a[href="/inventory.phtml"]')?.closest('li');
+            if (inventoryItem?.parentNode === mobileMenu) {
+                inventoryItem.insertAdjacentElement('afterend', item);
+            } else {
+                mobileMenu.appendChild(item);
+            }
+        }
+    }
+
     // --- Enhancement pass ---------------------------------------------------------
     function enhanceQuickstockTable() {
         qsInternalMutation = true;
         try {
             injectStyles();
             setInstructionsVisibility(null, GM_getValue(STATE_INSTRUCTIONS, true), true);
+            ensureQuickstockNavLinks();
 
             const table = document.querySelector('table.quickstock-table');
             if (!table) return;
