@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets Quickstock Enhancements
-// @version      2.0
+// @version      3.0
 // @description  Enhances the new Quickstock page.
 // @author       Hero
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -17,12 +17,11 @@
 // Enhancements:
 // - Adds item images column
 // - Adds compact view
-// - Adds Donate/Discard column visibility toggles
-// - Shows up to 70 Quickstock items on one page 
-// - Makes the table header and Check All row sticky while scrolling
+// - Adds Donate/Discard column and instructions visibility toggles
+// - Adds section Check rows in configurable groups (default 20)
+// - Keeps the Check All row sticky while scrolling
 // - Mirrors pagination above the Quickstock table
 // - Adds quick search links for SSW, TP, Auction Genie, SDB, JellyNeo, and ItemDB
-// - Adds a navigation menu on empty quickstock page
 
 
 (function () {
@@ -32,43 +31,13 @@
     const CACHE_PREFIX = 'qs_img_';
     const CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
     const ITEMDB_API = 'https://itemdb.com.br/api/v1/items/many';
-    const TARGET_PAGE_SIZE = 70;
+    const ACTIONS = ['stock', 'deposit', 'donate', 'discard', 'gallery', 'closet', 'shed', 'chamber'];
 
     const STATE_COMPACT = 'qs_compact_view';
     const STATE_DONATE = 'qs_show_donate';
     const STATE_DISCARD = 'qs_show_discard';
-    // --- Page size patch ----------------------------------------------------------
-    function installQuickstockPageSizePatch() {
-        const patchObserver = new MutationObserver(() => {
-            const appMount = document.getElementById('quickstock-app');
-            if (!appMount) return;
-
-            const script = [...document.querySelectorAll('script')].find(s =>
-                s.textContent.includes('const PAGE_SIZE = 20;') &&
-                s.textContent.includes("window.app.component('quickstock-page'")
-            );
-            if (!script) return;
-
-            patchObserver.disconnect();
-
-            const patchedScript = document.createElement('script');
-            patchedScript.textContent = script.textContent.replace(
-                'const PAGE_SIZE = 20;',
-                `const PAGE_SIZE = ${TARGET_PAGE_SIZE};`
-            );
-            script.replaceWith(patchedScript);
-        });
-
-        patchObserver.observe(document.documentElement, {
-            childList: true,
-            subtree: true
-        });
-
-        setTimeout(() => patchObserver.disconnect(), 10000);
-    }
-
-    installQuickstockPageSizePatch();
-
+    const STATE_INSTRUCTIONS = 'qs_show_instructions';
+    const STATE_SECTION_SIZE = 'qs_section_size';
     // --- Cache helpers ------------------------------------------------------------
     function getCached(name) {
         try {
@@ -175,6 +144,28 @@
       }
       .qs-btn:hover { background: #ddd; }
       .qs-btn.active { background: #c8e6c9; border-color: #4caf50; }
+
+      .qs-inline-control {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: #374151;
+      }
+
+      .qs-inline-control input[type="number"] {
+        width: 58px;
+        padding: 4px 6px;
+        font-size: 12px;
+        border: 1px solid #aaa;
+        border-radius: 4px;
+        background: #fff;
+      }
+
+      .qs-inline-note {
+        font-size: 11px;
+        color: #6b7280;
+      }
 
       #qs-top-pagination {
         display: flex;
@@ -302,133 +293,31 @@
       body.qs-hide-donate [data-qs-action="donate"] { display: none !important; }
       body.qs-hide-discard [data-qs-action="discard"] { display: none !important; }
 
-      #quickstock-table-container {
-        overflow: unset !important;
+      .qs-section-check-row {
+        background: #f7f0c6 !important;
+        border-top: 1px solid #d7c580;
+        border-bottom: 1px solid #d7c580;
       }
 
-      table.quickstock-table thead {
-        inset-block-start: 50px;
-        position: sticky;
-        z-index: 100;
+      .qs-section-check-row td {
+        font-weight: 700;
+      }
+
+      .qs-section-check-row input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+        accent-color: #c48a10;
+      }
+
+      #quickstock-table-container {
+        overflow: unset !important;
       }
 
       table.quickstock-table tbody tr:last-of-type {
         inset-block-end: 0;
         position: sticky;
         z-index: 100;
-      }
-
-      .qs-enhancer-page-header {
-        box-sizing: border-box;
-        width: min(100%, 980px);
-        margin: 14px auto 16px;
-        padding: 14px;
-        border: 1px solid #d7dbe7;
-        border-radius: 8px;
-        background: #f8fafc;
-        box-shadow: 0 4px 14px rgba(31, 41, 55, 0.08);
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      }
-
-      .qs-enhancer-page-header .qs-title-container {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 0 12px;
-      }
-
-      .qs-enhancer-page-header h1 {
-        margin: 0;
-        color: #1f2937;
-        font-size: 24px;
-        line-height: 1.2;
-        font-weight: 800;
-      }
-
-      .qs-enhancer-menubar {
-        display: flex;
-        width: 100%;
-        margin: 0;
-      }
-
-      .qs-enhancer-menubar .qs-menulinks {
-        width: 100%;
-        margin: 0;
-        padding: 0;
-        background: transparent;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        list-style: none;
-        gap: 8px;
-        box-sizing: border-box;
-        flex-wrap: wrap;
-      }
-
-      .qs-enhancer-menubar .qs-menulinks li {
-        margin: 0;
-        padding: 0;
-      }
-
-      .qs-enhancer-menubar .qs-menulinks a {
-        box-sizing: border-box;
-        display: flex;
-        min-height: 32px;
-        align-items: center;
-        justify-content: center;
-        padding: 7px 11px;
-        border: 1px solid #cfd6e3;
-        border-radius: 999px;
-        background: #ffffff;
-        color: #374151;
-        font-size: 12px;
-        font-weight: 700;
-        line-height: 1;
-        text-decoration: none;
-        transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
-      }
-
-      .qs-enhancer-menubar .qs-menulinks a:hover {
-        border-color: #7aa2d6;
-        background: #eef6ff;
-        color: #1d4f8f;
-      }
-
-      .qs-enhancer-menubar .qs-menulinks.mobile {
-        display: none;
-      }
-
-      .qs-enhancer-menubar .qs-menulinks.mobile img {
-        display: block;
-        width: 22px;
-        height: 22px;
-      }
-
-      @media (max-width: 700px) {
-        .qs-enhancer-page-header {
-          margin: 10px auto 14px;
-          padding: 12px;
-        }
-
-        .qs-enhancer-page-header h1 {
-          font-size: 21px;
-        }
-
-        .qs-enhancer-menubar .qs-menulinks:not(.mobile) {
-          display: none;
-        }
-
-        .qs-enhancer-menubar .qs-menulinks.mobile {
-          display: grid;
-          grid-template-columns: repeat(4, minmax(42px, 1fr));
-          gap: 8px;
-        }
-
-        .qs-enhancer-menubar .qs-menulinks.mobile a {
-          min-height: 42px;
-          padding: 8px;
-          border-radius: 8px;
-        }
       }
 
     `;
@@ -438,7 +327,7 @@
     // --- Toolbar state ------------------------------------------------------------
     function toggleCompact(btn, silent = false) {
         const on = document.body.classList.toggle('qs-compact');
-        btn.classList.toggle('active', on);
+        btn.classList.toggle('active', !on);
         btn.textContent = on ? 'Regular View' : 'Compact View';
         if (!silent) GM_setValue(STATE_COMPACT, on);
     }
@@ -457,6 +346,24 @@
         if (!silent) GM_setValue(STATE_DISCARD, !hidden);
     }
 
+    function setInstructionsVisibility(btn = null, show = true, silent = false) {
+        const instructions = document.getElementById('qs-instructions');
+        if (instructions) {
+            instructions.style.display = show ? '' : 'none';
+        }
+        if (btn) {
+            btn.classList.toggle('active', show);
+            btn.textContent = show ? 'Hide Instructions' : 'Show Instructions';
+        }
+        if (!silent) GM_setValue(STATE_INSTRUCTIONS, show);
+    }
+
+    function getSectionSize() {
+        const raw = Number(GM_getValue(STATE_SECTION_SIZE, 20));
+        if (!Number.isFinite(raw)) return 20;
+        return Math.max(1, Math.min(100, Math.floor(raw)));
+    }
+
     function buildToolbar(table) {
         if (document.getElementById('qs-toolbar')) return;
 
@@ -465,7 +372,7 @@
 
         const btnCompact = document.createElement('button');
         btnCompact.type = 'button';
-        btnCompact.className = 'qs-btn';
+        btnCompact.className = 'qs-btn active';
         btnCompact.textContent = 'Compact View';
         btnCompact.addEventListener('click', (e) => {
             e.preventDefault();
@@ -493,10 +400,40 @@
             toggleDiscard(btnDiscard);
         });
 
-        bar.append(btnCompact, btnDonate, btnDiscard);
+        const btnInstructions = document.createElement('button');
+        btnInstructions.type = 'button';
+        btnInstructions.className = 'qs-btn active';
+        btnInstructions.textContent = 'Hide Instructions';
+        btnInstructions.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const show = btnInstructions.textContent === 'Show Instructions';
+            setInstructionsVisibility(btnInstructions, show);
+        });
 
+        const sectionSizeWrap = document.createElement('label');
+        sectionSizeWrap.className = 'qs-inline-control';
+        sectionSizeWrap.innerHTML = `
+          <span>Section Size</span>
+          <input type="number" id="qs-section-size-input" min="1" max="100" step="1">
+          <span class="qs-inline-note">Reload to apply</span>
+        `;
+
+        const sectionSizeInput = sectionSizeWrap.querySelector('input');
+        sectionSizeInput.value = String(getSectionSize());
+        sectionSizeInput.addEventListener('change', () => {
+            const nextValue = Math.max(1, Math.min(100, Math.floor(Number(sectionSizeInput.value) || 20)));
+            sectionSizeInput.value = String(nextValue);
+            GM_setValue(STATE_SECTION_SIZE, nextValue);
+        });
+
+        bar.append(btnCompact, btnDonate, btnDiscard, btnInstructions, sectionSizeWrap);
+
+        const filterBar = document.getElementById('qs-filter-bar');
         const container = table.closest('#quickstock-table-container');
-        if (container) {
+        if (filterBar?.parentNode) {
+            filterBar.parentNode.insertBefore(bar, filterBar);
+        } else if (container) {
             container.before(bar);
         } else {
             table.parentNode.insertBefore(bar, table);
@@ -505,6 +442,7 @@
         if (GM_getValue(STATE_COMPACT, false)) toggleCompact(btnCompact, true);
         if (!GM_getValue(STATE_DONATE, true)) toggleDonate(btnDonate, true);
         if (!GM_getValue(STATE_DISCARD, true)) toggleDiscard(btnDiscard, true);
+        setInstructionsVisibility(btnInstructions, GM_getValue(STATE_INSTRUCTIONS, true), true);
     }
 
     // --- Top pagination mirror ----------------------------------------------------
@@ -549,98 +487,6 @@
         if (topPagination.dataset.paginationHtml !== nextHtml) {
             topPagination.innerHTML = nextHtml;
             topPagination.dataset.paginationHtml = nextHtml;
-        }
-    }
-
-    // --- Nav bar ------------------------------------------------------------------
-    function removeFallbackMenuIfOriginalExists() {
-        if (!document.querySelector('.qs-menubar:not(.qs-enhancer-menubar)')) return false;
-
-        document.querySelectorAll('.qs-enhancer-page-header').forEach(header => header.remove());
-        document.querySelectorAll('.qs-enhancer-menubar').forEach(nav => nav.remove());
-        return true;
-    }
-
-    function findEmptyQuickstockMessage() {
-        return [...document.querySelectorAll('center, b')]
-            .find(el => el.textContent.includes('You do not have any items :('));
-    }
-
-    function hasFallbackMenu() {
-        const fallbackHeaders = [...document.querySelectorAll('.qs-enhancer-page-header')];
-        if (!fallbackHeaders.length) return false;
-
-        fallbackHeaders.forEach((header, index) => {
-            if (index === 0) {
-                header.id = 'qs-enhancer-empty-header';
-            } else {
-                header.remove();
-            }
-        });
-        return true;
-    }
-
-    function ensureMenuBar() {
-        if (hasFallbackMenu()) return;
-        if (document.getElementById('qs-enhancer-empty-header')) return;
-        if (removeFallbackMenuIfOriginalExists()) return;
-
-        const tableContainer = document.querySelector('#quickstock-table-container');
-        const table = document.querySelector('table.quickstock-table');
-        const emptyMessage = findEmptyQuickstockMessage();
-        const hasQuickstockTable = !!table;
-        const hasNoItemsMessage = !!emptyMessage;
-
-        if (!hasQuickstockTable && !hasNoItemsMessage) return;
-
-        if (document.querySelector('.qs-menubar:not(.qs-enhancer-menubar)')) return;
-
-        const header = document.createElement('div');
-        header.id = 'qs-enhancer-empty-header';
-        header.className = 'qs-page-header qs-enhancer-page-header';
-        header.innerHTML = `
-    <div class="qs-title-container">
-      <h1 class="!text-black">Quick Stock</h1>
-    </div>
-
-    <div class="qs-menubar qs-enhancer-menubar">
-      <ul class="qs-menulinks">
-        <li><a href="/inventory.phtml">Inventory</a></li>
-        <li><a href="/closet.phtml">Closet</a></li>
-        <li><a href="/safetydeposit.phtml">Safety Deposit Box</a></li>
-        <li><a href="/dome/neopets.phtml">Equipment</a></li>
-        <li><a href="/neohome/shed">Shed</a></li>
-        <li><a href="/gallery/index.phtml">Gallery</a></li>
-        <li><a href="/stamps.phtml?type=album">Stamps</a></li>
-        <li><a href="/tcg/album.phtml">TCG</a></li>
-      </ul>
-      <ul class="qs-menulinks mobile">
-        <li><a href="/inventory.phtml"><img alt="Inventory" src="https://images.neopets.com/themes/h5/basic/images/v3/inventory-icon.svg"></a></li>
-        <li><a href="/closet.phtml"><img alt="Closet" src="https://images.neopets.com/themes/h5/basic/images/v3/customise-icon.svg"></a></li>
-        <li><a href="/safetydeposit.phtml"><img alt="Safety Deposit Box" src="https://images.neopets.com/themes/h5/basic/images/v3/safetydeposit-icon.svg"></a></li>
-        <li><a href="/dome/neopets.phtml"><img alt="Equipment" src="https://images.neopets.com/themes/h5/basic/images/v3/inventory-icon.svg"></a></li>
-        <li><a href="/neohome/shed"><img alt="Shed" src="https://images.neopets.com/themes/h5/basic/images/v3/neohome-icon.svg"></a></li>
-        <li><a href="/gallery/index.phtml"><img alt="Gallery" src="https://images.neopets.com/themes/h5/basic/images/v3/gallery-icon.svg"></a></li>
-        <li><a href="/stamps.phtml?type=album"><img alt="Stamps" src="https://images.neopets.com/themes/h5/basic/images/v3/stamps-icon.svg"></a></li>
-        <li><a href="/tcg/album.phtml"><img alt="TCG" src="https://images.neopets.com/themes/h5/basic/images/v3/tradingcards-icon.svg"></a></li>
-      </ul>
-    </div>
-  `;
-
-        if (tableContainer) {
-            tableContainer.before(header);
-        } else if (emptyMessage) {
-            const contentRoot = document.querySelector('#container__2020') || emptyMessage.parentElement || document.body;
-            const navBuffer = contentRoot.querySelector('#navsub-buffer__2020');
-            if (navBuffer?.parentElement === contentRoot) {
-                navBuffer.after(header);
-            } else {
-                emptyMessage.before(header);
-            }
-        } else if (table?.parentNode) {
-            table.parentNode.insertBefore(header, table);
-        } else {
-            document.body.prepend(header);
         }
     }
 
@@ -739,6 +585,114 @@
         }
     }
 
+    function getItemRows(tbody) {
+        return [...tbody.querySelectorAll('tr')].filter(tr => {
+            if (tr.classList.contains('qs-section-check-row')) return false;
+            if (tr.querySelector('td strong')?.textContent.trim() === 'Check All') return false;
+            return !!tr.querySelector('input[type="radio"][name^="qs_"]');
+        });
+    }
+
+    function getRowRadiosByAction(row) {
+        const radios = new Map();
+        row.querySelectorAll('input[type="radio"][name^="qs_"]').forEach(radio => {
+            if (!radio.disabled && radio.offsetParent !== null) {
+                radios.set(radio.value, radio);
+            }
+        });
+        return radios;
+    }
+
+    function setRowAction(row, action) {
+        const target = getRowRadiosByAction(row).get(action);
+        if (target && !target.checked) {
+            target.click();
+        }
+    }
+
+    function updateSectionCheckboxStates(tbody) {
+        tbody.querySelectorAll('tr.qs-section-check-row').forEach(sectionRow => {
+            const start = Number(sectionRow.dataset.startIndex || 0);
+            const end = Number(sectionRow.dataset.endIndex || 0);
+            const rows = getItemRows(tbody).slice(start, end);
+
+            sectionRow.querySelectorAll('input[type="checkbox"][data-action]').forEach(checkbox => {
+                const action = checkbox.dataset.action;
+                const eligibleRows = rows.filter(row => getRowRadiosByAction(row).has(action));
+                checkbox.checked = eligibleRows.length > 0 && eligibleRows.every(row => {
+                    const radio = getRowRadiosByAction(row).get(action);
+                    return !!radio?.checked;
+                });
+            });
+        });
+    }
+
+    function addSectionCheckRows(thead, tbody) {
+        const itemRows = getItemRows(tbody);
+        if (!itemRows.length) return;
+        const sectionSize = getSectionSize();
+
+        const headers = [...thead.querySelectorAll('th')];
+        const actionHeaders = headers.map(th => th.textContent.trim().toLowerCase());
+        const expectedRanges = [];
+
+        for (let start = 0; start < itemRows.length; start += sectionSize) {
+            const end = Math.min(start + sectionSize, itemRows.length);
+            expectedRanges.push(`${start}:${end}`);
+        }
+
+        const existingRows = [...tbody.querySelectorAll('tr.qs-section-check-row')];
+        const existingRanges = existingRows.map(row => `${row.dataset.startIndex || ''}:${row.dataset.endIndex || ''}`);
+        if (existingRows.length && existingRanges.join('|') === expectedRanges.join('|')) {
+            updateSectionCheckboxStates(tbody);
+            return;
+        }
+
+        existingRows.forEach(row => row.remove());
+
+        for (let start = 0; start < itemRows.length; start += sectionSize) {
+            const end = Math.min(start + sectionSize, itemRows.length);
+            const anchorRow = itemRows[start];
+            if (!anchorRow) continue;
+
+            const sectionRow = document.createElement('tr');
+            sectionRow.className = 'qs-section-check-row';
+            sectionRow.dataset.startIndex = String(start);
+            sectionRow.dataset.endIndex = String(end);
+            sectionRow.innerHTML = headers.map((th, index) => {
+                const headerText = actionHeaders[index] || '';
+                if (index === 0) return '<td class="qs-img-cell"></td>';
+                if (index === 1) return `<td><strong>Check ${start + 1}-${end}</strong></td>`;
+                if (ACTIONS.includes(headerText)) {
+                    return `<td><input type="checkbox" data-action="${headerText}"></td>`;
+                }
+                return '<td></td>';
+            }).join('');
+
+            sectionRow.querySelectorAll('input[type="checkbox"][data-action]').forEach(checkbox => {
+                const action = checkbox.dataset.action;
+                checkbox.addEventListener('click', () => {
+                    if (!checkbox.checked) {
+                        setTimeout(() => updateSectionCheckboxStates(tbody), 0);
+                        return;
+                    }
+
+                    sectionRow.querySelectorAll('input[type="checkbox"][data-action]').forEach(other => {
+                        if (other !== checkbox) other.checked = false;
+                    });
+
+                    const sectionRows = getItemRows(tbody).slice(start, end);
+                    sectionRows.forEach(row => setRowAction(row, action));
+                    setTimeout(() => updateSectionCheckboxStates(tbody), 0);
+                });
+            });
+
+            anchorRow.before(sectionRow);
+        }
+
+        updateSectionCheckboxStates(tbody);
+    }
+
     // --- Search helpers -----------------------------------------------------------
     function addSearchHelpers(tbody) {
         tbody.querySelectorAll('tr').forEach(tr => {
@@ -750,7 +704,7 @@
             const nameEl = nameCell.querySelector('.qs-name-text, span:first-child');
             if (!nameEl) return;
 
-            const itemName = nameEl.textContent.trim();
+            const itemName = getBaseItemName(nameEl);
             if (!itemName) return;
 
             if (nameCell.querySelector('.search-helper')) return;
@@ -842,7 +796,7 @@
             if (!imgTd || !nameTd) return;
             if (imgTd.querySelector('img.qs-item-img')) return;
 
-            const name = nameTd.textContent.trim();
+            const name = getBaseItemName(nameTd);
             if (!name) return;
 
             if (!nameMap.has(name)) nameMap.set(name, []);
@@ -881,37 +835,54 @@
         });
     }
 
+    function getBaseItemName(nameEl) {
+        if (!nameEl) return '';
+
+        const clone = nameEl.cloneNode(true);
+        clone.querySelectorAll('.qs-count-badge').forEach(el => el.remove());
+        return clone.textContent.replace(/\u00d7\d+\s*$/, '').trim();
+    }
+
     // --- Enhancement pass ---------------------------------------------------------
     function enhanceQuickstockTable() {
-        injectStyles();
-        ensureMenuBar();
+        qsInternalMutation = true;
+        try {
+            injectStyles();
+            setInstructionsVisibility(null, GM_getValue(STATE_INSTRUCTIONS, true), true);
 
-        const table = document.querySelector('table.quickstock-table');
-        if (!table) return;
+            const table = document.querySelector('table.quickstock-table');
+            if (!table) return;
 
-        const thead = table.querySelector('thead');
-        const tbody = table.querySelector('tbody');
-        if (!thead || !tbody) return;
+            const thead = table.querySelector('thead');
+            const tbody = table.querySelector('tbody');
+            if (!thead || !tbody) return;
 
-        buildToolbar(table);
-        ensureTopPagination(table);
-        addImgHeader(thead);
+            buildToolbar(table);
+            ensureTopPagination(table);
+            addImgHeader(thead);
 
-        tbody.querySelectorAll('tr').forEach(tr => {
-            if (tr.querySelector('td strong')?.textContent.trim() === 'Check All') return;
-            addImgCell(tr);
-        });
+            tbody.querySelectorAll('tr').forEach(tr => {
+                if (tr.querySelector('td strong')?.textContent.trim() === 'Check All') return;
+                addImgCell(tr);
+            });
 
-        fixCheckAllRow(tbody);
-        markColumns(thead, tbody);
+            fixCheckAllRow(tbody);
+            addSectionCheckRows(thead, tbody);
+            markColumns(thead, tbody);
 
-        addSearchHelpers(tbody);
-        loadImages(tbody);
+            addSearchHelpers(tbody);
+            loadImages(tbody);
+        } finally {
+            requestAnimationFrame(() => {
+                qsInternalMutation = false;
+            });
+        }
     }
 
     // --- Reactive watcher for Vue pagination / view updates -----------------------
     let qsEnhanceTimer = null;
     let qsStarted = false;
+    let qsInternalMutation = false;
 
     function scheduleEnhance() {
         clearTimeout(qsEnhanceTimer);
@@ -921,11 +892,17 @@
     }
 
     const observer = new MutationObserver((mutations) => {
+        if (qsInternalMutation) return;
+
         let shouldEnhance = false;
 
         for (const mutation of mutations) {
             if (mutation.type === 'childList') {
-                if (mutation.addedNodes.length || mutation.removedNodes.length) {
+                const relevantNodes = [...mutation.addedNodes, ...mutation.removedNodes].filter(node => {
+                    return !(node.nodeType === 1 && node.classList?.contains('qs-section-check-row'));
+                });
+
+                if (relevantNodes.length) {
                     shouldEnhance = true;
                     break;
                 }
@@ -948,6 +925,12 @@
 
         pruneExpiredCache();
         scheduleEnhance();
+
+        document.body.addEventListener('change', event => {
+            if (!event.target.matches('input[type="radio"][name^="qs_"]')) return;
+            const tbody = event.target.closest('tbody');
+            if (tbody) updateSectionCheckboxStates(tbody);
+        });
 
         observer.observe(document.body, {
             childList: true,
