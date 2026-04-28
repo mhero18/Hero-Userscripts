@@ -2,6 +2,11 @@
 # Hero's Userscripts 
 Just some scripts I made to help make life easier on Neopets, hope you find some use too!  Always ensure that your use of userscripts complies with Neopets' rules. Happy to hear any suggestions or improvements for new or existing scripts! :)
 
+# [Neopets Closet Enhancements](Neopets%20Closet%20Enhancements.user.js)
+New Closet page! Added the Search Helper icons plus extra DTI icon, added top pagination, narrowed down popup click trigger, and removed category label.
+
+![closetvisualizer](assets/closetenhance.png)
+
 # [Neopets Quickstock Enhancements](Neopets%20Quickstock%20Enhancements.user.js)
 Enhancing the new quickstock page with additional features like top pagination, search helper icons, item images, and compact view.
 
@@ -16,11 +21,6 @@ Neopets game trophy tracker with modern UI, dynamic filtering, game links, and t
 Better SDB Viewer / Visualizer with modern UI, dynamic search, multiple filters, and metadata retrieved from itemDB. Includes prices, additional categories, wearable zoning, and more. 
 
 ![sdbvisualizer](assets/sdbvisualizer.png)
-
-# [Neopets Closet Visualizer](Neopets%20Closet%20Visualizer.user.js)
-Better Closet Viewer / Visualizer with modern UI, dynamic search, multiple filters, and metadata retrieved from itemDB. Includes prices, additional categories, wearable zoning, and more. 
-
-![closetvisualizer](assets/closetvisualizer.png)
 
 # [Neopets Trading Post Helper](Neopets%20Trading%20Post%20Helper.user.js)
 Updated for new Trading Post. Added user action buttons under usernames (neomail, auctions, trades). And search helper icons under items (ssw, tp, auctions, sdb, jn, itemdb).
