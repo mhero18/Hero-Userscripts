@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets Closet Enhancements
-// @version      2.6
+// @version      2.9
 // @description  Adds search helper links and small usability tweaks to the updated Closet page.
 // @author       Hero
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -24,11 +24,12 @@
     'use strict';
 
     const PAINT_BRUSH_FILTER_VALUE = 'hero-paint-brush-clothing';
-    const NEOPOINT_FILTER_VALUE = 'hero-neopoint-items';
+    const NEOPOINTS_FILTER_VALUE = 'hero-neopoints-items';
     const ALL_ITEMS_CATEGORY_VALUE = '';
     const PAINT_BRUSH_DESCRIPTION = 'This item is part of a deluxe paint brush set!';
     const STATE_HERO_FILTER = 'hero_closet_active_filter';
     const STATE_HIDE_PAINT_BRUSH = 'hero_closet_hide_paint_brush';
+    const HELPER_METADATA_WAIT_MS = 600;
 
     const SELECTORS = {
         app: '#closet_app',
@@ -50,12 +51,14 @@
     let observer = null;
     let scheduled = false;
     let internalMutation = false;
-    let activeHeroFilter = [PAINT_BRUSH_FILTER_VALUE, NEOPOINT_FILTER_VALUE].includes(localStorage.getItem(STATE_HERO_FILTER))
+    let activeHeroFilter = [PAINT_BRUSH_FILTER_VALUE, NEOPOINTS_FILTER_VALUE].includes(localStorage.getItem(STATE_HERO_FILTER))
         ? localStorage.getItem(STATE_HERO_FILTER)
         : '';
     let hidePaintBrushItems = localStorage.getItem(STATE_HIDE_PAINT_BRUSH) === '1';
     let paintBrushItemNames = new Set();
     let itemMetaByName = new Map();
+    let hasSeenClosetMetadata = false;
+    let originalFetchForMetadata = null;
 
     function addStyles() {
         if (document.getElementById('hero-closet-enhancements-style')) return;
@@ -203,6 +206,7 @@
     function rememberClosetItems(items) {
         if (!Array.isArray(items)) return;
 
+        hasSeenClosetMetadata = true;
         paintBrushItemNames = new Set(
             items
                 .filter(item => item?.is_paintbrush)
@@ -228,6 +232,32 @@
         } catch {
             return null;
         }
+    }
+
+    function getCurrentClosetPageUrl() {
+        const url = new URL('/np-templates/ajax/closet/get-items.php', location.origin);
+        const activePage = document.querySelector('.closet-pagination-btn.active')?.textContent?.trim() || '1';
+        const perPage = document.querySelector('.closet-dropdown--perpage')?.value || '30';
+        const search = document.querySelector('.closet-search-field')?.value || '';
+        const categoryDropdown = document.querySelector(SELECTORS.categoryDropdown);
+        const selectedHeroFilter = categoryDropdown?.selectedOptions?.[0]?.dataset.heroFilter;
+        const category = selectedHeroFilter ? ALL_ITEMS_CATEGORY_VALUE : (categoryDropdown?.value || '');
+
+        url.searchParams.set('page', activePage);
+        url.searchParams.set('per_page', perPage);
+        url.searchParams.set('search', search);
+        url.searchParams.set('category', category);
+        return url;
+    }
+
+    function fetchCurrentClosetMetadata() {
+        const fetcher = originalFetchForMetadata || window.fetch?.bind(window);
+        if (typeof fetcher !== 'function') return;
+
+        fetcher(getCurrentClosetPageUrl().href)
+            .then(response => response.clone().json())
+            .then(data => rememberClosetItems(data?.items))
+            .catch(() => {});
     }
 
     async function fetchAllClosetItems(baseUrl, perPage, originalFetch) {
@@ -284,15 +314,15 @@
     async function buildHeroClosetResponse(originalUrl, originalFetch) {
         const requestedUrl = getClosetAjaxUrl(originalUrl);
         const shouldShowPaintBrushOnly = activeHeroFilter === PAINT_BRUSH_FILTER_VALUE;
-        const shouldShowNeopointOnly = activeHeroFilter === NEOPOINT_FILTER_VALUE;
+        const shouldShowNeopointsOnly = activeHeroFilter === NEOPOINTS_FILTER_VALUE;
         const shouldHidePaintBrush = hidePaintBrushItems && !shouldShowPaintBrushOnly;
-        if (!requestedUrl || (!shouldShowPaintBrushOnly && !shouldShowNeopointOnly && !shouldHidePaintBrush)) return null;
+        if (!requestedUrl || (!shouldShowPaintBrushOnly && !shouldShowNeopointsOnly && !shouldHidePaintBrush)) return null;
 
         const page = Math.max(parseInt(requestedUrl.searchParams.get('page') || '1', 10) || 1, 1);
         const perPage = Math.max(parseInt(requestedUrl.searchParams.get('per_page') || '30', 10) || 30, 1);
 
         const baseUrl = new URL(requestedUrl.href);
-        if (shouldShowPaintBrushOnly || shouldShowNeopointOnly) {
+        if (shouldShowPaintBrushOnly || shouldShowNeopointsOnly) {
             baseUrl.searchParams.set('category', ALL_ITEMS_CATEGORY_VALUE);
         }
 
@@ -301,7 +331,7 @@
 
         if (shouldShowPaintBrushOnly) {
             filteredItems = filteredItems.filter(item => item?.is_paintbrush);
-        } else if (shouldShowNeopointOnly) {
+        } else if (shouldShowNeopointsOnly) {
             filteredItems = filteredItems.filter(item => item?.is_nc === false);
         }
 
@@ -315,6 +345,7 @@
     function watchClosetAjax() {
         const originalFetch = window.fetch;
         if (typeof originalFetch === 'function') {
+            originalFetchForMetadata = originalFetch.bind(window);
             window.fetch = function (...args) {
                 const requestUrl = String(args[0]?.url || args[0] || '');
 
@@ -357,7 +388,7 @@
         xhrProto.send = function (...args) {
             if (
                 typeof originalFetch === 'function' &&
-                (activeHeroFilter === PAINT_BRUSH_FILTER_VALUE || activeHeroFilter === NEOPOINT_FILTER_VALUE || hidePaintBrushItems) &&
+                (activeHeroFilter === PAINT_BRUSH_FILTER_VALUE || activeHeroFilter === NEOPOINTS_FILTER_VALUE || hidePaintBrushItems) &&
                 getClosetAjaxUrl(this.__heroClosetRequestUrl)
             ) {
                 buildHeroClosetResponse(this.__heroClosetRequestUrl, originalFetch)
@@ -513,20 +544,22 @@
         const dropdown = document.querySelector(SELECTORS.categoryDropdown);
         if (!dropdown) return;
 
-        if (!dropdown.querySelector(`option[data-hero-filter="${PAINT_BRUSH_FILTER_VALUE}"]`)) {
+        let paintBrushOption = dropdown.querySelector(`option[data-hero-filter="${PAINT_BRUSH_FILTER_VALUE}"]`);
+        if (!paintBrushOption) {
             const option = document.createElement('option');
             option.value = PAINT_BRUSH_FILTER_VALUE;
             option.dataset.heroFilter = PAINT_BRUSH_FILTER_VALUE;
             option.textContent = 'Paint Brush Clothing';
             dropdown.appendChild(option);
+            paintBrushOption = option;
         }
 
-        if (!dropdown.querySelector(`option[data-hero-filter="${NEOPOINT_FILTER_VALUE}"]`)) {
+        if (!dropdown.querySelector(`option[data-hero-filter="${NEOPOINTS_FILTER_VALUE}"]`)) {
             const option = document.createElement('option');
-            option.value = NEOPOINT_FILTER_VALUE;
-            option.dataset.heroFilter = NEOPOINT_FILTER_VALUE;
-            option.textContent = 'Neopoint';
-            dropdown.appendChild(option);
+            option.value = NEOPOINTS_FILTER_VALUE;
+            option.dataset.heroFilter = NEOPOINTS_FILTER_VALUE;
+            option.textContent = 'Neopoints';
+            paintBrushOption?.insertAdjacentElement('beforebegin', option) || dropdown.appendChild(option);
         }
 
         if (activeHeroFilter) {
@@ -595,7 +628,7 @@
         if (!dropdown) return;
 
         const selectedHeroFilter = dropdown.selectedOptions[0]?.dataset.heroFilter || '';
-        if ([PAINT_BRUSH_FILTER_VALUE, NEOPOINT_FILTER_VALUE].includes(selectedHeroFilter)) {
+        if ([PAINT_BRUSH_FILTER_VALUE, NEOPOINTS_FILTER_VALUE].includes(selectedHeroFilter)) {
             activeHeroFilter = selectedHeroFilter;
             localStorage.setItem(STATE_HERO_FILTER, selectedHeroFilter);
             setTimeout(() => scheduleEnhance(), 0);
@@ -719,7 +752,7 @@
                 const option = dropdown?.querySelector(`option[data-hero-filter="${activeHeroFilter}"]`);
                 if (dropdown && option) dropdown.value = activeHeroFilter;
             }
-            addSearchHelpers();
+            if (hasSeenClosetMetadata) addSearchHelpers();
             syncTopPagination();
             applyHeroFilter();
         });
@@ -751,6 +784,13 @@
         watchHidePaintBrushToggle();
         observeCloset();
         scheduleEnhance();
+        fetchCurrentClosetMetadata();
+        setTimeout(() => {
+            if (!hasSeenClosetMetadata) {
+                hasSeenClosetMetadata = true;
+                scheduleEnhance();
+            }
+        }, HELPER_METADATA_WAIT_MS);
     }
 
     if (document.readyState === 'loading') {
