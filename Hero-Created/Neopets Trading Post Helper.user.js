@@ -190,7 +190,7 @@
             jnLink.target = '_blank';
             jnLink.title = 'Search JellyNeo';
             const jnImg = document.createElement('img');
-            jnImg.src = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT2dQNzqsjgXfIRB9FaJwx4yMVjEAskB_2jxr_H8wzOX0EqADa46TRv&s';
+            jnImg.src = 'https://images.neopets.com/items/toy_plushie_negg_fish.gif';
             jnImg.className = 'searchimg';
             jnLink.appendChild(jnImg);
 

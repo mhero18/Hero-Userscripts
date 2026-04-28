@@ -755,7 +755,7 @@
             jnLink.href = `https://items.jellyneo.net/search/?name=${encodeURIComponent(itemName)}&name_type=3`;
             jnLink.target = '_blank';
             jnLink.title = 'JellyNeo';
-            jnLink.innerHTML = '<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT2dQNzqsjgXfIRB9FaJwx4yMVjEAskB_2jxr_H8wzOX0EqADa46TRv&s" class="searchimg">';
+            jnLink.innerHTML = '<img src="https://images.neopets.com/items/toy_plushie_negg_fish.gif" class="searchimg">';
 
             const idbLink = document.createElement('a');
             idbLink.href = `https://itemdb.com.br/item/${encodeURIComponent(itemName)}`;
