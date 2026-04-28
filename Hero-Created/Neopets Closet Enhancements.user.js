@@ -12,10 +12,10 @@
 // ==/UserScript==
 
 // Enhancements:
-// - Added SSW, Trading Post, Auction Genie, SDB, JellyNeo, ItemDB, and DTI links below closet item names
-// - Added pagination above the item list as well
-// - Hide the item category label
-// - Only clicking on item image now brings up the remove item pop-up overlay instead of clicking anywhere
+// - Added SSW, Trading Post, Auction Genie, SDB, JellyNeo, ItemDB, and DTI links based on PB, NP, and NC items
+// - Added top pagination
+// - Hide the item category label because it's useless imo
+// - Pop-Up was annoying whenever you tried to copy paste item name so now only image click opens it
 // - Added Paint Brush Clothing filter to the category dropdown
 // - Added Neopoints item category
 // - Added a persisted Hide PB Clothing toggle

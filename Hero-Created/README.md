@@ -3,7 +3,7 @@
 Just some scripts I made to help make life easier on Neopets, hope you find some use too!  Always ensure that your use of userscripts complies with Neopets' rules. Happy to hear any suggestions or improvements for new or existing scripts! :)
 
 # [Neopets Closet Enhancements](Neopets%20Closet%20Enhancements.user.js)
-New Closet page! Added the Search Helper icons plus extra DTI icon, added top pagination, narrowed down popup click trigger, and removed category label.
+New Closet page! Added the Search Helper icons plus extra DTI icon, added top pagination, narrowed down popup click trigger, removed category label, added PB Clothing and NP items filter/categories.
 
 ![closetvisualizer](assets/closetenhance.png)
 
