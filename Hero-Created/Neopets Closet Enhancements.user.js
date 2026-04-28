@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets Closet Enhancements
-// @version      2.5
+// @version      2.6
 // @description  Adds search helper links and small usability tweaks to the updated Closet page.
 // @author       Hero
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -12,17 +12,19 @@
 // ==/UserScript==
 
 // Enhancements:
-// - Add SSW, Trading Post, Auction Genie, SDB, JellyNeo, ItemDB, and DTI links below closet item names
-// - Add pagination above the item list as well
+// - Added SSW, Trading Post, Auction Genie, SDB, JellyNeo, ItemDB, and DTI links below closet item names
+// - Added pagination above the item list as well
 // - Hide the item category label
 // - Only clicking on item image now brings up the remove item pop-up overlay instead of clicking anywhere
-// - Add a Paint Brush Clothing filter to the category dropdown
-// - Add a persisted Hide PB Clothing toggle
+// - Added Paint Brush Clothing filter to the category dropdown
+// - Added Neopoints item category
+// - Added a persisted Hide PB Clothing toggle
 
 (function () {
     'use strict';
 
     const PAINT_BRUSH_FILTER_VALUE = 'hero-paint-brush-clothing';
+    const NEOPOINT_FILTER_VALUE = 'hero-neopoint-items';
     const ALL_ITEMS_CATEGORY_VALUE = '';
     const PAINT_BRUSH_DESCRIPTION = 'This item is part of a deluxe paint brush set!';
     const STATE_HERO_FILTER = 'hero_closet_active_filter';
@@ -48,11 +50,12 @@
     let observer = null;
     let scheduled = false;
     let internalMutation = false;
-    let activeHeroFilter = localStorage.getItem(STATE_HERO_FILTER) === PAINT_BRUSH_FILTER_VALUE
-        ? PAINT_BRUSH_FILTER_VALUE
+    let activeHeroFilter = [PAINT_BRUSH_FILTER_VALUE, NEOPOINT_FILTER_VALUE].includes(localStorage.getItem(STATE_HERO_FILTER))
+        ? localStorage.getItem(STATE_HERO_FILTER)
         : '';
     let hidePaintBrushItems = localStorage.getItem(STATE_HIDE_PAINT_BRUSH) === '1';
     let paintBrushItemNames = new Set();
+    let itemMetaByName = new Map();
 
     function addStyles() {
         if (document.getElementById('hero-closet-enhancements-style')) return;
@@ -197,7 +200,7 @@
         return (name || '').replace(/\s+/g, ' ').trim().toLowerCase();
     }
 
-    function rememberPaintBrushItems(items) {
+    function rememberClosetItems(items) {
         if (!Array.isArray(items)) return;
 
         paintBrushItemNames = new Set(
@@ -207,9 +210,13 @@
                 .filter(Boolean)
         );
 
-        if (activeHeroFilter === PAINT_BRUSH_FILTER_VALUE) {
-            scheduleEnhance();
-        }
+        itemMetaByName = new Map(
+            items
+                .filter(item => item?.obj_name)
+                .map(item => [normalizeItemName(item.obj_name), item])
+        );
+
+        scheduleEnhance();
     }
 
     function getClosetAjaxUrl(url) {
@@ -265,7 +272,7 @@
             total_pages: Math.max(Math.ceil(filteredItems.length / perPage), 1)
         };
 
-        rememberPaintBrushItems(filteredItems);
+        rememberClosetItems(pageItems);
 
         return new Response(JSON.stringify(filteredData), {
             status: sourceResponse.status,
@@ -277,21 +284,30 @@
     async function buildHeroClosetResponse(originalUrl, originalFetch) {
         const requestedUrl = getClosetAjaxUrl(originalUrl);
         const shouldShowPaintBrushOnly = activeHeroFilter === PAINT_BRUSH_FILTER_VALUE;
+        const shouldShowNeopointOnly = activeHeroFilter === NEOPOINT_FILTER_VALUE;
         const shouldHidePaintBrush = hidePaintBrushItems && !shouldShowPaintBrushOnly;
-        if (!requestedUrl || (!shouldShowPaintBrushOnly && !shouldHidePaintBrush)) return null;
+        if (!requestedUrl || (!shouldShowPaintBrushOnly && !shouldShowNeopointOnly && !shouldHidePaintBrush)) return null;
 
         const page = Math.max(parseInt(requestedUrl.searchParams.get('page') || '1', 10) || 1, 1);
         const perPage = Math.max(parseInt(requestedUrl.searchParams.get('per_page') || '30', 10) || 30, 1);
 
         const baseUrl = new URL(requestedUrl.href);
-        if (shouldShowPaintBrushOnly) {
+        if (shouldShowPaintBrushOnly || shouldShowNeopointOnly) {
             baseUrl.searchParams.set('category', ALL_ITEMS_CATEGORY_VALUE);
         }
 
         const { response, data, allItems } = await fetchAllClosetItems(baseUrl, perPage, originalFetch);
-        const filteredItems = shouldShowPaintBrushOnly
-            ? allItems.filter(item => item?.is_paintbrush)
-            : allItems.filter(item => !item?.is_paintbrush);
+        let filteredItems = allItems;
+
+        if (shouldShowPaintBrushOnly) {
+            filteredItems = filteredItems.filter(item => item?.is_paintbrush);
+        } else if (shouldShowNeopointOnly) {
+            filteredItems = filteredItems.filter(item => item?.is_nc === false);
+        }
+
+        if (shouldHidePaintBrush) {
+            filteredItems = filteredItems.filter(item => !item?.is_paintbrush);
+        }
 
         return buildFilteredResponse(response, data, filteredItems, page, perPage);
     }
@@ -307,7 +323,7 @@
                     .then(response => {
                     if (requestUrl.includes('/np-templates/ajax/closet/get-items.php')) {
                         response.clone().json()
-                            .then(data => rememberPaintBrushItems(data?.items))
+                            .then(data => rememberClosetItems(data?.items))
                             .catch(() => {});
                     }
 
@@ -328,7 +344,7 @@
             if (requestUrl.includes('/np-templates/ajax/closet/get-items.php')) {
                 this.addEventListener('load', () => {
                     try {
-                        rememberPaintBrushItems(JSON.parse(this.responseText)?.items);
+                        rememberClosetItems(JSON.parse(this.responseText)?.items);
                     } catch {
                         // Ignore non-JSON responses.
                     }
@@ -341,7 +357,7 @@
         xhrProto.send = function (...args) {
             if (
                 typeof originalFetch === 'function' &&
-                (activeHeroFilter === PAINT_BRUSH_FILTER_VALUE || hidePaintBrushItems) &&
+                (activeHeroFilter === PAINT_BRUSH_FILTER_VALUE || activeHeroFilter === NEOPOINT_FILTER_VALUE || hidePaintBrushItems) &&
                 getClosetAjaxUrl(this.__heroClosetRequestUrl)
             ) {
                 buildHeroClosetResponse(this.__heroClosetRequestUrl, originalFetch)
@@ -417,46 +433,61 @@
         return link;
     }
 
+    function getSearchHelperType(itemName) {
+        const itemMeta = itemMetaByName.get(normalizeItemName(itemName));
+        if (itemMeta?.is_paintbrush) return 'paintbrush';
+        if (itemMeta?.is_nc === true) return 'nc';
+        return 'default';
+    }
+
     function buildSearchHelper(itemName) {
         const helper = document.createElement('p');
         helper.className = 'search-helper closet-search-helper';
+        helper.dataset.itemName = itemName;
+        helper.dataset.helperType = getSearchHelperType(itemName);
         helper.addEventListener('click', event => {
             event.stopPropagation();
         });
 
-        helper.append(
-            makeSswLink(itemName),
-            makeSearchLink(
-                'Trading Post',
-                `https://www.neopets.com/island/tradingpost.phtml?type=browse&criteria=item_phrase&search_string=${encodeURIComponent(itemName)}&sort=newest`,
-                'https://images.neopets.com/themes/h5/basic/images/tradingpost-icon.png'
-            ),
-            makeSearchLink(
-                'Auction Genie',
-                `/genie.phtml?type=process_genie&criteria=exact&auctiongenie=${encodeURIComponent(itemName)}`,
-                'https://images.neopets.com/themes/h5/basic/images/auction-icon.png'
-            ),
-            makeSearchLink(
-                'Safety Deposit Box',
-                `https://www.neopets.com/safetydeposit.phtml?obj_name=${encodeURIComponent(itemName)}&category=0`,
-                'https://images.neopets.com/images/emptydepositbox.gif'
-            ),
-            makeSearchLink(
-                'JellyNeo',
-                `https://items.jellyneo.net/search/?name=${encodeURIComponent(itemName)}&name_type=3`,
-                'https://images.neopets.com/items/toy_plushie_negg_fish.gif'
-            ),
-            makeSearchLink(
-                'ItemDB',
-                `https://itemdb.com.br/item/${encodeURIComponent(itemName)}`,
-                'https://images.neopets.com/themes/h5/basic/images/v3/quickstock-icon.svg'
-            ),
-            makeSearchLink(
-                'View in Dress to Impress',
-                `https://impress.openneo.net/items?q=${encodeURIComponent(itemName)}`,
-                'https://images.neopets.com/items/clo_shoyru_dappermon.gif'
-            )
+        const ssw = makeSswLink(itemName);
+        const tp = makeSearchLink(
+            'Trading Post',
+            `https://www.neopets.com/island/tradingpost.phtml?type=browse&criteria=item_phrase&search_string=${encodeURIComponent(itemName)}&sort=newest`,
+            'https://images.neopets.com/themes/h5/basic/images/tradingpost-icon.png'
         );
+        const auction = makeSearchLink(
+            'Auction Genie',
+            `/genie.phtml?type=process_genie&criteria=exact&auctiongenie=${encodeURIComponent(itemName)}`,
+            'https://images.neopets.com/themes/h5/basic/images/auction-icon.png'
+        );
+        const sdb = makeSearchLink(
+            'Safety Deposit Box',
+            `https://www.neopets.com/safetydeposit.phtml?obj_name=${encodeURIComponent(itemName)}&category=0`,
+            'https://images.neopets.com/images/emptydepositbox.gif'
+        );
+        const jellyneo = makeSearchLink(
+            'JellyNeo',
+            `https://items.jellyneo.net/search/?name=${encodeURIComponent(itemName)}&name_type=3`,
+            'https://images.neopets.com/items/toy_plushie_negg_fish.gif'
+        );
+        const itemdb = makeSearchLink(
+            'ItemDB',
+            `https://itemdb.com.br/item/${encodeURIComponent(itemName)}`,
+            'https://images.neopets.com/themes/h5/basic/images/v3/quickstock-icon.svg'
+        );
+        const dti = makeSearchLink(
+            'View in Dress to Impress',
+            `https://impress.openneo.net/items?q=${encodeURIComponent(itemName)}`,
+            'https://images.neopets.com/items/clo_shoyru_dappermon.gif'
+        );
+
+        if (helper.dataset.helperType === 'paintbrush') {
+            helper.append(jellyneo, itemdb, dti);
+        } else if (helper.dataset.helperType === 'nc') {
+            helper.append(sdb, jellyneo, itemdb, dti);
+        } else {
+            helper.append(ssw, tp, auction, sdb, jellyneo, itemdb, dti);
+        }
 
         return helper;
     }
@@ -464,10 +495,15 @@
     function addSearchHelpers() {
         document.querySelectorAll(SELECTORS.item).forEach(itemEl => {
             const nameEl = itemEl.querySelector(SELECTORS.itemName);
-            if (!nameEl || itemEl.querySelector(SELECTORS.helper)) return;
+            if (!nameEl) return;
 
             const itemName = getItemName(nameEl, itemEl);
             if (!itemName) return;
+
+            const existingHelper = itemEl.querySelector(SELECTORS.helper);
+            const helperType = getSearchHelperType(itemName);
+            if (existingHelper?.dataset.itemName === itemName && existingHelper?.dataset.helperType === helperType) return;
+            existingHelper?.remove();
 
             nameEl.insertAdjacentElement('afterend', buildSearchHelper(itemName));
         });
@@ -475,16 +511,26 @@
 
     function addCustomCategoryOption() {
         const dropdown = document.querySelector(SELECTORS.categoryDropdown);
-        if (!dropdown || dropdown.querySelector(`option[data-hero-filter="${PAINT_BRUSH_FILTER_VALUE}"]`)) return;
+        if (!dropdown) return;
 
-        const option = document.createElement('option');
-        option.value = PAINT_BRUSH_FILTER_VALUE;
-        option.dataset.heroFilter = PAINT_BRUSH_FILTER_VALUE;
-        option.textContent = 'Paint Brush Clothing';
-        dropdown.appendChild(option);
+        if (!dropdown.querySelector(`option[data-hero-filter="${PAINT_BRUSH_FILTER_VALUE}"]`)) {
+            const option = document.createElement('option');
+            option.value = PAINT_BRUSH_FILTER_VALUE;
+            option.dataset.heroFilter = PAINT_BRUSH_FILTER_VALUE;
+            option.textContent = 'Paint Brush Clothing';
+            dropdown.appendChild(option);
+        }
 
-        if (activeHeroFilter === PAINT_BRUSH_FILTER_VALUE) {
-            dropdown.value = PAINT_BRUSH_FILTER_VALUE;
+        if (!dropdown.querySelector(`option[data-hero-filter="${NEOPOINT_FILTER_VALUE}"]`)) {
+            const option = document.createElement('option');
+            option.value = NEOPOINT_FILTER_VALUE;
+            option.dataset.heroFilter = NEOPOINT_FILTER_VALUE;
+            option.textContent = 'Neopoint';
+            dropdown.appendChild(option);
+        }
+
+        if (activeHeroFilter) {
+            dropdown.value = activeHeroFilter;
         }
     }
 
@@ -548,9 +594,10 @@
         const dropdown = event.target.closest(SELECTORS.categoryDropdown);
         if (!dropdown) return;
 
-        if (dropdown.selectedOptions[0]?.dataset.heroFilter === PAINT_BRUSH_FILTER_VALUE) {
-            activeHeroFilter = PAINT_BRUSH_FILTER_VALUE;
-            localStorage.setItem(STATE_HERO_FILTER, PAINT_BRUSH_FILTER_VALUE);
+        const selectedHeroFilter = dropdown.selectedOptions[0]?.dataset.heroFilter || '';
+        if ([PAINT_BRUSH_FILTER_VALUE, NEOPOINT_FILTER_VALUE].includes(selectedHeroFilter)) {
+            activeHeroFilter = selectedHeroFilter;
+            localStorage.setItem(STATE_HERO_FILTER, selectedHeroFilter);
             setTimeout(() => scheduleEnhance(), 0);
             return;
         }
@@ -667,10 +714,10 @@
             addHidePaintBrushToggle();
             const hideToggle = document.querySelector(SELECTORS.hidePaintBrushToggle);
             if (hideToggle) hideToggle.checked = hidePaintBrushItems;
-            if (activeHeroFilter === PAINT_BRUSH_FILTER_VALUE) {
+            if (activeHeroFilter) {
                 const dropdown = document.querySelector(SELECTORS.categoryDropdown);
-                const option = dropdown?.querySelector(`option[data-hero-filter="${PAINT_BRUSH_FILTER_VALUE}"]`);
-                if (dropdown && option) dropdown.value = PAINT_BRUSH_FILTER_VALUE;
+                const option = dropdown?.querySelector(`option[data-hero-filter="${activeHeroFilter}"]`);
+                if (dropdown && option) dropdown.value = activeHeroFilter;
             }
             addSearchHelpers();
             syncTopPagination();
