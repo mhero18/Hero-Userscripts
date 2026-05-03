@@ -76,12 +76,12 @@ Fix the annoying Alerts/Notifications bubble count that is wrong. Makes it so th
 Adds a helper table on training school status pages (Swashbuckling Academy, Mystery Island Training, Secret Ninja School). Helps make training multiple pets easier.
 - Table showing all eligible pets, stats, and training status (Training, Need to Pay, Need to Complete)
  - Bulk select stats and train multiple pets at once
- - Buttons to: Train Selected, Complete Courses, Cancel Unpaid, Pay All Unpaid, Check All, Reset selected
+ - Buttons to: Train Selected, Complete Courses, Get All Items, Cancel Unpaid, Pay All Unpaid, Check All, Reset selected
+ - SDB PIN field
  - Shows progress bar and feedback during actions
  - Displays stat increases after Completion
 
 ![trainingschoolhelper1](assets/trainingschoolhelper1.png)
-![trainingschoolhelper2](assets/trainingschoolhelper2.png)
 
 
 

@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets Training Schools Helper
-// @version      1.7
+// @version      1.9
 // @author       Hero
 // @description  Improves Neopets training schools: train, complete, cancel, and pay for courses with bulk actions.
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -28,13 +28,19 @@
   --------------------------------
 */
 
-const SDB_PIN = "0"; // Set your SDB PIN here, or "0" if none
-
-
 (function() {
     'use strict';
 
     function log(msg) { console.log(`[TrainingHelper] ${msg}`); }
+
+    function normalizeSdbPin(pin) {
+        return (pin || "").replace(/\D/g, "").slice(0, 4);
+    }
+
+    function getSdbPin() {
+        const pinInput = document.getElementById("training-sdb-pin");
+        return normalizeSdbPin(pinInput?.value) || "0";
+    }
 
     const style = document.createElement("style");
     style.textContent = `
@@ -63,6 +69,15 @@ const SDB_PIN = "0"; // Set your SDB PIN here, or "0" if none
     .training-actions .btn-danger:hover { background: #c82333; }
     .training-actions .btn-success { background: #28a745; }
     .training-actions .btn-success:hover { background: #218838; }
+    .training-pin-setting {
+      display: inline-flex; align-items: center; gap: 6px; padding: 8px 10px;
+      border: 1px solid #bbb; border-radius: 6px; background: #fff;
+      color: #333; font-family: Arial, sans-serif; font-size: 13px;
+    }
+    .training-pin-setting input {
+      width: 52px; padding: 5px 6px; border: 1px solid #aaa; border-radius: 4px;
+      font-size: 13px; text-align: center;
+    }
 
     #training-results {
       margin-top: 12px; text-align: center; font-family: Arial, sans-serif;
@@ -91,8 +106,28 @@ const SDB_PIN = "0"; // Set your SDB PIN here, or "0" if none
     log(`Using process URL: ${processUrl}`);
 
     // Helper for random delay
-    function randomDelay(min=1000, max=2000) {
+    function randomDelay(min=350, max=800) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function refreshButtonHTML() {
+        return `
+  <div style="margin-top:10px;">
+    <button class="btn-refresh-page" style="
+      padding:8px 14px; border:none; border-radius:6px;
+      background:#5c9ded; color:#fff; cursor:pointer; font-size:14px;
+      transition: all 0.2s; box-shadow:0 2px 4px rgba(0,0,0,0.1);
+    ">🔄 Refresh Page</button>
+  </div>
+`;
+    }
+
+    function bindRefreshButtons() {
+        document.querySelectorAll(".btn-refresh-page").forEach(button => {
+            button.addEventListener("click", () => {
+                location.reload();
+            });
+        });
     }
 
     // Parse pets
@@ -208,7 +243,11 @@ const SDB_PIN = "0"; // Set your SDB PIN here, or "0" if none
       <button id="btn-get-items">📦 Get All Items</button>
       <button id="btn-cancel-all" class="btn-danger">❌ Cancel Unpaid</button>
       <button id="btn-pay-all" class="btn-primary">💰 Pay All Unpaid</button>
-      <button id="btn-reset">🔄 Reset</button>
+      <button id="btn-reset">🔄 Reset Selection</button>
+      <label class="training-pin-setting" title="Leave blank if you do not use a PIN.">
+        SDB PIN
+        <input id="training-sdb-pin" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="0">
+      </label>
     </div>
     <div id="training-results"></div>
   `;
@@ -217,6 +256,10 @@ const SDB_PIN = "0"; // Set your SDB PIN here, or "0" if none
     if (statusHeader) statusHeader.parentElement.insertBefore(tableWrapper, statusHeader);
 
     const resultsContainer = document.getElementById("training-results");
+    const sdbPinInput = document.getElementById("training-sdb-pin");
+    sdbPinInput.addEventListener("input", () => {
+        sdbPinInput.value = normalizeSdbPin(sdbPinInput.value);
+    });
 
     function updateProgress(current, total, message) {
         resultsContainer.innerHTML = `
@@ -268,7 +311,7 @@ const SDB_PIN = "0"; // Set your SDB PIN here, or "0" if none
                 log(errorMatch ? `❌ ${p.name}: ${errorMatch[1]}` : `✅ ${p.name} training started`);
             } catch(err){ log(`❌ ${p.name} network error`); }
 
-            await new Promise(r=>setTimeout(r, randomDelay(800,1500)));
+            await new Promise(r=>setTimeout(r, randomDelay()));
         }
 
         updateProgress(selectedPets.length, selectedPets.length, "Training complete! Refreshing page...");
@@ -297,7 +340,7 @@ const SDB_PIN = "0"; // Set your SDB PIN here, or "0" if none
                 await fetch(processUrl,{method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:`pet_name=${encodeURIComponent(petName)}&type=cancel`});
                 log(`✅ Cancelled course for ${petName}`);
             }catch(err){ log(`❌ Error cancelling ${petName}`); }
-            await new Promise(r=>setTimeout(r, randomDelay(800,1500)));
+            await new Promise(r=>setTimeout(r, randomDelay()));
         }
 
         updateProgress(cancellablePets.length, cancellablePets.length, "Cancellation complete! Refreshing page...");
@@ -332,23 +375,13 @@ const SDB_PIN = "0"; // Set your SDB PIN here, or "0" if none
                 resultsHTML += errorMatch ? `<div>${p.name}: <span style="color:red">❌ ${errorMatch[1]}</span></div>` :
                 `<div>${p.name}: <span style="color:green">✅ +${bonus} ${stat}${bonus>1?' (SUPER BONUS!)':''}</span></div>`;
             }catch(err){ resultsHTML+=`<div>${p.name}: <span style="color:red">❌ Network Error</span></div>`;}
-            await new Promise(r=>setTimeout(r, randomDelay(800,1500)));
+            await new Promise(r=>setTimeout(r, randomDelay()));
         }
 
-        resultsContainer.innerHTML = resultsHTML + `
-  <div style="margin-top:10px;">
-    <button id="btn-refresh" style="
-      padding:8px 14px; border:none; border-radius:6px;
-      background:#5c9ded; color:#fff; cursor:pointer; font-size:14px;
-      transition: all 0.2s; box-shadow:0 2px 4px rgba(0,0,0,0.1);
-    ">🔄 Refresh Page</button>
-  </div>
-`;
+        resultsContainer.innerHTML = resultsHTML + refreshButtonHTML();
 
         // Add refresh button
-        document.getElementById("btn-refresh").addEventListener("click", () => {
-            location.reload();
-        });
+        bindRefreshButtons();
         button.disabled=false;
     });
 
@@ -448,8 +481,7 @@ const SDB_PIN = "0"; // Set your SDB PIN here, or "0" if none
                 log(`❌ Error paying course for ${entry.petName}: ${err}`);
             }
 
-            // Random delay 1–3 seconds
-            await new Promise(r => setTimeout(r, 1000 + Math.random() * 2000));
+            await new Promise(r => setTimeout(r, randomDelay()));
         }
 
         updateProgress(payForms.length, payForms.length, "All payments completed! Refreshing page...");
@@ -483,13 +515,13 @@ const SDB_PIN = "0"; // Set your SDB PIN here, or "0" if none
             postData[`back_to_inv[${item}]`] = itemCount[item];
             postData["obj_name"] = array.find(name => itemID[name] == item);
         }
-        postData["pin"] = SDB_PIN.toString();
+        postData["pin"] = getSdbPin();
         postData["category"] = "0";
         postData["offset"] = "0";
 
         return new Promise(async resolve => {
             // Random delay before sending request
-            await new Promise(r => setTimeout(r, randomDelay(800, 1500)));
+            await new Promise(r => setTimeout(r, randomDelay()));
 
             $.ajax({
                 type: "POST",
@@ -524,7 +556,8 @@ const SDB_PIN = "0"; // Set your SDB PIN here, or "0" if none
             .join("<br>");
             resultsContainer.innerHTML = `<b>SDB Retrieval:</b> ${status}<br><br>Items retrieved:<br>${itemList}`;
         } else {
-            resultsContainer.innerHTML = `<b>${status}</b>`;
+            resultsContainer.innerHTML = `<b>${status}</b>${refreshButtonHTML()}`;
+            bindRefreshButtons();
         }
     });
 
