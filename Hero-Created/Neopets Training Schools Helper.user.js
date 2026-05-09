@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets Training Schools Helper
-// @version      2.8
+// @version      3.2
 // @author       Hero
 // @description  Improves Neopets training schools: train, complete, cancel, and pay for courses with bulk actions.
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -58,6 +58,14 @@
     .training-table { margin: 10px auto; width: 70%; border-collapse: collapse; font-family: Arial, sans-serif; color: #000000; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     .training-table th, .training-table td { border: 1px solid #bbb; padding: 8px; text-align: center; }
     .training-table th { background: #4a8cd4; color: white; font-weight: bold; }
+    .training-table th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+    .training-table th.sortable::after {
+      content: "↕"; display: inline-block; width: 12px; margin-left: 4px;
+      font-size: 11px; line-height: 1; opacity: 0.75; text-align: center;
+      vertical-align: 1px;
+    }
+    .training-table th.sort-asc::after { content: "↑"; }
+    .training-table th.sort-desc::after { content: "↓"; }
     .training-table tr:nth-child(even) { background: #f8f9fa; }
     .training-table tr:nth-child(odd) { background: #fff; }
     .training-table .check-all { background: #e3f2fd; font-weight: bold; }
@@ -101,7 +109,7 @@
     }
 
     #training-results {
-      margin-top: 12px; text-align: center; font-family: Arial, sans-serif;
+      margin-top: 12px; text-align: center; font-family: Arial, sans-serif; color: #000000;
       font-size: 14px; padding: 10px; border-radius: 6px; background: #f8f9fa;
     }
     .progress-bar {
@@ -155,8 +163,13 @@
         const issueHTML = issues.length
             ? `<div style="margin-top:10px; color:#c00;"><strong>Issues:</strong><br>${issues.map(issue => `<div>${escapeHtml(issue)}</div>`).join("")}</div>`
             : "";
-        resultsContainer.innerHTML = `<div>${escapeHtml(message)}</div>${issueHTML}${refreshButtonHTML()}`;
-        bindRefreshButtons();
+        if (issues.length) {
+            resultsContainer.innerHTML = `<div>${escapeHtml(message)}</div>${issueHTML}${refreshButtonHTML()}`;
+            bindRefreshButtons();
+        } else {
+            resultsContainer.innerHTML = `<div>${escapeHtml(message)} Refreshing page...</div>`;
+            setTimeout(() => location.reload(), 2000);
+        }
     }
 
     // Parse pets
@@ -238,7 +251,7 @@
         }
 
         const ruleClass = canTrain ? "stat-trainable" : "stat-not-trainable";
-        return `<td class="stat-rule ${ruleClass}" title="${escapeHtml(reason)}">${radioInput}<br><span class="stat-value">${value}</span></td>`;
+        return `<td class="stat-rule ${ruleClass}" data-sort-value="${value}" title="${escapeHtml(reason)}">${radioInput}<br><span class="stat-value">${value}</span></td>`;
     }
 
     const tbodyRows = pets.map(p => {
@@ -255,12 +268,13 @@
 
         return `
       <tr class="${rowClass}">
-        <td><strong>${p.name}</strong><br>${statusText}</td>
+        <td data-sort-value="${escapeHtml(p.name.toLowerCase())}"><strong>${p.name}</strong><br>${statusText}</td>
         ${statRuleCell(p, "Level", p.Lvl, radioInputs[0])}
         ${statRuleCell(p, "Strength", p.Str, radioInputs[1])}
         ${statRuleCell(p, "Defence", p.Def, radioInputs[2])}
         ${statRuleCell(p, "Agility", p.Mov, radioInputs[3])}
         ${statRuleCell(p, "Endurance", p.Hp, radioInputs[4])}
+        <td data-sort-value="${p.Hp + p.Str + p.Def}"><span class="stat-value">${p.Hp + p.Str + p.Def}</span></td>
       </tr>
     `;
     }).join("");
@@ -273,13 +287,14 @@
       <td><input type="radio" name="checkall" value="Defence"></td>
       <td><input type="radio" name="checkall" value="Agility"></td>
       <td><input type="radio" name="checkall" value="Endurance"></td>
+      <td></td>
     </tr>
   `;
 
     tableWrapper.innerHTML = `
     <table class="training-table">
       <thead>
-        <tr><th>Pet</th><th>Lvl</th><th>Str</th><th>Def</th><th>Mov</th><th>HP</th></tr>
+        <tr><th class="sortable" data-sort-type="text">Pet</th><th class="sortable" data-sort-type="number">Lvl</th><th class="sortable" data-sort-type="number">Str</th><th class="sortable" data-sort-type="number">Def</th><th class="sortable" data-sort-type="number">Mov</th><th class="sortable" data-sort-type="number">HP</th><th class="sortable" data-sort-type="number">HSD</th></tr>
       </thead>
       <tbody>
         ${tbodyRows}
@@ -306,6 +321,42 @@
     if (statusHeader) statusHeader.parentElement.insertBefore(tableWrapper, statusHeader);
 
     const resultsContainer = document.getElementById("training-results");
+    let currentSort = { column: null, direction: "asc" };
+    function sortTrainingTable(columnIndex, sortType) {
+        const tbody = tableWrapper.querySelector(".training-table tbody");
+        const petRows = [...tbody.querySelectorAll("tr.pet-row")];
+        const checkAllRow = tbody.querySelector("tr.check-all");
+        const direction = currentSort.column === columnIndex && currentSort.direction === "asc" ? "desc" : "asc";
+        const directionMultiplier = direction === "asc" ? 1 : -1;
+
+        petRows.sort((a, b) => {
+            const aValue = a.children[columnIndex]?.dataset.sortValue || "";
+            const bValue = b.children[columnIndex]?.dataset.sortValue || "";
+
+            if (sortType === "number") {
+                return ((Number(aValue) || 0) - (Number(bValue) || 0)) * directionMultiplier;
+            }
+
+            return aValue.localeCompare(bValue, undefined, { sensitivity: "base" }) * directionMultiplier;
+        });
+
+        petRows.forEach(row => tbody.appendChild(row));
+        if (checkAllRow) tbody.appendChild(checkAllRow);
+
+        tableWrapper.querySelectorAll(".training-table th.sortable").forEach(th => {
+            th.classList.remove("sort-asc", "sort-desc");
+        });
+        const activeHeader = tableWrapper.querySelectorAll(".training-table th.sortable")[columnIndex];
+        activeHeader?.classList.add(direction === "asc" ? "sort-asc" : "sort-desc");
+        currentSort = { column: columnIndex, direction };
+    }
+
+    tableWrapper.querySelectorAll(".training-table th.sortable").forEach((header, index) => {
+        header.addEventListener("click", () => {
+            sortTrainingTable(index, header.dataset.sortType);
+        });
+    });
+
     const sdbPinInput = document.getElementById("training-sdb-pin");
     sdbPinInput.addEventListener("input", () => {
         sdbPinInput.value = normalizeSdbPin(sdbPinInput.value);
