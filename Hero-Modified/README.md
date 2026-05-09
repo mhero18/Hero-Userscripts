@@ -6,6 +6,14 @@ Just adding here as backup and for reference.
 Some of them have small modifications I made.
 
 
+# Neopets: Better Volunteering UI
+
+Originally created by rawbeee, updates from Hero! THANK YOU, THIS IS LIFE SAVER.
+
+ - Added a Select All button that will select the first available pet for each slot
+ - Added a Submit All button that will submit the Volunteer Requests one by one
+
+
 # [Neopets Search Helper vHero](Neopets%20-%20Search%20Helper%20vHero.user.js)
 
 Originally created by diceroll123, modified by itemDB, and updates from Hero!

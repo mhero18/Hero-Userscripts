@@ -1,18 +1,28 @@
 // ==UserScript==
 // @name         Neopets: Better Volunteering UI
-// @version      1.1
+// @version      2.0.1
 // @description  Brings the select pet UI to each individual shift on the Neopets Hospital volunteering page.
-// @author       rawbeee
+// @author       rawbeee & Hero
 // @match        *://*.neopets.com/hospital/volunteer.phtml*
 // @match        *://*.neopets.com/quickref.phtml*
 // @icon         https://images.neopets.com/themes/h5/altadorcup/images/settings-icon.png
 // @grant        none
 // ==/UserScript==
 
-(function() {
+/* HERO MODIFICATIONS
+  - Added a Select All button that will select the first available pet for each slot
+  - Added a Submit All button that will submit the Volunteer Requests one by one
+*/
+
+(function () {
     'use strict';
 
     let initialized = false;
+    const SUBMIT_ALL_DELAY_MS = 1100;
+
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
 
     function setValue(key, value) {
         if (typeof GM_setValue === "function") {
@@ -100,6 +110,12 @@
         const joinButton = fight.querySelector('[id^="VolunteerButton"]');
         if (!joinButton || joinButton.innerText.trim() !== 'Join Shift') return;
 
+        let locked = false
+        const lock = fight.querySelector('.vc-lock');
+        if (lock) {
+            locked = true;
+        }
+
         const fightIdMatch = joinButton.id && joinButton.id.match(/\d+$/);
         const fightNumber = fightIdMatch ? fightIdMatch[0] : '';
 
@@ -141,7 +157,7 @@
             img.setAttribute('data-petname', pet);
 
             const isGreyed = volunteeringPets.includes(pet);
-            if (isGreyed) {
+            if (isGreyed || locked) {
                 img.style.filter = 'grayscale(100%) opacity(0.5)';
                 imageDiv.style.pointerEvents = 'none';
                 imageDiv.style.opacity = '0.6';
@@ -149,7 +165,7 @@
                 imageDiv.style.cursor = '';
             }
 
-            imageDiv.onclick = function() {
+            imageDiv.onclick = function () {
                 const currentVolunteering = getVolunteeringPets();
                 if (currentVolunteering.includes(pet)) return;
 
@@ -175,7 +191,7 @@
         container.appendChild(imagesWrapper);
         container.appendChild(volunteerBtn);
 
-        volunteerBtn.addEventListener('click', function() {
+        volunteerBtn.addEventListener('click', function () {
             const selectedPet = volunteerBtn.getAttribute('data-pet');
             if (!selectedPet) return;
 
@@ -263,12 +279,65 @@
             volunteerBtn.textContent = 'Cancel';
         });
 
-        volunteerBtn.onclick = function() {
+        volunteerBtn.onclick = function () {
             this.id = 'VolunteerJoinButton';
-            startBetterShift(this);
+            this.betterShiftPromise = startBetterShift(this);
+            return this.betterShiftPromise;
         };
 
         joinButton.parentNode.replaceChild(container, joinButton);
+    }
+
+    async function submitAllSelectedVolunteers(button) {
+        const selectedButtons = Array.from(document.querySelectorAll('.volunteer-pets button[data-fight][data-pet]'))
+            .filter(btn => !btn.disabled && btn.dataset.fight && btn.dataset.pet);
+
+        if (selectedButtons.length === 0) {
+            document.getElementById("VolunteerErrMsg").innerHTML = "Select at least one pet to volunteer first.";
+            togglePopup__2020(document.getElementById("VolunteerErrorPopup"));
+            return;
+        }
+
+        button.disabled = true;
+        const originalText = button.textContent;
+
+        try {
+            for (let index = 0; index < selectedButtons.length; index++) {
+                const volunteerBtn = selectedButtons[index];
+                const pet = volunteerBtn.dataset.pet;
+                const fight = volunteerBtn.dataset.fight;
+
+                if (!pet || !fight || volunteerBtn.disabled) continue;
+
+                button.textContent = `Submitting ${index + 1}/${selectedButtons.length}`;
+                volunteerBtn.click();
+
+                if (volunteerBtn.betterShiftPromise) {
+                    await volunteerBtn.betterShiftPromise;
+                }
+                await sleep(SUBMIT_ALL_DELAY_MS);
+            }
+        } finally {
+            button.textContent = originalText;
+            button.disabled = false;
+        }
+    }
+
+    function selectAllVolunteerPets() {
+        const volunteeringPets = getVolunteeringPets();
+        const availablePets = petList.filter(pet => !volunteeringPets.includes(pet));
+        const volunteerContainers = Array.from(document.querySelectorAll('.volunteer-pets'));
+
+        volunteerContainers.forEach((container, index) => {
+            const pet = availablePets[index];
+            if (!pet) return;
+
+            const image = container.querySelector(`img[data-petname="${pet}"]`);
+            const imageButton = image && image.parentElement;
+            if (!imageButton || imageButton.style.pointerEvents === 'none') return;
+
+            imageButton.click();
+        });
     }
 
     function enhanceVolunteeringUI() {
@@ -310,12 +379,18 @@
         wrapper.innerHTML = `
             <div class="h5-dialogue dialogue-lg">
                 <div class="h5-speaker"><mark>Better Volunteering UI</mark></div>
-                <p style="text-align: left;"><b>Tips:</b></p>
-                <p style="text-align: left;">&nbsp;&nbsp;&nbsp;&nbsp;• If you aren't seeing some of your pets, make sure to refresh the list by visiting <a href="https://www.neopets.com/quickref.phtml">Quick Reference</a>.</p>
-                <p style="text-align: left;">&nbsp;&nbsp;&nbsp;&nbsp;• After volunteering all of your pets, refresh for the 'Skip Time' buttons to appear.</p>
+                <p><b>Tip:</b> If you aren't seeing some of your pets, make sure to refresh the list by visiting <a href="https://www.neopets.com/quickref.phtml">Quick Reference</a>.</p>
+                <button id="BetterVolunteeringSelectAll" type="button" class="button-default__2020 button-yellow__2020 btn-single__2020 plot-button">Select All</button>
+                <button id="BetterVolunteeringSubmitAll" type="button" class="button-default__2020 button-yellow__2020 btn-single__2020 plot-button">Submit All Selected</button>
             </div>
         `;
         volunteering.parentNode.insertBefore(wrapper, volunteering);
+        document.getElementById('BetterVolunteeringSelectAll').addEventListener('click', function () {
+            selectAllVolunteerPets();
+        });
+        document.getElementById('BetterVolunteeringSubmitAll').addEventListener('click', function () {
+            submitAllSelectedVolunteers(this);
+        });
 
         const allFights = Array.from(document.querySelectorAll('.vc-fight-details'));
         const volunteeringPets = getVolunteeringPets();
@@ -331,58 +406,64 @@
 
     function startBetterShift(e) {
 
-	let fight = e.dataset.fight;
-	let pet = e.dataset.pet;
+        let fight = e.dataset.fight;
+        let pet = e.dataset.pet;
 
-	if (document.getElementById("VolunteerJoinButton").hasAttribute("disabled") || fight == "" || pet == "") {
-		let errMsg = fight == "" ? "You have not selected a Battle! You must first select a Battle to volunteer!" : "You must select which pet you want to volunteer!";
-		document.getElementById("VolunteerErrMsg").innerHTML = errMsg;
-		togglePopup__2020(document.getElementById("VolunteerErrorPopup"));
-		return;
-	}
+        if (e.hasAttribute("disabled") || !fight || !pet) {
+            let errMsg = !fight ? "You have not selected a Battle! You must first select a Battle to volunteer!" : "You must select which pet you want to volunteer!";
+            document.getElementById("VolunteerErrMsg").innerHTML = errMsg;
+            togglePopup__2020(document.getElementById("VolunteerErrorPopup"));
+            return Promise.resolve({ error: true, errMsg });
+        }
 
-	e.setAttribute("disabled", '');
+        e.setAttribute("disabled", '');
 
-	let formData = new FormData();
-	formData.append("_ref_ck", getCK());
-	formData.append("fight_id", fight);
-	formData.append("pet_name", pet);
+        let formData = new FormData();
+        formData.append("_ref_ck", getCK());
+        formData.append("fight_id", fight);
+        formData.append("pet_name", pet);
 
-	document.getElementById("VolunteerErrMsg").innerHTML = "";
+        document.getElementById("VolunteerErrMsg").innerHTML = "";
 
-	fetch("/np-templates/ajax/plots/hospital/volunteer-join.php", {
-	    method: "POST",
-	    headers: {"x-requested-with": "XMLHttpRequest"},
-		body: formData,
-	})
-	    .then(
-	        function (response) {
-	            if (response.status !== 200) {
-	                console.log("Error setting state!");
-	            }
+        return fetch("/np-templates/ajax/plots/hospital/volunteer-join.php", {
+            method: "POST",
+            headers: { "x-requested-with": "XMLHttpRequest" },
+            body: formData,
+        })
+            .then(function (response) {
+                if (response.status !== 200) {
+                    console.log("Error setting state!");
+                }
 
-				response.json().then(function (data) {
-					if (data.success) {
-						togglePopup__2020(document.getElementById("VolunteerJoinedPopup"));
-						setFightInService(fight, data);
-						showFights();
-						let clock = new vcClock((data.time / 3600), 0, 0);
-						intervals["fight"+fight+"Clock"] = setInterval(function() {
-							clock.tick("fight",fight);
-						}, 1000);
-					}
-                    if (data.error) {
-						document.getElementById("VolunteerErrMsg").innerHTML = data.errMsg;
-						togglePopup__2020(document.getElementById("VolunteerErrorPopup"));
+                return response.json();
+            })
+            .then(function (data) {
+                if (data.success) {
+                    //togglePopup__2020(document.getElementById("VolunteerJoinedPopup"));
+                    setFightInService(fight, data);
+                    showFights();
+                    if (!data.isPremium && data.adsHtml != '') {
+                        document.getElementById("showAdsButtons-" + fight).innerHTML = data.adsHtml;
+                        checkIfVideoAdAvailable();
                     }
-					e.removeAttribute("disabled");
-                });
-	        }
-	    )
-	    .catch(function (err) {
-	        console.log("Fetch Error :-S", err);
-	    });
-}
+                    let clock = new vcClock((data.time / 3600), 0, 0);
+                    intervals["fight" + fight + "Clock"] = setInterval(function () {
+                        clock.tick("fight", fight);
+                    }, 1000);
+                }
+                if (data.error) {
+                    document.getElementById("VolunteerErrMsg").innerHTML = data.errMsg;
+                    togglePopup__2020(document.getElementById("VolunteerErrorPopup"));
+                }
+                e.removeAttribute("disabled");
+                return data;
+            })
+            .catch(function (err) {
+                console.log("Fetch Error :-S", err);
+                e.removeAttribute("disabled");
+                return { error: true, err };
+            });
+    }
 
     function init() {
         if (initialized) return;
