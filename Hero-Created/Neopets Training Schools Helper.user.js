@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets Training Schools Helper
-// @version      1.9
+// @version      2.7
 // @author       Hero
 // @description  Improves Neopets training schools: train, complete, cancel, and pay for courses with bulk actions.
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -23,7 +23,6 @@
   - Buttons to: Train Selected, Complete Courses, Cancel Unpaid, Get All Items from SDB, Pay All Unpaid, Check All, Reset selected
   - Shows progress bar and feedback during actions
   - Uses small random delays to mimic natural actions
-  - Auto-refreshes page after operations finish
   - Displays stat increases after Completion
   --------------------------------
 */
@@ -31,10 +30,22 @@
 (function() {
     'use strict';
 
+    const HIGHLIGHT_STORAGE_KEY = "trainingHelperHighlightEnabled";
+
     function log(msg) { console.log(`[TrainingHelper] ${msg}`); }
 
     function normalizeSdbPin(pin) {
         return (pin || "").replace(/\D/g, "").slice(0, 4);
+    }
+
+    function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, char => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            "\"": "&quot;",
+            "'": "&#039;"
+        }[char]));
     }
 
     function getSdbPin() {
@@ -55,6 +66,14 @@
     .training-table .training-disabled:hover { background: #f5f5f5 !important; }
     .training-table .training-disabled input[type="radio"] { cursor: not-allowed; }
     .training-table .stat-value { color: #2e7d32; font-weight: bold; }
+    .training-rules-on .training-table .stat-trainable {
+      background: #e7f7e7 !important; box-shadow: inset 0 0 0 2px #72bf72;
+    }
+    .training-rules-on .training-table .stat-not-trainable {
+      background: #fde8e8 !important; box-shadow: inset 0 0 0 2px #dc7777;
+    }
+    .training-rules-on .training-table .stat-trainable .stat-value { color: #1f7a1f; }
+    .training-rules-on .training-table .stat-not-trainable .stat-value { color: #9f2f2f; }
     .training-actions { margin: 12px auto; text-align: center; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;}
     .training-actions button {
       padding: 10px 16px; margin: 0 8px; border: none; border-radius: 6px;
@@ -69,6 +88,8 @@
     .training-actions .btn-danger:hover { background: #c82333; }
     .training-actions .btn-success { background: #28a745; }
     .training-actions .btn-success:hover { background: #218838; }
+    .training-actions .btn-toggle-active { background: #6f42c1; }
+    .training-actions .btn-toggle-active:hover { background: #5a35a0; }
     .training-pin-setting {
       display: inline-flex; align-items: center; gap: 6px; padding: 8px 10px;
       border: 1px solid #bbb; border-radius: 6px; background: #fff;
@@ -106,7 +127,7 @@
     log(`Using process URL: ${processUrl}`);
 
     // Helper for random delay
-    function randomDelay(min=350, max=800) {
+    function randomDelay(min=350, max=550) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
@@ -128,6 +149,14 @@
                 location.reload();
             });
         });
+    }
+
+    function showFinalStatus(message, issues = []) {
+        const issueHTML = issues.length
+            ? `<div style="margin-top:10px; color:#c00;"><strong>Issues:</strong><br>${issues.map(issue => `<div>${escapeHtml(issue)}</div>`).join("")}</div>`
+            : "";
+        resultsContainer.innerHTML = `<div>${escapeHtml(message)}</div>${issueHTML}${refreshButtonHTML()}`;
+        bindRefreshButtons();
     }
 
     // Parse pets
@@ -192,6 +221,26 @@
 
     // Build table
     const tableWrapper = document.createElement("div");
+    function statRuleCell(p, stat, value, radioInput) {
+        const hpBlocksOtherStats = p.Hp > (p.Lvl * 2);
+        let canTrain = true;
+        let reason = "Can be trained under the level rules.";
+
+        if (stat === "Strength" || stat === "Defence" || stat === "Agility") {
+            canTrain = !hpBlocksOtherStats && value < (p.Lvl * 2);
+            if (hpBlocksOtherStats) reason = "HP is above twice this pet's level, so train Level first.";
+            else if (!canTrain) reason = `${stat} is already at least twice this pet's level.`;
+        } else if (stat === "Endurance") {
+            canTrain = value < (p.Lvl * 3);
+            if (!canTrain) reason = "HP is already at least three times this pet's level.";
+        } else if (hpBlocksOtherStats) {
+            reason = "Training Level will let this pet train other stats again.";
+        }
+
+        const ruleClass = canTrain ? "stat-trainable" : "stat-not-trainable";
+        return `<td class="stat-rule ${ruleClass}" title="${escapeHtml(reason)}">${radioInput}<br><span class="stat-value">${value}</span></td>`;
+    }
+
     const tbodyRows = pets.map(p => {
         const radioInputs = ['Level', 'Strength', 'Defence', 'Agility', 'Endurance'].map(stat =>
                                                                                          `<input type="radio" name="${p.name}" value="${stat}"${(p.isTraining || p.needsPayment || p.needsComplete) ? ' disabled' : ''}>`
@@ -207,11 +256,11 @@
         return `
       <tr class="${rowClass}">
         <td><strong>${p.name}</strong><br>${statusText}</td>
-        <td>${radioInputs[0]}<br><span class="stat-value">${p.Lvl}</span></td>
-        <td>${radioInputs[1]}<br><span class="stat-value">${p.Str}</span></td>
-        <td>${radioInputs[2]}<br><span class="stat-value">${p.Def}</span></td>
-        <td>${radioInputs[3]}<br><span class="stat-value">${p.Mov}</span></td>
-        <td>${radioInputs[4]}<br><span class="stat-value">${p.Hp}</span></td>
+        ${statRuleCell(p, "Level", p.Lvl, radioInputs[0])}
+        ${statRuleCell(p, "Strength", p.Str, radioInputs[1])}
+        ${statRuleCell(p, "Defence", p.Def, radioInputs[2])}
+        ${statRuleCell(p, "Agility", p.Mov, radioInputs[3])}
+        ${statRuleCell(p, "Endurance", p.Hp, radioInputs[4])}
       </tr>
     `;
     }).join("");
@@ -244,6 +293,7 @@
       <button id="btn-cancel-all" class="btn-danger">❌ Cancel Unpaid</button>
       <button id="btn-pay-all" class="btn-primary">💰 Pay All Unpaid</button>
       <button id="btn-reset">🔄 Reset Selection</button>
+      <button id="btn-toggle-training-rules" type="button" title="Highlight stats by level training rules">Toggle Highlight</button>
       <label class="training-pin-setting" title="Leave blank if you do not use a PIN.">
         SDB PIN
         <input id="training-sdb-pin" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="0">
@@ -259,6 +309,20 @@
     const sdbPinInput = document.getElementById("training-sdb-pin");
     sdbPinInput.addEventListener("input", () => {
         sdbPinInput.value = normalizeSdbPin(sdbPinInput.value);
+    });
+    const trainingRulesToggle = document.getElementById("btn-toggle-training-rules");
+    function setTrainingRulesHighlight(isActive) {
+        tableWrapper.classList.toggle("training-rules-on", isActive);
+        trainingRulesToggle.classList.toggle("btn-toggle-active", isActive);
+        trainingRulesToggle.textContent = isActive ? "Toggle Highlight: On" : "Toggle Highlight";
+    }
+
+    setTrainingRulesHighlight(localStorage.getItem(HIGHLIGHT_STORAGE_KEY) === "1");
+
+    trainingRulesToggle.addEventListener("click", () => {
+        const isActive = !tableWrapper.classList.contains("training-rules-on");
+        setTrainingRulesHighlight(isActive);
+        localStorage.setItem(HIGHLIGHT_STORAGE_KEY, isActive ? "1" : "0");
     });
 
     function updateProgress(current, total, message) {
@@ -296,6 +360,7 @@
 
         const button = document.getElementById("btn-train-all");
         button.disabled = true;
+        const issues = [];
 
         for (let i=0;i<selectedPets.length;i++){
             const p = selectedPets[i];
@@ -308,15 +373,24 @@
                 const res = await fetch(processUrl, {method:'POST', body: formData, headers:{'Content-Type':'application/x-www-form-urlencoded'}});
                 const html = await res.text();
                 const errorMatch = html.match(/<b>Error: <\/b>([^<]+)/);
-                log(errorMatch ? `❌ ${p.name}: ${errorMatch[1]}` : `✅ ${p.name} training started`);
-            } catch(err){ log(`❌ ${p.name} network error`); }
+                if (errorMatch) {
+                    const message = `${p.name}: ${errorMatch[1]}`;
+                    issues.push(message);
+                    log(`❌ ${message}`);
+                } else {
+                    log(`✅ ${p.name} training started`);
+                }
+            } catch(err){
+                const message = `${p.name}: network error`;
+                issues.push(message);
+                log(`❌ ${message}`);
+            }
 
             await new Promise(r=>setTimeout(r, randomDelay()));
         }
 
-        updateProgress(selectedPets.length, selectedPets.length, "Training complete! Refreshing page...");
+        showFinalStatus("Training complete!", issues);
         button.disabled = false;
-        setTimeout(()=>location.reload(),2000);
     });
 
     // Cancel all
@@ -332,20 +406,32 @@
 
         const button = document.getElementById("btn-cancel-all");
         button.disabled = true;
+        const issues = [];
 
         for(let i=0;i<cancellablePets.length;i++){
             const petName = cancellablePets[i];
             updateProgress(i, cancellablePets.length, `Cancelling course for ${petName}...`);
             try{
-                await fetch(processUrl,{method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:`pet_name=${encodeURIComponent(petName)}&type=cancel`});
-                log(`✅ Cancelled course for ${petName}`);
-            }catch(err){ log(`❌ Error cancelling ${petName}`); }
+                const res = await fetch(processUrl,{method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:`pet_name=${encodeURIComponent(petName)}&type=cancel`});
+                const html = await res.text();
+                const errorMatch = html.match(/<b>Error: <\/b>([^<]+)/);
+                if (errorMatch) {
+                    const message = `${petName}: ${errorMatch[1]}`;
+                    issues.push(message);
+                    log(`❌ Error cancelling ${message}`);
+                } else {
+                    log(`✅ Cancelled course for ${petName}`);
+                }
+            }catch(err){
+                const message = `${petName}: network error`;
+                issues.push(message);
+                log(`❌ Error cancelling ${petName}`);
+            }
             await new Promise(r=>setTimeout(r, randomDelay()));
         }
 
-        updateProgress(cancellablePets.length, cancellablePets.length, "Cancellation complete! Refreshing page...");
+        showFinalStatus("Cancellation complete!", issues);
         button.disabled=false;
-        setTimeout(()=>location.reload(),2000);
     });
 
     // Complete all
@@ -453,6 +539,7 @@
 
         const button = document.getElementById("btn-pay-all");
         button.disabled = true;
+        const issues = [];
 
         for (let i = 0; i < payForms.length; i++) {
             const entry = payForms[i];
@@ -462,31 +549,38 @@
                 if (url.includes('island/fight_training')) {
                     // Fight training: use GET with query params
                     const queryStr = new URLSearchParams(entry.params).toString();
-                    await fetch(`${entry.action}?${queryStr}`, { method: entry.method });
+                    const res = await fetch(`${entry.action}?${queryStr}`, { method: entry.method });
+                    const html = await res.text();
+                    const errorMatch = html.match(/<b>Error: <\/b>([^<]+)/);
+                    if (errorMatch) throw new Error(errorMatch[1]);
                 } else {
                     // Other pages: use POST form submission
                     const formData = new URLSearchParams();
                     entry.form.querySelectorAll("input").forEach(input => {
                         if (input.name) formData.append(input.name, input.value);
                     });
-                    await fetch(entry.form.action, {
+                    const res = await fetch(entry.form.action, {
                         method: entry.form.method || "POST",
                         body: formData,
                         headers: { "Content-Type": "application/x-www-form-urlencoded" }
                     });
+                    const html = await res.text();
+                    const errorMatch = html.match(/<b>Error: <\/b>([^<]+)/);
+                    if (errorMatch) throw new Error(errorMatch[1]);
                 }
 
                 log(`✅ Paid course for ${entry.petName}`);
             } catch (err) {
+                const message = `${entry.petName}: ${err.message || err}`;
+                issues.push(message);
                 log(`❌ Error paying course for ${entry.petName}: ${err}`);
             }
 
             await new Promise(r => setTimeout(r, randomDelay()));
         }
 
-        updateProgress(payForms.length, payForms.length, "All payments completed! Refreshing page...");
+        showFinalStatus("All payments completed!", issues);
         button.disabled = false;
-        setTimeout(() => location.reload(), 2000);
     });
 
 
@@ -499,8 +593,16 @@
         "Cui Codestone": "22210", "Kew Codestone": "22211", "Sho Codestone": "22212", "Zed Codestone": "22213"
     };
 
+    function parseSdbStatus(data) {
+        if (!data.includes("Error:")) return "Successful";
+
+        const errorMatch = data.match(/<b>Error:\s*<\/b>\s*([\s\S]*?)(?:<\/div>|<br|<\/td>|$)/i);
+        const rawError = errorMatch ? errorMatch[1] : data.slice(data.indexOf("Error:"));
+        return "Error: " + rawError.replace(/<[^>]+>/g, "").trim();
+    }
+
     async function getItemsFromSDB(array) {
-        let postData = {};
+        const postData = {};
         const itemCount = {};
 
         for (let i = 0; i < array.length; i++) {
@@ -528,8 +630,7 @@
                 url: "/process_safetydeposit.phtml?checksub=scan",
                 data: postData,
                 success: data => {
-                    const error = data.includes("Error:") ? "Error: " + data.split("<b>Error: </b>")[1].split("</div>")[0] : "Successful";
-                    resolve(error);
+                    resolve(parseSdbStatus(data));
                 },
                 error: () => resolve("Error: SDB request failed")
             });
@@ -547,18 +648,20 @@
         this.disabled = true;
 
         const status = await getItemsFromSDB(getAllItems);
+        const summary = {};
+        getAllItems.forEach(i => summary[i] = (summary[i] || 0) + 1);
+
+        const itemList = Object.entries(summary)
+            .map(([name, count]) => `${escapeHtml(name)} (x${count})`)
+            .join("<br>");
+        const missingItemNote = `<br><br><small><b>Note:</b> If you do not have an item in your SDB, you will see it as still needed once you Pay All.</small>`;
 
         if (!status.startsWith("Error:")) {
-            const summary = {};
-            getAllItems.forEach(i => summary[i] = (summary[i] || 0) + 1);
-            const itemList = Object.entries(summary)
-            .map(([name, count]) => `${name} (x${count})`)
-            .join("<br>");
-            resultsContainer.innerHTML = `<b>SDB Retrieval:</b> ${status}<br><br>Items retrieved:<br>${itemList}`;
+            resultsContainer.innerHTML = `<b>SDB Retrieval Request:</b> ${escapeHtml(status)}<br><br>Items requested:<br>${itemList}${missingItemNote}`;
         } else {
-            resultsContainer.innerHTML = `<b>${status}</b>${refreshButtonHTML()}`;
-            bindRefreshButtons();
+            resultsContainer.innerHTML = `<b>${escapeHtml(status)}</b>${missingItemNote}`;
         }
+        this.disabled = false;
     });
 
 })();
