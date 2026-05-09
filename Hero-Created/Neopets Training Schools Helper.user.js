@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets Training Schools Helper
-// @version      2.7
+// @version      2.8
 // @author       Hero
 // @description  Improves Neopets training schools: train, complete, cancel, and pay for courses with bulk actions.
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -55,7 +55,7 @@
 
     const style = document.createElement("style");
     style.textContent = `
-    .training-table { margin: 10px auto; width: 70%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .training-table { margin: 10px auto; width: 70%; border-collapse: collapse; font-family: Arial, sans-serif; color: #000000; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     .training-table th, .training-table td { border: 1px solid #bbb; padding: 8px; text-align: center; }
     .training-table th { background: #4a8cd4; color: white; font-weight: bold; }
     .training-table tr:nth-child(even) { background: #f8f9fa; }
