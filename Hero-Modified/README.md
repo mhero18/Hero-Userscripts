@@ -12,6 +12,7 @@ Originally created by rawbeee, updates from Hero! THANK YOU, THIS IS LIFE SAVER.
 
  - Added a Select All button that will select the first available pet for each slot
  - Added a Submit All button that will submit the Volunteer Requests one by one
+ - Made Pets Unselectable on second click
 
 
 # [Neopets Search Helper vHero](Neopets%20-%20Search%20Helper%20vHero.user.js)

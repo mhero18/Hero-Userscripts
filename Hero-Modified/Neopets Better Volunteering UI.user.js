@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets: Better Volunteering UI
-// @version      2.0.1
+// @version      2.0.2
 // @description  Brings the select pet UI to each individual shift on the Neopets Hospital volunteering page.
 // @author       rawbeee & Hero
 // @match        *://*.neopets.com/hospital/volunteer.phtml*
@@ -12,6 +12,7 @@
 /* HERO MODIFICATIONS
   - Added a Select All button that will select the first available pet for each slot
   - Added a Submit All button that will submit the Volunteer Requests one by one
+  - Made Pets Unselectable on second click
 */
 
 (function () {
@@ -168,6 +169,18 @@
             imageDiv.onclick = function () {
                 const currentVolunteering = getVolunteeringPets();
                 if (currentVolunteering.includes(pet)) return;
+
+                if (volunteerBtn.getAttribute('data-pet') === pet) {
+                    imageDiv.style.border = '';
+                    imageDiv.style.boxSizing = '';
+                    volunteerBtn.setAttribute('data-pet', '');
+                    volunteerBtn.style.backgroundColor = '#ccc';
+                    volunteerBtn.style.color = '#888';
+                    volunteerBtn.disabled = true;
+                    volunteerBtn.style.pointerEvents = 'none';
+                    volunteerBtn.style.cursor = '';
+                    return;
+                }
 
                 imageDivs.forEach(div => {
                     div.style.border = '';
