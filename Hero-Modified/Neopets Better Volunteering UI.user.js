@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets: Better Volunteering UI
-// @version      2.0.2
+// @version      2.0.3
 // @description  Brings the select pet UI to each individual shift on the Neopets Hospital volunteering page.
 // @author       rawbeee & Hero
 // @match        *://*.neopets.com/hospital/volunteer.phtml*
@@ -13,6 +13,7 @@
   - Added a Select All button that will select the first available pet for each slot
   - Added a Submit All button that will submit the Volunteer Requests one by one
   - Made Pets Unselectable on second click
+  - Added BD_PET_NAME to skip a battle pet during Select All
 */
 
 (function () {
@@ -20,6 +21,7 @@
 
     let initialized = false;
     const SUBMIT_ALL_DELAY_MS = 1100;
+    const BD_PET_NAME = ''; // ADD BD PET NAME HERE IF YOU WANT IT TO BE SKIPPED FOR SELECT ALL
 
     function sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
@@ -338,7 +340,11 @@
 
     function selectAllVolunteerPets() {
         const volunteeringPets = getVolunteeringPets();
-        const availablePets = petList.filter(pet => !volunteeringPets.includes(pet));
+        const bdPetName = BD_PET_NAME.trim().toLowerCase();
+        const availablePets = petList.filter(pet => {
+            const petName = pet.trim().toLowerCase();
+            return !volunteeringPets.includes(pet) && (!bdPetName || petName !== bdPetName);
+        });
         const volunteerContainers = Array.from(document.querySelectorAll('.volunteer-pets'));
 
         volunteerContainers.forEach((container, index) => {
