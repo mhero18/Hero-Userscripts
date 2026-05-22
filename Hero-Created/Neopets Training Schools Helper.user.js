@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets Training Schools Helper
-// @version      3.2
+// @version      3.3
 // @author       Hero
 // @description  Improves Neopets training schools: train, complete, cancel, and pay for courses with bulk actions.
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -31,6 +31,7 @@
     'use strict';
 
     const HIGHLIGHT_STORAGE_KEY = "trainingHelperHighlightEnabled";
+    const SDB_PIN_STORAGE_KEY = "trainingHelperSdbPin";
 
     function log(msg) { console.log(`[TrainingHelper] ${msg}`); }
 
@@ -51,6 +52,17 @@
     function getSdbPin() {
         const pinInput = document.getElementById("training-sdb-pin");
         return normalizeSdbPin(pinInput?.value) || "0";
+    }
+
+    function getStoredSdbPin() {
+        return normalizeSdbPin(localStorage.getItem(SDB_PIN_STORAGE_KEY));
+    }
+
+    function saveSdbPin(pin) {
+        const normalizedPin = normalizeSdbPin(pin);
+        if (normalizedPin) localStorage.setItem(SDB_PIN_STORAGE_KEY, normalizedPin);
+        else localStorage.removeItem(SDB_PIN_STORAGE_KEY);
+        return normalizedPin;
     }
 
     const style = document.createElement("style");
@@ -311,7 +323,7 @@
       <button id="btn-toggle-training-rules" type="button" title="Highlight stats by level training rules">Toggle Highlight</button>
       <label class="training-pin-setting" title="Leave blank if you do not use a PIN.">
         SDB PIN
-        <input id="training-sdb-pin" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="0">
+        <input id="training-sdb-pin" type="text" inputmode="numeric" maxlength="4" autocomplete="off" value="${getStoredSdbPin()}" placeholder="0">
       </label>
     </div>
     <div id="training-results"></div>
@@ -359,7 +371,7 @@
 
     const sdbPinInput = document.getElementById("training-sdb-pin");
     sdbPinInput.addEventListener("input", () => {
-        sdbPinInput.value = normalizeSdbPin(sdbPinInput.value);
+        sdbPinInput.value = saveSdbPin(sdbPinInput.value);
     });
     const trainingRulesToggle = document.getElementById("btn-toggle-training-rules");
     function setTrainingRulesHighlight(isActive) {
