@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name         Neopets SDB Enhancements
-// @version      1.5
+// @version      2.0
 // @description  Enhances new SDB page.
 // @author       Hero
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
 // @match        *://*.neopets.com/safetydeposit.phtml*
 // @grant        GM_xmlhttpRequest
+// @grant        unsafeWindow
 // @connect      itemdb.com.br
-// @run-at       document-idle
+// @run-at       document-start
 // @downloadURL  https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20SDB%20Enhancements.user.js
 // @updateURL    https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20SDB%20Enhancements.user.js
 // ==/UserScript==
@@ -17,6 +18,7 @@
 // - Pop up is kinda annoying so now only image / name click opens it
 // - Hides Donate / Discard Options in dropdown
 // - Add itemDB prices
+// - Add SDB pin field for Remove 1 functionality
 
 
 (function () {
@@ -27,6 +29,9 @@
     const PRICE_CACHE_TTL = 12 * 60 * 60 * 1000;
     const SEARCH_HELPER_CLASS = 'sdb-search-helper';
     const PRICE_CLASS = 'sdb-itemdb-price';
+    const PIN_INPUT_ID = 'hero-sdb-pin';
+    const REMOVE_LINK_CLASS = 'hero-sdb-remove-one';
+    const REMOVE_ERROR_CLASS = 'hero-sdb-remove-error';
     const ENHANCED_ROW_ATTR = 'data-hero-sdb-enhanced';
     const ENHANCED_GRID_ATTR = 'data-hero-sdb-grid-enhanced';
     const HIDDEN_ACTION_VALUES = new Set(['donate', 'discard']);
@@ -47,6 +52,8 @@
 
     let enhanceTimer = null;
     const pendingPriceNames = new Set();
+    const sdbItemsByExactKey = new Map();
+    const sdbItemsByName = new Map();
     let priceFetchTimer = null;
 
     function injectStyles() {
@@ -122,6 +129,59 @@
                 margin-top: 3px;
                 text-align: center;
             }
+
+            .sdb-header-bar.hero-sdb-has-pin {
+                align-items: center;
+                display: flex;
+                gap: 10px;
+            }
+
+            .sdb-header-bar.hero-sdb-has-pin .sdb-header-totals {
+                margin-right: auto;
+            }
+
+            .hero-sdb-pin-wrap {
+                align-items: center;
+                display: inline-flex;
+                gap: 5px;
+                margin-left: auto;
+                white-space: nowrap;
+            }
+
+            .hero-sdb-pin-wrap label {
+                color: #48330d;
+                font-size: 12px;
+                font-weight: 700;
+            }
+
+            #${PIN_INPUT_ID} {
+                background: #fff;
+                border: 1px solid #c3ad82;
+                border-radius: 5px;
+                box-sizing: border-box;
+                font-size: 12px;
+                color: black;
+                height: 26px;
+                padding: 3px 6px;
+                width: 64px;
+            }
+
+            .${REMOVE_LINK_CLASS} {
+                color: #1f5f95;
+                cursor: pointer;
+                display: inline-block;
+                font-size: 12px;
+                margin-top: 4px;
+                text-decoration: underline;
+            }
+
+            .${REMOVE_ERROR_CLASS} {
+                color: #a02518;
+                display: block;
+                font-size: 11px;
+                line-height: 1.25;
+                margin-top: 2px;
+            }
         `;
         document.head.appendChild(style);
     }
@@ -133,10 +193,33 @@
 
     function enhanceRows() {
         injectStyles();
+        addPinInput();
         hideUnsafeActionOptions();
         document.querySelectorAll('.sdb-item-cell').forEach(enhanceItemCell);
         document.querySelectorAll('.sdb-grid-item').forEach(enhanceGridItem);
+        document.querySelectorAll('td.sdb-cell-action').forEach(addRemoveOneLink);
         queueMissingPrices();
+    }
+
+    function addPinInput() {
+        if (document.getElementById(PIN_INPUT_ID)) return;
+
+        const headerBar = document.querySelector('.sdb-header-bar');
+        if (!headerBar) return;
+        headerBar.classList.add('hero-sdb-has-pin');
+
+        const wrap = document.createElement('span');
+        wrap.className = 'hero-sdb-pin-wrap';
+        wrap.innerHTML = `
+            <label for="${PIN_INPUT_ID}">SDB PIN</label>
+            <input id="${PIN_INPUT_ID}" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="0000">
+        `;
+        headerBar.appendChild(wrap);
+
+        const input = wrap.querySelector(`#${PIN_INPUT_ID}`);
+        input.addEventListener('input', () => {
+            input.value = normalizeSdbPin(input.value);
+        });
     }
 
     function hideUnsafeActionOptions() {
@@ -184,8 +267,23 @@
         applyCachedPrice(gridItem, itemName);
     }
 
+    function addRemoveOneLink(actionCell) {
+        if (actionCell.querySelector(`.${REMOVE_LINK_CLASS}`)) return;
+
+        const link = document.createElement('a');
+        link.href = '#';
+        link.className = REMOVE_LINK_CLASS;
+        link.textContent = 'Remove 1';
+        link.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopPropagation();
+            removeOneItem(actionCell, link);
+        });
+        actionCell.appendChild(link);
+    }
+
     function getItemName(nameEl) {
-        return (nameEl.textContent || '').replace(/\s+/g, ' ').trim();
+        return (nameEl?.textContent || '').replace(/\s+/g, ' ').trim();
     }
 
     function addNameHelper(nameEl, itemName) {
@@ -452,6 +550,194 @@
         return String(name || '').replace(/\s+/g, ' ').trim().toLowerCase();
     }
 
+    function normalizeSdbPin(pin) {
+        return String(pin || '').replace(/\D/g, '').slice(0, 4);
+    }
+
+    function cacheSdbItems(payload) {
+        const items = payload?.data?.items;
+        if (!Array.isArray(items)) return;
+
+        items.forEach(item => {
+            const name = item?.obj_name;
+            const id = item?.obj_info_id || item?.id;
+            if (!name || !id) return;
+
+            const record = {
+                id: Number(id),
+                name,
+                filename: item.obj_filename || ''
+            };
+            sdbItemsByName.set(normalizeName(name), record);
+            if (record.filename) sdbItemsByExactKey.set(`${normalizeName(name)}|${record.filename}`, record);
+        });
+    }
+
+    function installSdbItemsInterceptor() {
+        const targetWindow = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window;
+        if (targetWindow.__heroSdbItemsInterceptorInstalled) return;
+        targetWindow.__heroSdbItemsInterceptorInstalled = true;
+
+        const originalFetch = targetWindow.fetch;
+        if (typeof originalFetch === 'function') {
+            targetWindow.fetch = function (...args) {
+                const responsePromise = originalFetch.apply(this, args);
+                responsePromise.then(response => {
+                    if (!isSdbGetItemsUrl(args[0])) return;
+                    response.clone().text().then(cacheSdbItemsText).catch(() => {});
+                }).catch(() => {});
+                return responsePromise;
+            };
+        }
+
+        const Xhr = targetWindow.XMLHttpRequest;
+        if (typeof Xhr === 'function') {
+            const originalOpen = Xhr.prototype.open;
+            const originalSend = Xhr.prototype.send;
+
+            Xhr.prototype.open = function (method, url, ...rest) {
+                this.__heroSdbUrl = url;
+                return originalOpen.call(this, method, url, ...rest);
+            };
+
+            Xhr.prototype.send = function (...args) {
+                if (isSdbGetItemsUrl(this.__heroSdbUrl)) {
+                    this.addEventListener('load', () => {
+                        cacheSdbItemsText(this.responseText);
+                    });
+                }
+                return originalSend.apply(this, args);
+            };
+        }
+    }
+
+    function isSdbGetItemsUrl(input) {
+        const rawUrl = typeof input === 'string' ? input : input?.url;
+        return String(rawUrl || '').includes('/np-templates/ajax/safetydeposit/get-items.php');
+    }
+
+    function cacheSdbItemsText(text) {
+        try {
+            cacheSdbItems(JSON.parse(text || '{}'));
+        } catch {
+            // Ignore non-JSON responses.
+        }
+    }
+
+    async function removeOneItem(actionCell, link) {
+        clearRemoveError(actionCell);
+
+        const pin = getSdbPin();
+        if (!pin) {
+            showRemoveError(actionCell, 'Enter your SDB PIN first.');
+            return;
+        }
+
+        const itemName = getActionCellItemName(actionCell);
+        const item = getCachedSdbItem(actionCell, itemName);
+        if (!item?.id) {
+            showRemoveError(actionCell, 'Could not find this item ID yet. Refresh and try again.');
+            return;
+        }
+
+        const refCk = getRefCk();
+        if (!refCk) {
+            showRemoveError(actionCell, 'Could not find _ref_ck for the SDB request.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/np-templates/ajax/safetydeposit/move-items.php', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    moves: [{
+                        obj_info_id: item.id,
+                        quantity: 1,
+                        action: 'inventory'
+                    }],
+                    pin,
+                    _ref_ck: refCk
+                })
+            });
+            const bodyText = await response.text();
+            const result = parseSdbMoveItemsStatus(response, bodyText);
+            if (!result.ok) {
+                showRemoveError(actionCell, result.message);
+                return;
+            }
+            window.location.reload();
+        } catch (err) {
+            showRemoveError(actionCell, err?.message || 'SDB request failed.');
+        }
+    }
+
+    function getSdbPin() {
+        return normalizeSdbPin(document.getElementById(PIN_INPUT_ID)?.value);
+    }
+
+    function getActionCellItemName(actionCell) {
+        const row = actionCell.closest('tr');
+        return getItemName(row?.querySelector('.sdb-item-name'));
+    }
+
+    function getCachedSdbItem(actionCell, itemName) {
+        const row = actionCell.closest('tr');
+        const img = row?.querySelector('.sdb-item-img');
+        const filename = getItemFilename(img?.src);
+        if (itemName && filename) {
+            const exact = sdbItemsByExactKey.get(`${normalizeName(itemName)}|${filename}`);
+            if (exact) return exact;
+        }
+        return sdbItemsByName.get(normalizeName(itemName));
+    }
+
+    function getItemFilename(src) {
+        const match = String(src || '').match(/\/items\/([^/.]+)\./);
+        return match?.[1] || '';
+    }
+
+    function getRefCk() {
+        if (typeof window.getCK === 'function') return window.getCK();
+        if (typeof unsafeWindow !== 'undefined' && typeof unsafeWindow.getCK === 'function') return unsafeWindow.getCK();
+
+        const scripts = Array.from(document.scripts).map(script => script.textContent || '').join('\n');
+        const match = scripts.match(/_ref_ck["']?\s*[:=]\s*["']([^"']+)["']/) || scripts.match(/getCK\(\)\s*\{\s*return\s*["']([^"']+)["']/);
+        return match?.[1] || '';
+    }
+
+    function parseSdbMoveItemsStatus(response, bodyText) {
+        let payload = null;
+        try {
+            payload = JSON.parse(bodyText || '{}');
+        } catch {
+            payload = null;
+        }
+
+        const message = payload?.message || payload?.error || payload?.errors?.[0]?.message || bodyText || `Request failed (${response.status})`;
+        return {
+            ok: response.ok && payload?.success !== false,
+            message: String(message || 'SDB request failed.')
+        };
+    }
+
+    function showRemoveError(actionCell, message) {
+        clearRemoveError(actionCell);
+        const error = document.createElement('span');
+        error.className = REMOVE_ERROR_CLASS;
+        error.textContent = message;
+        actionCell.appendChild(error);
+    }
+
+    function clearRemoveError(actionCell) {
+        actionCell.querySelector(`.${REMOVE_ERROR_CLASS}`)?.remove();
+    }
+
     function limitDetailsClickTargets() {
         document.addEventListener('click', event => {
             const cell = event.target.closest?.('.sdb-item-cell');
@@ -484,6 +770,8 @@
         const observer = new MutationObserver(scheduleEnhance);
         observer.observe(document.body, { childList: true, subtree: true });
     }
+
+    installSdbItemsInterceptor();
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init, { once: true });
