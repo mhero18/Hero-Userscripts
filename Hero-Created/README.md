@@ -22,7 +22,7 @@ Neopets game trophy tracker with modern UI, dynamic filtering, game links, and t
 
 ![gametrophies](assets/gametrophies.png)
 
-# [SDB Visualizer v2](SDB%20Visualizer%20v2.user.js)
+# [SDB Visualizer v3](SDB%20Visualizer%20v3.user.js)
 Better SDB Viewer / Visualizer with modern UI, dynamic search, multiple filters, and metadata retrieved from itemDB. Includes prices, additional categories, wearable zoning, and more. 
 
 ![sdbvisualizer](assets/sdbvisualizer.png)

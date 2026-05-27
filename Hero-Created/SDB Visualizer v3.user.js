@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name        SDB Visualizer v2
-// @author      Hero (special thanks to NeoQuest.Guide & itemDB)
+// @name        SDB Visualizer v3
+// @author      Hero (special thanks to NeoQuest.Guide & itemDB & Codex)
 // @icon        https://images.neopets.com/items/foo_gmc_herohotdog.gif
-// @version     3.0
+// @version     4.4
 // @match       *://*.neopets.com/safetydeposit.phtml*
 // @connect     itemdb.com.br
 // @grant       GM_setValue
@@ -16,22 +16,21 @@
 
 const STORAGE_KEYS = {
   allItems: "allSDBItems",
-  visitedPages: "visitedSDBPages",
   itemDatabase: "itemDatabase",
   scanMeta: "sdbVisualizerScanMeta",
   helpCollapsed: "sdbVisualizerHelpCollapsed",
   viewerTheme: "sdbVisualizerViewerTheme",
   removalDraft: "sdbVisualizerRemovalDraft",
 };
+const LEGACY_STORAGE_KEYS = ["visitedSDBPages"];
 
 const ITEMDB_CHUNK_DELAY_MS = 1000;
 const ITEMDB_CHUNK_SIZE = 1000;
 const ITEMDB_REFRESH_AFTER_MS = 1000 * 60 * 60 * 24 * 7;
 const PRICE_REFRESH_AFTER_MS = 1000 * 60 * 60 * 12;
 const ITEMDB_RATE_LIMIT_COOLDOWN_MS = 1000 * 60 * 30;
-const PAGE_SCAN_DELAY_MIN_MS = 400;
-const PAGE_SCAN_DELAY_MAX_MS = 700;
-const PAGE_SCAN_RETRY_LIMIT = 3;
+const SDB_DEFAULT_PAGE_SIZE = 30;
+const SDB_FULL_SCAN_PAGE_SIZE = 90;
 const WEARABLE_ZONE_DELAY_MS = 200;
 const WEARABLE_ZONE_CONCURRENCY = 5;
 const WEARABLE_ZONE_RETRY_LIMIT = 3;
@@ -66,16 +65,12 @@ let viewerState = null;
 const scriptVersion = GM_info?.script?.version || "unknown";
 console.log("NQ.G/NEOPETS: SDB Visualizer Collector version:", scriptVersion);
 
-const currentPageMeta = getCurrentPageMeta(document);
-recordCurrentPage(document, currentPageMeta.currentPage);
 renderCollectorUI();
 
 function renderCollectorUI() {
   const host = document.createElement("div");
   host.id = "sdbVisualizerCollector";
-  const isMainSdbPage = currentPageMeta.currentPage === 1;
-  host.innerHTML = isMainSdbPage
-    ? `
+  host.innerHTML = `
     <div class="sdbvc-panel">
       <div class="sdbvc-header">
         <div>
@@ -90,35 +85,31 @@ function renderCollectorUI() {
         </div>
         <div id="sdbvcHelpContent">
           <ol class="sdbvc-helpList">
-            <li>Move this page to another window, NOT another tab. That way it can run while you do other stuff.</li>
-            <li>First time setup: click <strong>Scan Full SDB Automatically</strong>. This visits every SDB page in the background and builds your full box data.</li>
+            <li>First time setup: click <strong>Collect Full SDB Snapshot</strong>. This asks the new SDB endpoint for your saved item list.</li>
             <li>Then click <strong>Update itemdb Data</strong> to add prices, rarity, item categories, and other extra item details.</li>
             <li>Optional: click <strong>Update Wearable Zoning Data</strong> if you want wearable zone info.</li>
             <li>Click <strong>Open Report Here</strong> to load your saved collector data into the visualizer!</li>
-            <li>Later on, click <strong>Refresh Prices</strong> to update price data only, this won't need a full SDB scan. </li>
+            <li>Later on, click <strong>Refresh Prices</strong> to update price data only, this won't need a fresh SDB snapshot. </li>
             <li><strong>JSON Export</strong> if you want a backup of your latest saved data.</li>
-            <li><strong>Clear Zoning Cache Only</strong> removes saved wearable zoning results so you can fetch again without deleting your full scan data.</li>
+            <li><strong>Clear Zoning Cache Only</strong> removes saved wearable zoning results so you can fetch again without deleting your SDB snapshot.</li>
             <li><strong>Clear ALL Data</strong> wipes the saved collector data if you want to start over from scratch.</li>
           </ol>
         </div>
       </div>
       <div class="sdbvc-status" id="sdbvcStatus"></div>
       <div class="sdbvc-actions">
-        <button type="button" id="sdbvcScanButton" class="sdbvc-btn scan">Scan Full SDB Automatically</button>
+        <button type="button" id="sdbvcScanButton" class="sdbvc-btn scan">Collect Full SDB Snapshot</button>
         <button type="button" id="sdbvcItemdbButton" class="sdbvc-btn itemdb">Update itemdb Data</button>
         <button type="button" id="sdbvcRefreshPricesButton" class="sdbvc-btn prices">Refresh Prices</button>
         <button type="button" id="sdbvcZonesButton" class="sdbvc-btn zones">Update Wearable Zoning Data</button>
         <button type="button" id="sdbvcEmbeddedReportButton" class="sdbvc-btn report">Open Report Here</button>
+      </div>
+      <div class="sdbvc-actions sdbvc-dangerActions">
         <button type="button" id="sdbvcClearZonesButton" class="sdbvc-btn danger-soft">Clear Zoning Cache Only</button>
         <button type="button" id="sdbvcClearButton" class="danger">Clear ALL Data</button>
         <button type="button" id="sdbvcExportFullButton" class="sdbvc-btn export">JSON Export</button>
       </div>
       <div class="sdbvc-meta" id="sdbvcMeta"></div>
-    </div>
-  `
-    : `
-    <div class="sdbvc-panel sdbvc-panel-compact">
-      <div class="sdbvc-status" id="sdbvcStatus"></div>
     </div>
   `;
 
@@ -206,6 +197,9 @@ function renderCollectorUI() {
       flex-wrap: wrap;
       gap: 8px;
       margin: 8px 0;
+    }
+    .sdbvc-dangerActions {
+      margin-top: 4px;
     }
     .sdbvc-actions button {
       cursor: pointer;
@@ -850,11 +844,17 @@ function renderCollectorUI() {
       color: var(--sdbvc-viewer-text);
     }
     .sdbvc-viewerLinkRow {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
+      display: grid;
       gap: 10px;
+      justify-items: center;
       margin-top: 18px;
+    }
+    .sdbvc-viewerLinkRowLine {
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
     }
     .sdbvc-viewerLink {
       display: inline-flex;
@@ -888,6 +888,11 @@ function renderCollectorUI() {
       display: grid;
       gap: 18px;
       align-content: start;
+      position: sticky;
+      top: 0;
+      max-height: calc(97vh - 190px);
+      overflow-y: auto;
+      padding-right: 4px;
     }
     .sdbvc-viewerSubPanel {
       border-radius: 22px;
@@ -1161,6 +1166,12 @@ function renderCollectorUI() {
       .sdbvc-viewerGrid {
         grid-template-columns: 1fr;
       }
+      .sdbvc-viewerAside {
+        position: static;
+        max-height: none;
+        overflow: visible;
+        padding-right: 0;
+      }
       .sdbvc-viewerHeading,
       .sdbvc-viewerResultsHeader {
         flex-direction: column;
@@ -1235,14 +1246,9 @@ function renderCollectorUI() {
   `;
 
   document.head.appendChild(style);
-  document.querySelector(".content").insertBefore(host, document.querySelector(".content").firstChild);
+  insertCollectorHost(host);
 
   const statusEl = host.querySelector("#sdbvcStatus");
-  if (!isMainSdbPage) {
-    setCompactStatus(statusEl);
-    return;
-  }
-
   const metaEl = host.querySelector("#sdbvcMeta");
   const helpToggle = host.querySelector("#sdbvcHelpToggle");
   const helpContent = host.querySelector("#sdbvcHelpContent");
@@ -1277,21 +1283,16 @@ function renderCollectorUI() {
   function refreshMeta() {
     const items = getStoredItems();
     const itemDatabase = getItemDatabase();
-    const visitedPages = getVisitedPages();
     const scanMeta = getScanMeta();
     const totalQty = items.reduce((sum, item) => sum + (item.qty || 0), 0);
-    const totalPages = Math.max(
-      Number(scanMeta.totalPages || 0),
-      Number(currentPageMeta.totalPages || 0),
-      visitedPages.length,
-      Object.keys(buildPageItemIdsMap(scanMeta.pageItemIdsByPage)).length,
-    );
     const zonesCheckedCount = Object.values(itemDatabase).filter((item) => item?.zonesFetchedAt).length;
     const zonesCount = Object.values(itemDatabase).filter((item) => {
       const zones = item?.zones || [];
       return Array.isArray(zones) && zones.length > 0;
     }).length;
-    const lastFullScan = scanMeta.lastFullScanAt ? new Date(scanMeta.lastFullScanAt).toLocaleString() : "Never";
+    const missingItemdb = items.filter((item) => !itemDatabase[item.id]?.fetchedAt).length;
+    const wearableZonesPending = Object.values(itemDatabase).filter((item) => item?.isWearable && !item?.zonesFetchedAt).length;
+    const lastSnapshot = scanMeta.lastSnapshotAt ? new Date(scanMeta.lastSnapshotAt).toLocaleString() : "Never";
     const lastPricesRefreshed = scanMeta.priceRefreshLastCompletedAt
       ? new Date(scanMeta.priceRefreshLastCompletedAt).toLocaleString()
       : "Never";
@@ -1302,13 +1303,14 @@ function renderCollectorUI() {
     metaEl.style.whiteSpace = "pre";
     metaEl.textContent =
       `Logged ${items.length.toLocaleString("en-US")} unique items / ${totalQty.toLocaleString("en-US")} total quantity \n` +
-      `Visited pages: ${visitedPages.length}/${totalPages || 0}\n` +
       `itemdb entries: ${Object.keys(itemDatabase).length.toLocaleString("en-US")}\n` +
+      `New or unenriched SDB items: ${missingItemdb.toLocaleString("en-US")}\n` +
       `Wearables checked for zones: ${zonesCheckedCount.toLocaleString("en-US")} | With zones found: ${zonesCount.toLocaleString("en-US")}\n` +
+      `Wearable zoning remaining: ${wearableZonesPending.toLocaleString("en-US")}\n` +
       `itemdb remaining: ${pendingItemdb.toLocaleString("en-US")} | Resume: ${resumeAt}\n` +
       `price refresh remaining: ${pendingPrices.toLocaleString("en-US")} | Resume: ${priceResumeAt}\n` +
       `Last prices refreshed: ${lastPricesRefreshed}\n` +
-      `Last full scan: ${lastFullScan}`;
+      `Last SDB snapshot: ${lastSnapshot}`;
   }
 
   function setStatus(message) {
@@ -1334,32 +1336,23 @@ function renderCollectorUI() {
 
   buttons.scan.addEventListener("click", () => {
     runTask(buttons.scan, async () => {
-      setStatus("Starting automatic full SDB scan...");
+      setStatus("Requesting full SDB snapshot...");
       const result = await scanEntireSdb({
         onProgress(progress) {
-          const attemptLabel = progress.attempt ? ` (attempt ${progress.attempt}/${progress.attempts})` : "";
-          setStatus(`Scanning page ${progress.pageIndex}/${progress.totalPages}${attemptLabel}...`);
+          setStatus(`Collecting SDB snapshot page ${progress.pageIndex}/${progress.totalPages}...`);
           showOverlay({
-            title: "Scanning Safety Deposit Box",
-            text: `Fetching page ${progress.pageIndex} of ${progress.totalPages}${attemptLabel} in the background. Please wait until the scan finishes.`,
+            title: "Collecting Safety Deposit Box",
+            text: `Requesting snapshot page ${progress.pageIndex} of ${progress.totalPages}. Please wait until the collection finishes.`,
             current: progress.pageIndex,
             total: progress.totalPages,
           });
         },
       });
       hideOverlay();
-      if (result.failedPages.length) {
-        const listedPages = result.failedPages.slice(0, 12).map((page) => page.pageIndex).join(", ");
-        const moreLabel = result.failedPages.length > 12 ? ", ..." : "";
-        setStatus(
-          `Full SDB scan finished with ${result.failedPages.length} failed page(s). Saved all successful pages. Please manually visit page(s): ${listedPages}${moreLabel}.`,
-        );
-      } else {
-        setStatus("Full SDB scan complete.");
-      }
+      setStatus(`Full SDB snapshot complete: ${result.totalItems.toLocaleString("en-US")} unique items / ${result.totalQuantity.toLocaleString("en-US")} total quantity.`);
     }).catch((error) => {
       hideOverlay();
-      setStatus(`Full SDB scan failed: ${error.message}`);
+      setStatus(`Full SDB snapshot failed: ${error.message}`);
     });
   });
 
@@ -1440,18 +1433,17 @@ function renderCollectorUI() {
   });
 
   buttons.exportFull.addEventListener("click", () => {
-    const snapshotMode = hasAuthoritativeFullScan() ? "full" : "partial";
-    const payload = buildVisualizerExportPayload({ snapshotMode, itemScope: "stored" });
+    const payload = buildVisualizerExportPayload();
     if (!payload.items.length) {
-      setStatus("No stored SDB data yet. Run a scan first.");
+      setStatus("No stored SDB data yet. Collect a snapshot first.");
       return;
     }
-    const result = exportVisualizerPayload(payload, `sdb-visualizer-${snapshotMode}`);
+    const result = exportVisualizerPayload(payload, "sdb-visualizer-full");
     setStatus(result.message);
   });
 
   buttons.clearZones.addEventListener("click", () => {
-    if (!confirm("Clear only the saved wearable zoning cache? This will keep your SDB scan data and itemdb data, but wearable zone lookups will need to be fetched again.")) {
+    if (!confirm("Clear only the saved wearable zoning cache? This will keep your SDB snapshot and itemdb data, but wearable zone lookups will need to be fetched again.")) {
       return;
     }
     clearZoningCache();
@@ -1459,22 +1451,37 @@ function renderCollectorUI() {
   });
 
   buttons.clear.addEventListener("click", () => {
-    if (!confirm("Warning: this will permanently delete ALL saved scan progress, itemdb data, and cached zoning data for the collector. Continue?")) {
+    if (!confirm("Warning: this will permanently delete ALL saved SDB snapshot, itemdb data, and cached zoning data for the collector. Continue?")) {
       return;
     }
     clearAllStoredData();
-    recordCurrentPage(document, currentPageMeta.currentPage);
     setStatus("All collector data cleared.");
   });
 
   refreshMeta();
-  setStatus(`Current page recorded: ${currentPageMeta.currentPage}/${currentPageMeta.totalPages}.`);
+  setStatus("Refreshing current SDB page snapshot...");
+  runTask(buttons.scan, async () => {
+    const result = await refreshCurrentSdbPageSnapshot();
+    setStatus(`Current SDB page snapshot refreshed: ${result.updatedItems.toLocaleString("en-US")} item(s) updated from the page-load request.`);
+  }).catch((error) => {
+    setStatus(`Automatic current-page SDB snapshot failed: ${error.message}`);
+  });
 }
 
-function setCompactStatus(statusEl) {
-  if (!statusEl) return;
-  statusEl.textContent = `Current page recorded: ${currentPageMeta.currentPage}/${currentPageMeta.totalPages}.`;
-  statusEl.classList.remove("is-error");
+function insertCollectorHost(host) {
+  const sdbHeader = document.querySelector(".sdb-header");
+  if (sdbHeader) {
+    sdbHeader.insertAdjacentElement("afterend", host);
+    return;
+  }
+
+  const content = document.querySelector(".content");
+  if (content) {
+    content.insertBefore(host, content.firstChild);
+    return;
+  }
+
+  document.body.prepend(host);
 }
 
 function setCollectorStatusMessage(message) {
@@ -1505,22 +1512,6 @@ function setStoredItems(items) {
   GM_setValue(STORAGE_KEYS.allItems, JSON.stringify(items));
 }
 
-function getVisitedPages() {
-  const raw = JSON.parse(GM_getValue(STORAGE_KEYS.visitedPages, "[]"));
-  if (Array.isArray(raw)) {
-    return raw;
-  }
-  if (raw && typeof raw === "object" && raw.__scoped && raw.scopes && typeof raw.scopes === "object") {
-    const browsePages = raw.scopes.browse;
-    return Array.isArray(browsePages) ? browsePages : [];
-  }
-  return [];
-}
-
-function setVisitedPages(pages) {
-  GM_setValue(STORAGE_KEYS.visitedPages, JSON.stringify(pages));
-}
-
 function getItemDatabase() {
   return JSON.parse(GM_getValue(STORAGE_KEYS.itemDatabase, "{}"));
 }
@@ -1544,6 +1535,7 @@ function setScanMeta(scanMeta) {
 
 function clearAllStoredData() {
   Object.values(STORAGE_KEYS).forEach((key) => GM_deleteValue(key));
+  LEGACY_STORAGE_KEYS.forEach((key) => GM_deleteValue(key));
 }
 
 function clearZoningCache() {
@@ -1559,71 +1551,6 @@ function clearZoningCache() {
   setItemDatabase(itemDatabase);
 }
 
-function hasAuthoritativeFullScan() {
-  const scanMeta = getScanMeta();
-  const visitedPages = getVisitedPages();
-  const totalPages = scanMeta.totalPages || currentPageMeta.totalPages || 0;
-  const hasFailedPages = Array.isArray(scanMeta.failedScanPages) && scanMeta.failedScanPages.length > 0;
-  return Boolean(scanMeta.lastFullScanAt) && totalPages > 0 && visitedPages.length >= totalPages && !hasFailedPages;
-}
-
-function getCurrentPageMeta(doc) {
-  const pageSelect = doc.querySelector("select[name='offset']");
-  const totalPages = pageSelect ? pageSelect.options.length : 1;
-  const currentOffset = pageSelect ? parseInt(pageSelect.value || "0", 10) : 0;
-  const currentPage = pageSelect ? Math.floor(currentOffset / 30) + 1 : 1;
-  const totalsText = doc.querySelector(".content > table")?.textContent.replace(/,/g, "") || "";
-  const totalsMatch = totalsText.match(/Items:\s*(\d+)\s*\|\s*Qty:\s*(\d+)/);
-  const username =
-    doc.querySelector("td.user a[href*='/userlookup.phtml?user=']")?.textContent?.trim() ||
-    doc.querySelector("a[href*='/userlookup.phtml?user=']")?.textContent?.trim() ||
-    null;
-
-  return {
-    currentPage,
-    totalPages,
-    totalItems: totalsMatch ? parseInt(totalsMatch[1], 10) : null,
-    totalQuantity: totalsMatch ? parseInt(totalsMatch[2], 10) : null,
-    username,
-  };
-}
-
-function parseSdbRows(doc) {
-  const table = findSdbItemsTable(doc);
-  if (!table) {
-    return [];
-  }
-
-  return Array.from(table.querySelectorAll("tr[bgcolor]"))
-    .filter((row) => row.getAttribute("bgcolor")?.toUpperCase() !== "#E4E4E4")
-    .filter((row) => row.querySelector("input[name^='back_to_inv[']"))
-    .map((row) => {
-      const cells = row.querySelectorAll("td");
-      const input = row.querySelector("input[name^='back_to_inv[']");
-      const idMatch = input?.name?.match(/\[(\d+)\]/);
-      const name = cells[1]?.querySelector("b")?.childNodes?.[0]?.textContent?.trim() || "";
-      let qty = parseInt(cells[4]?.textContent.replace(/[^\d]/g, "") || "0", 10);
-      if ((cells[4]?.textContent || "").includes("NP")) {
-        qty = parseInt(cells[5]?.textContent.replace(/[^\d]/g, "") || "0", 10);
-      }
-
-      return {
-        id: parseInt(idMatch?.[1] || "0", 10),
-        name,
-        qty,
-        image: cells[0]?.querySelector("img")?.getAttribute("src") || "",
-        description: cells[2]?.textContent.trim() || "",
-        sdbType: cells[3]?.textContent.trim() || "",
-      };
-    })
-    .filter((item) => Number.isFinite(item.id) && item.id > 0);
-}
-
-function findSdbItemsTable(doc) {
-  const candidateTables = Array.from(doc.querySelectorAll(".content form table, .content table"));
-  return candidateTables.find((table) => table.querySelector("input[name^='back_to_inv[']")) || null;
-}
-
 function mergeItemsById(existingItems, nextItems) {
   const byId = new Map(existingItems.map((item) => [item.id, item]));
   nextItems.forEach((item) => {
@@ -1635,191 +1562,187 @@ function mergeItemsById(existingItems, nextItems) {
   return Array.from(byId.values()).sort((a, b) => a.name.localeCompare(b.name));
 }
 
-function recordCurrentPage(doc, pageNumber) {
-  const items = parseSdbRows(doc);
-  const mergedItems = mergeItemsById(getStoredItems(), items);
-  setStoredItems(mergedItems);
-
-  const visitedPages = getVisitedPages();
-  if (!visitedPages.includes(pageNumber)) {
-    visitedPages.push(pageNumber);
-    visitedPages.sort((a, b) => a - b);
-    setVisitedPages(visitedPages);
-  }
-
-  const pageMeta = getCurrentPageMeta(doc);
-  const scanMeta = getScanMeta();
-  const pageItemIds = buildPageItemIdsMap(scanMeta.pageItemIdsByPage);
-  pageItemIds[String(pageNumber)] = items.map((item) => item.id);
-  const failedScanPages = Array.isArray(scanMeta.failedScanPages)
-    ? scanMeta.failedScanPages.filter((page) => page.pageIndex !== pageNumber)
-    : [];
-  const pagesChangedSinceFullScan = Array.isArray(scanMeta.pagesChangedSinceFullScan)
-    ? [...new Set([...scanMeta.pagesChangedSinceFullScan, pageNumber])].sort((a, b) => a - b)
-    : [pageNumber];
-  setScanMeta({
-    ...scanMeta,
-    totalPages: pageMeta.totalPages,
-    totalItems: pageMeta.totalItems,
-    totalQuantity: pageMeta.totalQuantity,
-    username: pageMeta.username || scanMeta.username || null,
-    lastPageRecordedAt: new Date().toISOString(),
-    lastObservedPage: pageNumber,
-    pageItemIdsByPage: pageItemIds,
-    pagesChangedSinceFullScan,
-    failedScanPages,
-    lastFailedScanAt: failedScanPages.length ? scanMeta.lastFailedScanAt || new Date().toISOString() : null,
-  });
-}
-
 async function scanEntireSdb({ onProgress } = {}) {
-  const pageMeta = getCurrentPageMeta(document);
-  const offsets = Array.from({ length: pageMeta.totalPages }, (_, index) => index * 30);
-  const collectedItems = [];
-  const failedPages = [];
-  const pageItemIdsByPage = {};
+  const firstSnapshot = await fetchSdbSnapshotPage(1, { perPage: SDB_FULL_SCAN_PAGE_SIZE });
+  const totalPages = Number(firstSnapshot.pagination.total_pages || 1);
+  const collectedItems = [...firstSnapshot.items];
+  onProgress?.({
+    pageIndex: 1,
+    totalPages,
+  });
 
-  for (let index = 0; index < offsets.length; index += 1) {
-    const offset = offsets[index];
-    const scanResult = await fetchAndParseSdbPage({
-      offset,
-      pageIndex: index + 1,
-      totalPages: offsets.length,
-      onProgress,
+  for (let page = 2; page <= totalPages; page += 1) {
+    onProgress?.({
+      pageIndex: page,
+      totalPages,
     });
-    collectedItems.push(...scanResult.items);
-    if (scanResult.valid) {
-      pageItemIdsByPage[String(index + 1)] = scanResult.items.map((item) => item.id);
-    }
-    if (!scanResult.valid) {
-      failedPages.push({
-        pageIndex: index + 1,
-        offset,
-        reason: scanResult.reason,
-      });
-    }
-    await delay(randomBetween(PAGE_SCAN_DELAY_MIN_MS, PAGE_SCAN_DELAY_MAX_MS));
+    const snapshot = await fetchSdbSnapshotPage(page, { perPage: SDB_FULL_SCAN_PAGE_SIZE });
+    collectedItems.push(...snapshot.items);
   }
 
   const uniqueItems = mergeItemsById([], collectedItems);
+  const totalItems = uniqueItems.length;
+  const totalQuantity = uniqueItems.reduce((sum, item) => sum + (item.qty || 0), 0);
+
   setStoredItems(uniqueItems);
-  const failedPageNumbers = new Set(failedPages.map((page) => page.pageIndex));
-  setVisitedPages(Array.from({ length: offsets.length }, (_, index) => index + 1).filter((pageNumber) => !failedPageNumbers.has(pageNumber)));
   setScanMeta({
     ...getScanMeta(),
-    totalPages: pageMeta.totalPages,
-    totalItems: pageMeta.totalItems,
-    totalQuantity: pageMeta.totalQuantity,
-    username: pageMeta.username || getScanMeta().username || null,
-    lastFullScanAt: new Date().toISOString(),
-    lastObservedPage: 1,
-    pageItemIdsByPage,
-    pagesChangedSinceFullScan: [],
-    failedScanPages: failedPages,
-    lastFailedScanAt: failedPages.length ? new Date().toISOString() : null,
+    totalPages,
+    totalItems,
+    totalQuantity,
+    username: getCurrentUsername() || getScanMeta().username || null,
+    lastSnapshotAt: new Date().toISOString(),
   });
-  return { failedPages };
-}
-
-async function fetchAndParseSdbPage({ offset, pageIndex, totalPages, onProgress }) {
-  const url = buildSdbPageUrl(offset);
-  let lastReason = "Unknown validation failure";
-
-  for (let attempt = 1; attempt <= PAGE_SCAN_RETRY_LIMIT; attempt += 1) {
-    onProgress?.({
-      pageIndex,
-      totalPages,
-      offset,
-      attempt,
-      attempts: PAGE_SCAN_RETRY_LIMIT,
-    });
-
-    const responseText = await fetchSdbPage(url);
-    const doc = new DOMParser().parseFromString(responseText, "text/html");
-    const validation = validateSdbPage(doc, pageIndex, totalPages);
-    if (validation.valid) {
-      return {
-        valid: true,
-        items: validation.items,
-      };
-    }
-    lastReason = validation.reason;
-    if (attempt < PAGE_SCAN_RETRY_LIMIT) {
-      await delay(800 * attempt);
-    }
-  }
-
   return {
-    valid: false,
-    items: [],
-    reason: lastReason,
+    failedPages: [],
+    totalItems,
+    totalQuantity,
   };
 }
 
-function validateSdbPage(doc, pageIndex, totalPages) {
-  const pageMeta = getCurrentPageMeta(doc);
-  const items = parseSdbRows(doc);
-  const hasOffsetSelect = Boolean(doc.querySelector("select[name='offset']"));
-  const hasTotals = pageMeta.totalItems != null && pageMeta.totalQuantity != null;
-  const expectedRows = pageIndex < totalPages ? 30 : null;
-
-  if (!hasOffsetSelect) {
-    return { valid: false, items, reason: "Missing page selector" };
-  }
-  if (!hasTotals) {
-    return { valid: false, items, reason: "Missing SDB totals block" };
-  }
-  if (!items.length && pageMeta.totalItems > 0) {
-    return { valid: false, items, reason: "No SDB rows found" };
-  }
-  if (expectedRows && items.length !== expectedRows) {
-    return { valid: false, items, reason: `Expected ${expectedRows} rows but found ${items.length}` };
-  }
-
-  return { valid: true, items };
+async function refreshCurrentSdbPageSnapshot() {
+  const snapshot = await fetchSdbSnapshotPage(1, { perPage: SDB_DEFAULT_PAGE_SIZE });
+  const mergedItems = mergeItemsById(getStoredItems(), snapshot.items);
+  setStoredItems(mergedItems);
+  setScanMeta({
+    ...getScanMeta(),
+    totalPages: Number(snapshot.pagination.total_pages || getScanMeta().totalPages || 1),
+    username: getCurrentUsername() || getScanMeta().username || null,
+    lastPageSnapshotAt: new Date().toISOString(),
+  });
+  return {
+    updatedItems: snapshot.items.length,
+  };
 }
 
-function buildSdbPageUrl(offset) {
-  if (offset === 0) {
-    return `${location.origin}/safetydeposit.phtml`;
+async function fetchSdbSnapshotPage(page = 1, { perPage = SDB_DEFAULT_PAGE_SIZE } = {}) {
+  const refCk = getRefCk();
+  if (!refCk) {
+    throw new Error("Could not find _ref_ck for SDB request.");
   }
-  return `${location.origin}/safetydeposit.phtml?category=0&obj_name=&offset=${offset}`;
-}
 
-async function fetchSdbPage(url) {
-  const response = await fetch(url, {
-    credentials: "include",
-    cache: "no-store",
+  const response = await fetch("/np-templates/ajax/safetydeposit/get-items.php", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+    body: JSON.stringify({
+      page,
+      per_page: perPage,
+      search: "",
+      category: "",
+      sort: "",
+      _ref_ck: refCk,
+    }),
   });
 
+  const responseText = await response.text();
   if (!response.ok) {
-    throw new Error(`Failed to fetch ${url}: ${response.status}`);
+    throw new Error(`SDB snapshot request failed with status ${response.status}: ${responseText.slice(0, 180)}`);
   }
 
-  return response.text();
+  let payload;
+  try {
+    payload = JSON.parse(responseText);
+  } catch {
+    throw new Error("SDB snapshot response was not valid JSON.");
+  }
+
+  if (!payload?.success) {
+    throw new Error(payload?.message || "SDB snapshot request was not successful.");
+  }
+
+  const items = Array.isArray(payload?.data?.items)
+    ? payload.data.items.map(normalizeSdbAjaxItem).filter((item) => Number.isFinite(item.id) && item.id > 0)
+    : [];
+
+  return {
+    items,
+    pagination: payload?.data?.pagination || {},
+  };
 }
 
-function buildVisualizerExportPayload({ snapshotMode = "partial", itemScope = "snapshot" } = {}) {
-  const pageMeta = getCurrentPageMeta(document);
+function normalizeSdbAjaxItem(item) {
+  return {
+    id: Number(item.obj_info_id || item.id || 0),
+    name: String(item.obj_name || "").trim(),
+    qty: Number(item.amount || 0),
+    image: buildNeopetsItemImageUrl(item.obj_filename),
+    description: String(item.obj_desc || "").trim(),
+    sdbType: String(item.type_name || "").trim(),
+    rarity: Number.isFinite(Number(item.obj_rarity)) ? Number(item.obj_rarity) : null,
+    rarityLabel: item.rarity_label || "",
+    rarityColor: item.rarity_color || "",
+    isNc: Boolean(item.is_nc),
+    isNoSell: Boolean(item.is_nosell),
+    isNoTrade: Boolean(item.is_notrade),
+    sdbActions: {
+      canCloset: Boolean(item.can_closet),
+      canDiscard: Boolean(item.can_discard),
+      canStampAlbum: Boolean(item.can_stamp_album),
+      canTcgAlbum: Boolean(item.can_tcg_album),
+      canNeodeck: Boolean(item.can_neodeck),
+      canShed: Boolean(item.can_shed),
+      canFeed: Boolean(item.can_feed),
+      canEquip: Boolean(item.can_equip),
+      canPlay: Boolean(item.can_play),
+      canRead: Boolean(item.can_read),
+      canGroom: Boolean(item.can_groom),
+    },
+  };
+}
+
+function buildNeopetsItemImageUrl(filename) {
+  const cleanFilename = String(filename || "").trim();
+  if (!cleanFilename) return "";
+  if (/^https?:\/\//i.test(cleanFilename)) return cleanFilename;
+  return `https://images.neopets.com/items/${cleanFilename}.gif`;
+}
+
+function getRefCk() {
+  if (typeof window.getCK === "function") return window.getCK();
+  if (typeof unsafeWindow !== "undefined" && typeof unsafeWindow.getCK === "function") return unsafeWindow.getCK();
+
+  const refInput = document.querySelector("input[name='_ref_ck']");
+  if (refInput?.value) return refInput.value;
+
+  const scripts = Array.from(document.scripts).map((script) => script.textContent || "").join("\n");
+  const scriptMatch =
+    scripts.match(/_ref_ck["']?\s*[:=]\s*["']([^"']+)["']/) ||
+    scripts.match(/getCK\(\)\s*\{\s*return\s*["']([^"']+)["']/);
+  if (scriptMatch?.[1]) return scriptMatch[1];
+
+  return extractRefCk(document.documentElement.innerHTML);
+}
+
+function extractRefCk(html) {
+  const inputMatch = html.match(/name=["']_ref_ck["'][^>]*value=["']([^"']+)["']/i);
+  if (inputMatch) return inputMatch[1];
+
+  const valueFirstInputMatch = html.match(/value=["']([^"']+)["'][^>]*name=["']_ref_ck["']/i);
+  if (valueFirstInputMatch) return valueFirstInputMatch[1];
+
+  const pageMatch = html.match(/_ref_ck["']?\s*[:=]\s*["']([a-f0-9]+)["']/i);
+  return pageMatch?.[1] || "";
+}
+
+function getCurrentUsername() {
+  return (
+    document.querySelector(".nav-profile-dropdown-text a[href*='/userlookup.phtml?user=']")?.textContent?.trim() ||
+    document.querySelector("td.user a[href*='/userlookup.phtml?user=']")?.textContent?.trim() ||
+    document.querySelector("a[href*='/userlookup.phtml?user=']")?.textContent?.trim() ||
+    null
+  );
+}
+
+function buildVisualizerExportPayload() {
   const scanMeta = getScanMeta();
   const itemDatabase = getItemDatabase();
   const items = getStoredItems();
   const storedTotalQty = items.reduce((sum, item) => sum + (item.qty || 0), 0);
-  const visitedPages = getVisitedPages();
-  const totalPages = scanMeta.totalPages || pageMeta.totalPages;
-  const pageItemIdsByPage = buildPageItemIdsMap(scanMeta.pageItemIdsByPage);
-  const pagesImported = snapshotMode === "full"
-    ? visitedPages
-    : getPartialExportPages(scanMeta, pageMeta.currentPage, visitedPages, pageItemIdsByPage);
-  const pageCoverage = totalPages > 0 ? pagesImported.length / totalPages : 0;
-  const exportedItemIds = new Set(
-    snapshotMode === "full"
-      ? items.map((item) => item.id)
-      : pagesImported.flatMap((pageNumber) => pageItemIdsByPage[String(pageNumber)] || []),
-  );
-  const exportItems = itemScope === "stored"
-    ? items
-    : items.filter((item) => exportedItemIds.has(item.id));
   const categoryOptions = Array.from(document.querySelectorAll("select[name='category'] option"))
     .map((option) => ({
       value: option.value,
@@ -1831,20 +1754,15 @@ function buildVisualizerExportPayload({ snapshotMode = "partial", itemScope = "s
     source: "nqg-sdb-visualizer-collector",
     collectorVersion: scriptVersion,
     exportedAt: new Date().toISOString(),
-    username: scanMeta.username || pageMeta.username || null,
-    snapshotMode,
-    isAuthoritative: snapshotMode === "full" && hasAuthoritativeFullScan(),
-    currentPage: pageMeta.currentPage,
-    totalPages,
-    pagesImported,
-    pageCoverage,
+    username: getCurrentUsername() || scanMeta.username || null,
+    isAuthoritative: true,
+    currentPage: 1,
+    totalPages: scanMeta.totalPages || 1,
     totalItems: items.length,
     totalQuantity: storedTotalQty,
-    lastFullScanAt: scanMeta.lastFullScanAt || null,
-    lastPageRecordedAt: scanMeta.lastPageRecordedAt || null,
-    lastObservedPage: scanMeta.lastObservedPage || pageMeta.currentPage,
+    lastSnapshotAt: scanMeta.lastSnapshotAt || null,
     categoryOptions,
-    items: exportItems.map((item) => ({
+    items: items.map((item) => ({
       ...item,
       itemdb: normalizeItemdbForExport(itemDatabase[item.id]) || null,
     })),
@@ -1864,39 +1782,6 @@ function normalizeItemdbForExport(itemdbEntry) {
     zones,
     zonesFetchedAt,
   };
-}
-
-function buildPageItemIdsMap(rawMap) {
-  if (!rawMap || typeof rawMap !== "object") return {};
-  return Object.fromEntries(
-    Object.entries(rawMap).map(([pageNumber, ids]) => [
-      String(pageNumber),
-      Array.isArray(ids)
-        ? ids.map((id) => Number(id)).filter((id) => Number.isFinite(id) && id > 0)
-        : [],
-    ]),
-  );
-}
-
-function getPartialExportPages(scanMeta, currentPage, visitedPages, pageItemIdsByPage) {
-  const changedPages = Array.isArray(scanMeta.pagesChangedSinceFullScan)
-    ? scanMeta.pagesChangedSinceFullScan.map((page) => Number(page)).filter((page) => Number.isFinite(page) && page > 0)
-    : [];
-  if (changedPages.length) {
-    return [...new Set(changedPages)].sort((a, b) => a - b);
-  }
-
-  const mappedPages = Object.keys(pageItemIdsByPage)
-    .map((page) => Number(page))
-    .filter((page) => Number.isFinite(page) && page > 0);
-  if (!scanMeta.lastFullScanAt && mappedPages.length) {
-    return [...new Set(mappedPages)].sort((a, b) => a - b);
-  }
-
-  if (visitedPages.includes(currentPage)) {
-    return [currentPage];
-  }
-  return [];
 }
 
 async function updateItemdbData({ mode = "itemdb", onProgress } = {}) {
@@ -2326,24 +2211,20 @@ function delay(ms) {
 }
 
 function openEmbeddedVisualizerReport({ status }) {
-  const hasFullScan = hasAuthoritativeFullScan();
-  const snapshotMode = hasFullScan ? "full" : "partial";
-  const payload = buildVisualizerExportPayload({ snapshotMode, itemScope: "stored" });
+  const payload = buildVisualizerExportPayload();
   if (!payload.items.length) {
-    status("No stored SDB data yet. Run a scan first.");
+    status("No stored SDB data yet. Collect a snapshot first.");
     return;
   }
 
   const overlay = ensureVisualizerOverlay();
   viewerState = createViewerState(payload);
-  overlay.status.textContent = hasFullScan
-    ? "Contextual report ready."
-    : "Contextual report ready from your saved master dataset. Scan authority is partial until you finish a full scan.";
+  overlay.status.textContent = "Contextual report ready from the latest SDB snapshot.";
   overlay.host.classList.remove("is-hidden");
   document.body.style.overflow = "hidden";
   applyContextualViewerTheme();
   renderContextualViewer();
-  status(hasFullScan ? "Opening contextual full report..." : "Opening contextual report from saved master dataset...");
+  status("Opening contextual report from latest SDB snapshot...");
 }
 
 function ensureVisualizerOverlay() {
@@ -2537,15 +2418,11 @@ function handleEmbeddedVisualizerEscape(event) {
 function createViewerState(payload) {
   const dataset = {
     username: payload.username || null,
-    snapshotMode: payload.snapshotMode || "partial",
     totalPages: payload.totalPages ?? null,
     totalItems: payload.totalItems ?? null,
     totalQuantity: payload.totalQuantity ?? null,
-    pagesImported: Array.isArray(payload.pagesImported) ? payload.pagesImported : [],
     lastImportedAt: payload.exportedAt || new Date().toISOString(),
-    lastFullScanAt: payload.lastFullScanAt || null,
-    lastPageRecordedAt: payload.lastPageRecordedAt || null,
-    lastObservedPage: payload.lastObservedPage ?? payload.currentPage ?? null,
+    lastSnapshotAt: payload.lastSnapshotAt || null,
     items: (payload.items || []).map((item) => normalizeViewerItem(item)).sort((a, b) => a.name.localeCompare(b.name)),
   };
   const storedRemovalDraft = getStoredRemovalDraft();
@@ -2732,19 +2609,16 @@ function renderContextualViewerOverview() {
   const totalQty = items.reduce((sum, item) => sum + (item.qty || 0), 0);
   const totalValue = items.reduce((sum, item) => sum + getViewerStackValue(item), 0);
   const ncCount = items.filter((item) => isViewerNcItem(item)).length;
-  const pages = dataset.pagesImported.length;
-  const coverageLabel = formatViewerCoverage(pages, dataset.totalPages);
-  const snapshotLabel = getViewerSnapshotLabel(dataset.snapshotMode);
   const lastImported = dataset.lastImportedAt ? new Date(dataset.lastImportedAt).toLocaleString() : "Not imported yet";
 
   visualizerOverlayElements.title.textContent = dataset.username ? `SDB Visualizer - ${dataset.username}` : "SDB Visualizer";
   visualizerOverlayElements.heroMeta.innerHTML = `
-    <div>Snapshot: <strong>${escapeHtml(snapshotLabel)}</strong></div>
-    <div>Coverage: <strong>${escapeHtml(coverageLabel)}</strong></div>
+    <div>Snapshot: <strong>Live full SDB</strong></div>
+    <div>Unique items: <strong>${escapeHtml(formatNumber(items.length))}</strong></div>
     <div>Last updated: <strong>${escapeHtml(lastImported)}</strong></div>
   `;
   visualizerOverlayElements.datasetMeta.textContent = items.length
-    ? `${pages} imported page${pages === 1 ? "" : "s"} | coverage ${coverageLabel} | snapshot ${snapshotLabel} | last updated ${lastImported}`
+    ? `Live full SDB snapshot | ${formatNumber(items.length)} unique items | last updated ${lastImported}`
     : "Waiting for imported data.";
 
   const stats = [
@@ -2850,15 +2724,7 @@ function renderContextualViewerDetail() {
       <div class="sdbvc-viewerDetailStat"><span>ItemDB Updated</span><strong>${escapeHtml(fetchedAt)}</strong></div>
       <div class="sdbvc-viewerDetailStat"><span>Zones</span><strong>${escapeHtml((item.itemdb?.zones || []).join(", ") || "Unknown")}</strong></div>
     </div>
-    <div class="sdbvc-viewerLinkRow">
-      ${buildViewerDetailLinks(item)
-        .map(
-          (link) => link.action
-            ? `<button type="button" class="sdbvc-viewerLink sdbvc-viewerLinkButton" data-action="${escapeAttribute(link.action)}" data-item-id="${escapeAttribute(String(item.id))}" title="${escapeAttribute(link.label)}" aria-label="${escapeAttribute(link.label)}"><img class="sdbvc-viewerLinkIcon" src="${escapeAttribute(link.iconSrc)}" alt="${escapeAttribute(link.label)}" loading="lazy" /></button>`
-            : `<a class="sdbvc-viewerLink" href="${escapeAttribute(link.href)}" target="_blank" rel="noopener noreferrer" title="${escapeAttribute(link.label)}" aria-label="${escapeAttribute(link.label)}"><img class="sdbvc-viewerLinkIcon" src="${escapeAttribute(link.iconSrc)}" alt="${escapeAttribute(link.label)}" loading="lazy" /></a>`,
-        )
-        .join("")}
-    </div>
+    ${buildViewerDetailLinksMarkup(item)}
   `;
 }
 
@@ -3165,66 +3031,80 @@ async function submitViewerRemovalList() {
 }
 
 async function submitSdbRemovalRequest(entries, pin) {
-  const searchParams = new URLSearchParams(location.search);
-  const form = new URLSearchParams();
-  entries.forEach((entry) => {
-    form.append(`back_to_inv[${entry.id}]`, String(entry.qty));
-  });
-  form.append("pin", String(pin || "0"));
-  form.append("category", searchParams.get("category") || "0");
-  form.append("offset", searchParams.get("offset") || "0");
-  form.append("obj_name", searchParams.get("obj_name") || "");
+  const refCk = getRefCk();
+  if (!refCk) {
+    return { ok: false, message: "Could not find _ref_ck for the SDB request." };
+  }
 
-  const response = await fetch("/process_safetydeposit.phtml?checksub=scan", {
+  const response = await fetch("/np-templates/ajax/safetydeposit/move-items.php", {
     method: "POST",
-    credentials: "include",
+    credentials: "same-origin",
     headers: {
-      "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest",
     },
-    body: form.toString(),
+    body: JSON.stringify({
+      moves: entries.map((entry) => ({
+        obj_info_id: entry.id,
+        quantity: entry.qty,
+        action: "inventory",
+      })),
+      pin,
+      _ref_ck: refCk,
+    }),
   });
 
-  const html = await response.text();
-  if (!response.ok) {
-    return { ok: false, message: `SDB removal request failed with ${response.status}.` };
-  }
-
-  const parsedMessage = parseSdbRemovalResponseMessage(html);
-  if (parsedMessage.isError) {
-    return { ok: false, message: parsedMessage.message };
-  }
-
+  const bodyText = await response.text();
+  const result = parseSdbMoveItemsStatus(response, bodyText);
   const totalRequested = entries.reduce((sum, entry) => sum + entry.qty, 0);
+  if (!result.ok) {
+    return result;
+  }
+
   return {
     ok: true,
-    message: parsedMessage.message || `Removed ${formatNumber(totalRequested)} item${totalRequested === 1 ? "" : "s"} from your SDB.`,
+    message: result.message === "Successful"
+      ? `Removed ${formatNumber(totalRequested)} item${totalRequested === 1 ? "" : "s"} from your SDB.`
+      : result.message,
   };
 }
 
-function parseSdbRemovalResponseMessage(html) {
-  const normalized = String(html || "");
-  const errorMatch = normalized.match(/<b>\s*Error:\s*<\/b>\s*([^<]+)/i);
-  if (errorMatch) {
+function parseSdbMoveItemsStatus(response, bodyText) {
+  if (!response.ok) {
     return {
-      isError: true,
-      message: `Error: ${errorMatch[1].trim()}`,
+      ok: false,
+      message: `Error: SDB request failed (${response.status})`,
     };
   }
 
-  const doc = new DOMParser().parseFromString(normalized, "text/html");
-  const contentText = doc.querySelector(".content")?.textContent?.replace(/\s+/g, " ").trim() || "";
-  const successMatch = contentText.match(/successfully[^.]*\./i);
-  if (successMatch) {
+  if (!String(bodyText || "").trim()) {
     return {
-      isError: false,
-      message: successMatch[0].trim(),
+      ok: false,
+      message: "Error: SDB request returned an empty response",
     };
   }
 
-  return {
-    isError: false,
-    message: "",
-  };
+  try {
+    const payload = JSON.parse(bodyText);
+    const errorMessage = payload.message || payload.error || payload.errors?.[0]?.message || payload.errors?.[0];
+    if (payload.success === false || errorMessage) {
+      return {
+        ok: false,
+        message: `Error: ${errorMessage || "SDB request failed"}`,
+      };
+    }
+
+    return {
+      ok: true,
+      message: payload.message || "Successful",
+    };
+  } catch {
+    return {
+      ok: false,
+      message: "Error: SDB request returned non-JSON response",
+    };
+  }
 }
 
 function shouldRefreshAfterRemovalError(message) {
@@ -3270,7 +3150,7 @@ function applyViewerRemovalResult(entries) {
     ...scanMeta,
     totalItems: nextItems.length,
     totalQuantity: Math.max(0, Number(scanMeta.totalQuantity ?? viewerState.dataset.totalQuantity ?? 0) - removedTotalQty),
-    lastPageRecordedAt: new Date().toISOString(),
+    lastSnapshotAt: new Date().toISOString(),
   });
   viewerState.dataset.totalItems = nextItems.length;
   viewerState.dataset.totalQuantity = Math.max(0, Number(viewerState.dataset.totalQuantity ?? 0) - removedTotalQty);
@@ -3403,6 +3283,37 @@ function buildViewerCardMarkup(item) {
   `;
 }
 
+function buildViewerDetailLinksMarkup(item) {
+  const links = buildViewerDetailLinks(item);
+  const rows = splitViewerDetailLinks(links);
+  return `
+    <div class="sdbvc-viewerLinkRow">
+      ${rows
+        .map(
+          (row) => `
+            <div class="sdbvc-viewerLinkRowLine">
+              ${row.map((link) => buildViewerDetailLinkMarkup(link, item)).join("")}
+            </div>
+          `,
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function splitViewerDetailLinks(links) {
+  if (links.length <= 6) return [links];
+  const firstRowCount = Math.ceil(links.length / 2);
+  return [links.slice(0, firstRowCount), links.slice(firstRowCount)];
+}
+
+function buildViewerDetailLinkMarkup(link, item) {
+  if (link.action) {
+    return `<button type="button" class="sdbvc-viewerLink sdbvc-viewerLinkButton" data-action="${escapeAttribute(link.action)}" data-item-id="${escapeAttribute(String(item.id))}" title="${escapeAttribute(link.label)}" aria-label="${escapeAttribute(link.label)}"><img class="sdbvc-viewerLinkIcon" src="${escapeAttribute(link.iconSrc)}" alt="${escapeAttribute(link.label)}" loading="lazy" /></button>`;
+  }
+  return `<a class="sdbvc-viewerLink" href="${escapeAttribute(link.href)}" target="_blank" rel="noopener noreferrer" title="${escapeAttribute(link.label)}" aria-label="${escapeAttribute(link.label)}"><img class="sdbvc-viewerLinkIcon" src="${escapeAttribute(link.iconSrc)}" alt="${escapeAttribute(link.label)}" loading="lazy" /></a>`;
+}
+
 function buildViewerTableMarkup(items) {
   return `
     <div class="sdbvc-viewerTableWrap">
@@ -3477,6 +3388,11 @@ function buildViewerDetailLinks(item) {
       href: `https://www.neopets.com/safetydeposit.phtml?obj_name=${encodedName}&category=0`,
     },
     {
+      label: "JellyNeo",
+      iconSrc: "https://images.neopets.com/items/toy_plushie_negg_fish.gif",
+      href: `https://items.jellyneo.net/search/?name=${encodedName}&name_type=3`,
+    },
+    {
       label: "ItemDB",
       iconSrc: "https://images.neopets.com/themes/h5/basic/images/v3/quickstock-icon.svg",
       href: `https://itemdb.com.br/item/${encodeURIComponent(itemdbSlug)}`,
@@ -3516,25 +3432,6 @@ function buildViewerDetailLinks(item) {
   return links;
 }
 
-function getViewerSnapshotLabel(mode) {
-  switch (mode) {
-    case "full":
-      return "Full snapshot";
-    case "mixed":
-      return "Mixed snapshot";
-    default:
-      return "Partial snapshot";
-  }
-}
-
-function formatViewerCoverage(importedPages, totalPages) {
-  if (!totalPages) {
-    return `${formatNumber(importedPages)} pages`;
-  }
-  const percent = Math.round((importedPages / totalPages) * 100);
-  return `${formatNumber(importedPages)}/${formatNumber(totalPages)} pages (${percent}%)`;
-}
-
 function exportVisualizerPayload(payload, fileBaseName) {
   const json = JSON.stringify(payload, null, 2);
   const size = new Blob([json], { type: "application/json" }).size;
@@ -3549,7 +3446,7 @@ function exportVisualizerPayload(payload, fileBaseName) {
   GM_setClipboard(json);
   return {
     method: "clipboard",
-    message: `JSON export copied to clipboard (${payload.snapshotMode === "full" ? "full snapshot" : "latest saved partial snapshot"}).`,
+    message: "JSON export copied to clipboard (live full SDB snapshot).",
   };
 }
 
