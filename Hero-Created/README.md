@@ -2,6 +2,11 @@
 # Hero's Userscripts 
 Just some scripts I made to help make life easier on Neopets, hope you find some use too!  Always ensure that your use of userscripts complies with Neopets' rules. Happy to hear any suggestions or improvements for new or existing scripts! :)
 
+# [Neopets SDB Enhancements](Neopets%20SDB%20Enhancements.user.js)
+New SDB page! Added the Search Helper icons, narrowed down popup click trigger, removed donate/discard options, and added itemDB prices.
+
+![closetvisualizer](assets/sdbenhance.png)
+
 # [Neopets Closet Enhancements](Neopets%20Closet%20Enhancements.user.js)
 New Closet page! Added the Search Helper icons plus extra DTI icon, added top pagination, narrowed down popup click trigger, removed category label, added PB Clothing and NP items filter/categories.
 
