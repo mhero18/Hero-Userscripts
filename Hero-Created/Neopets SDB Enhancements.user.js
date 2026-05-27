@@ -13,7 +13,7 @@
 // ==/UserScript==
 
 // Enhancements:
-// - Added SSW, Trading Post, Auction Genie, SDB, JellyNeo, ItemDB, and DTI links based on PB, NP, and NC items
+// - Added SSW, Trading Post, Auction Genie, SDB, JellyNeo, ItemDB search icons
 // - Pop up is kinda annoying so now only image / name click opens it
 // - Hides Donate / Discard Options in dropdown
 // - Add itemDB prices
