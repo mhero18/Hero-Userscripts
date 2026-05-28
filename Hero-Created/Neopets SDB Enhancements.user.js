@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets SDB Enhancements
-// @version      2.0
+// @version      2.1
 // @description  Enhances new SDB page.
 // @author       Hero
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -628,11 +628,6 @@
         clearRemoveError(actionCell);
 
         const pin = getSdbPin();
-        if (!pin) {
-            showRemoveError(actionCell, 'Enter your SDB PIN first.');
-            return;
-        }
-
         const itemName = getActionCellItemName(actionCell);
         const item = getCachedSdbItem(actionCell, itemName);
         if (!item?.id) {
