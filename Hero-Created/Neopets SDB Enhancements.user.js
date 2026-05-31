@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets SDB Enhancements
-// @version      2.1
+// @version      2.6
 // @description  Enhances new SDB page.
 // @author       Hero
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -16,9 +16,14 @@
 // Enhancements:
 // - Added SSW, Trading Post, Auction Genie, SDB, JellyNeo, ItemDB search icons
 // - Pop up is kinda annoying so now only image / name click opens it
-// - Hides Donate / Discard Options in dropdown
 // - Add itemDB prices
-// - Add SDB pin field for Remove 1 functionality
+// - Add persistent customization options
+// - Hide Donate Options in dropdown
+// - Hide Discard Options in dropdown
+// - Add SDB pin field and save/autofill option
+// - Move 1 to inventory with no confirmation
+// - One click set max quantity
+// - Default display to 90 items per page option
 
 
 (function () {
@@ -30,11 +35,14 @@
     const SEARCH_HELPER_CLASS = 'sdb-search-helper';
     const PRICE_CLASS = 'sdb-itemdb-price';
     const PIN_INPUT_ID = 'hero-sdb-pin';
+    const CUSTOMIZATIONS_PANEL_ID = 'hero-sdb-customizations';
+    const SETTINGS_STORAGE_KEY = 'heroSdbEnhancementsSettings';
+    const PIN_STORAGE_KEY = 'heroSdbPin';
     const REMOVE_LINK_CLASS = 'hero-sdb-remove-one';
     const REMOVE_ERROR_CLASS = 'hero-sdb-remove-error';
+    const MAX_QUANTITY_LINK_CLASS = 'hero-sdb-max-quantity';
     const ENHANCED_ROW_ATTR = 'data-hero-sdb-enhanced';
     const ENHANCED_GRID_ATTR = 'data-hero-sdb-grid-enhanced';
-    const HIDDEN_ACTION_VALUES = new Set(['donate', 'discard']);
     const DETAIL_CLICK_TARGETS = '.sdb-item-img, .sdb-item-name, .sdb-item-view-details';
     const GRID_DETAIL_CLICK_TARGETS = '.sdb-grid-item-image, .sdb-grid-item-name';
     const SAFE_CLICK_TARGETS = [
@@ -54,7 +62,10 @@
     const pendingPriceNames = new Set();
     const sdbItemsByExactKey = new Map();
     const sdbItemsByName = new Map();
+    const removedActionOptions = new WeakMap();
+    let settings = loadSettings();
     let priceFetchTimer = null;
+    let defaultDisplay90Applied = false;
 
     function injectStyles() {
         if (document.getElementById('hero-sdb-enhancements-style')) return;
@@ -63,10 +74,10 @@
         style.id = 'hero-sdb-enhancements-style';
         style.textContent = `
             .sdb-item-name-line {
-                align-items: center;
+                align-items: flex-start;
                 display: inline-flex;
-                flex-wrap: wrap;
-                gap: 5px;
+                flex-direction: column;
+                gap: 3px;
                 line-height: 1.2;
             }
 
@@ -166,7 +177,8 @@
                 width: 64px;
             }
 
-            .${REMOVE_LINK_CLASS} {
+            .${REMOVE_LINK_CLASS},
+            .${MAX_QUANTITY_LINK_CLASS} {
                 color: #1f5f95;
                 cursor: pointer;
                 display: inline-block;
@@ -175,12 +187,59 @@
                 text-decoration: underline;
             }
 
+            td.sdb-cell-stepper .${MAX_QUANTITY_LINK_CLASS} {
+                display: block;
+            }
+
             .${REMOVE_ERROR_CLASS} {
                 color: #a02518;
                 display: block;
                 font-size: 11px;
                 line-height: 1.25;
                 margin-top: 2px;
+            }
+
+            #${CUSTOMIZATIONS_PANEL_ID} {
+                background: #fffdf7;
+                border: 1px solid #c3ad82;
+                border-radius: 6px;
+                box-shadow: 0 2px 7px rgba(72, 51, 13, 0.16);
+                color: #48330d;
+                float: right;
+                font-size: 14px;
+                margin-right: -198px;
+                padding: 10px;
+                position: sticky;
+                top: 200px;
+                width: 174px;
+                z-index: 100;
+            }
+
+            #${CUSTOMIZATIONS_PANEL_ID} strong {
+                display: block;
+                font-size: 13px;
+                margin-bottom: 7px;
+            }
+
+            #${CUSTOMIZATIONS_PANEL_ID} label {
+                align-items: center;
+                cursor: pointer;
+                display: flex;
+                gap: 6px;
+                line-height: 1.25;
+                margin-top: 6px;
+            }
+
+            #${CUSTOMIZATIONS_PANEL_ID} input {
+                margin: 0;
+            }
+
+            @media (max-width: 1580px) {
+                #${CUSTOMIZATIONS_PANEL_ID} {
+                    float: none;
+                    margin: 0 0 12px auto;
+                    position: static;
+                }
             }
         `;
         document.head.appendChild(style);
@@ -193,10 +252,15 @@
 
     function enhanceRows() {
         injectStyles();
+        ensureSdbNavLinks();
         addPinInput();
-        hideUnsafeActionOptions();
+        addCustomizationsPanel();
+        autofillSdbPinPrompts();
+        applyDefaultDisplay90();
+        applyActionOptionVisibility();
         document.querySelectorAll('.sdb-item-cell').forEach(enhanceItemCell);
         document.querySelectorAll('.sdb-grid-item').forEach(enhanceGridItem);
+        document.querySelectorAll('td.sdb-cell-stepper').forEach(addMaxQuantityLink);
         document.querySelectorAll('td.sdb-cell-action').forEach(addRemoveOneLink);
         queueMissingPrices();
     }
@@ -217,17 +281,97 @@
         headerBar.appendChild(wrap);
 
         const input = wrap.querySelector(`#${PIN_INPUT_ID}`);
+        if (settings.savePin) input.value = getStoredSdbPin();
         input.addEventListener('input', () => {
             input.value = normalizeSdbPin(input.value);
+            if (settings.savePin) {
+                saveSdbPin(input.value);
+                autofillSdbPinPrompts();
+            }
         });
     }
 
-    function hideUnsafeActionOptions() {
-        document.querySelectorAll('select.sdb-action-select').forEach(select => {
-            Array.from(select.options).forEach(option => {
-                if (HIDDEN_ACTION_VALUES.has(option.value)) option.remove();
+    function ensureSdbNavLinks() {
+        const shopHref = '/market.phtml?type=your';
+        const desktopMenu = document.querySelector('.sdb-menubar .sdb-menulinks:not(.sdb-menulinks--mobile)');
+        if (desktopMenu && !desktopMenu.querySelector(`a[href="${shopHref}"]`)) {
+            const item = document.createElement('li');
+            item.innerHTML = `<a href="${shopHref}">Shop</a>`;
+            insertAfterInventory(desktopMenu, item);
+        }
+
+        const mobileMenu = document.querySelector('.sdb-menubar .sdb-menulinks--mobile');
+        if (mobileMenu && !mobileMenu.querySelector(`a[href="${shopHref}"]`)) {
+            const item = document.createElement('li');
+            item.innerHTML = `<a href="${shopHref}"><img alt="Shop" src="https://images.neopets.com/themes/h5/basic/images/myshop-icon.png"></a>`;
+            insertAfterInventory(mobileMenu, item);
+        }
+    }
+
+    function insertAfterInventory(menu, item) {
+        const inventoryItem = menu.querySelector('a[href="/inventory.phtml"]')?.closest('li');
+        if (inventoryItem?.parentNode === menu) {
+            inventoryItem.insertAdjacentElement('afterend', item);
+        } else {
+            menu.appendChild(item);
+        }
+    }
+
+    function addCustomizationsPanel() {
+        if (document.getElementById(CUSTOMIZATIONS_PANEL_ID)) return;
+
+        const panel = document.createElement('aside');
+        panel.id = CUSTOMIZATIONS_PANEL_ID;
+        panel.innerHTML = `
+            <strong>Customizations</strong>
+            <label><input type="checkbox" data-setting="hideDonate"> Hide Donate</label>
+            <label><input type="checkbox" data-setting="hideDiscard"> Hide Discard</label>
+            <label><input type="checkbox" data-setting="savePin"> Save and autofill PIN</label>
+            <label><input type="checkbox" data-setting="defaultDisplay90"> Default display to 90</label>
+            <label><input type="checkbox" data-setting="noInventoryConfirmation"> No Move to Inventory Confirmation</label>
+        `;
+        const app = document.getElementById('sdb-vue-app');
+        if (!app) return;
+        app.prepend(panel);
+
+        panel.querySelectorAll('input[data-setting]').forEach(input => {
+            const key = input.dataset.setting;
+            input.checked = Boolean(settings[key]);
+            input.addEventListener('change', () => {
+                settings[key] = input.checked;
+                saveSettings();
+                if (key === 'savePin') updatePinPersistence();
+                if (key === 'hideDonate' || key === 'hideDiscard') applyActionOptionVisibility();
+                if (key === 'defaultDisplay90' && settings.defaultDisplay90) {
+                    defaultDisplay90Applied = false;
+                    applyDefaultDisplay90();
+                }
             });
         });
+    }
+
+    function applyActionOptionVisibility() {
+        document.querySelectorAll('select.sdb-action-select').forEach(select => {
+            const removed = removedActionOptions.get(select) || [];
+            Array.from(select.options).forEach((option, index) => {
+                if (!shouldHideAction(option.value)) return;
+                removed.push({ option, index });
+                option.remove();
+            });
+            removedActionOptions.set(select, removed);
+
+            const restored = removed
+                .filter(({ option }) => !shouldHideAction(option.value))
+                .sort((a, b) => a.index - b.index);
+            restored.forEach(({ option, index }) => {
+                select.insertBefore(option, select.options[index] || null);
+            });
+            removedActionOptions.set(select, removed.filter(entry => !restored.includes(entry)));
+        });
+    }
+
+    function shouldHideAction(value) {
+        return (value === 'donate' && settings.hideDonate) || (value === 'discard' && settings.hideDiscard);
     }
 
     function enhanceItemCell(cell) {
@@ -277,9 +421,27 @@
         link.addEventListener('click', event => {
             event.preventDefault();
             event.stopPropagation();
-            removeOneItem(actionCell, link);
+            moveItemToInventory(actionCell, 1);
         });
         actionCell.appendChild(link);
+    }
+
+    function addMaxQuantityLink(stepperCell) {
+        if (stepperCell.querySelector(`.${MAX_QUANTITY_LINK_CLASS}`)) return;
+
+        const input = stepperCell.querySelector('.np-stepper-input');
+        if (!input) return;
+
+        const link = document.createElement('a');
+        link.href = '#';
+        link.className = MAX_QUANTITY_LINK_CLASS;
+        link.textContent = 'Max Quantity';
+        link.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopPropagation();
+            setInputValue(input, input.value === input.max ? '0' : input.max);
+        });
+        stepperCell.appendChild(link);
     }
 
     function getItemName(nameEl) {
@@ -550,8 +712,99 @@
         return String(name || '').replace(/\s+/g, ' ').trim().toLowerCase();
     }
 
+    function loadSettings() {
+        const defaults = {
+            hideDonate: true,
+            hideDiscard: true,
+            savePin: false,
+            defaultDisplay90: false,
+            noInventoryConfirmation: false
+        };
+
+        try {
+            return { ...defaults, ...JSON.parse(localStorage.getItem(SETTINGS_STORAGE_KEY) || '{}') };
+        } catch {
+            return defaults;
+        }
+    }
+
+    function saveSettings() {
+        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+    }
+
     function normalizeSdbPin(pin) {
         return String(pin || '').replace(/\D/g, '').slice(0, 4);
+    }
+
+    function getStoredSdbPin() {
+        return normalizeSdbPin(localStorage.getItem(PIN_STORAGE_KEY));
+    }
+
+    function saveSdbPin(pin) {
+        const normalizedPin = normalizeSdbPin(pin);
+        if (normalizedPin) {
+            localStorage.setItem(PIN_STORAGE_KEY, normalizedPin);
+        } else {
+            localStorage.removeItem(PIN_STORAGE_KEY);
+        }
+    }
+
+    function updatePinPersistence() {
+        const input = document.getElementById(PIN_INPUT_ID);
+        if (!settings.savePin) {
+            localStorage.removeItem(PIN_STORAGE_KEY);
+            return;
+        }
+
+        if (!input) return;
+        if (!input.value) input.value = getStoredSdbPin();
+        saveSdbPin(input.value);
+        autofillSdbPinPrompts();
+    }
+
+    function autofillSdbPinPrompts() {
+        if (!settings.savePin) return;
+
+        const pin = getStoredSdbPin();
+        if (!pin) return;
+
+        document.querySelectorAll('input[type="password"][maxlength="4"]').forEach(input => {
+            if (input.id === PIN_INPUT_ID || input.value) return;
+            setInputValue(input, pin);
+        });
+    }
+
+    function setInputValue(input, value) {
+        const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+        if (setter) {
+            setter.call(input, value);
+        } else {
+            input.value = value;
+        }
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    function applyDefaultDisplay90() {
+        if (!settings.defaultDisplay90 || defaultDisplay90Applied) return;
+
+        const select = Array.from(document.querySelectorAll('select.sdb-select')).find(candidate => {
+            const values = Array.from(candidate.options).map(option => option.value);
+            return values.includes('30') && values.includes('60') && values.includes('90');
+        });
+        if (!select) return;
+
+        defaultDisplay90Applied = true;
+        if (select.value === '90') return;
+
+        const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')?.set;
+        if (setter) {
+            setter.call(select, '90');
+        } else {
+            select.value = '90';
+        }
+        select.dispatchEvent(new Event('input', { bubbles: true }));
+        select.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
     function cacheSdbItems(payload) {
@@ -624,8 +877,14 @@
         }
     }
 
-    async function removeOneItem(actionCell, link) {
+    async function moveItemToInventory(actionCell, quantity) {
         clearRemoveError(actionCell);
+
+        const normalizedQuantity = Number.parseInt(quantity, 10);
+        if (!Number.isFinite(normalizedQuantity) || normalizedQuantity < 1) {
+            showRemoveError(actionCell, 'Set a quantity greater than 0 first.');
+            return;
+        }
 
         const pin = getSdbPin();
         const itemName = getActionCellItemName(actionCell);
@@ -653,7 +912,7 @@
                 body: JSON.stringify({
                     moves: [{
                         obj_info_id: item.id,
-                        quantity: 1,
+                        quantity: normalizedQuantity,
                         action: 'inventory'
                     }],
                     pin,
@@ -733,6 +992,34 @@
         actionCell.querySelector(`.${REMOVE_ERROR_CLASS}`)?.remove();
     }
 
+    function bypassInventoryConfirmation() {
+        document.addEventListener('change', event => {
+            const select = event.target.closest?.('select.sdb-action-select');
+            const actionCell = select?.closest('td.sdb-cell-action');
+            const row = actionCell?.closest('tr');
+            if (!settings.noInventoryConfirmation || !select || select.value !== 'inventory' || !actionCell || !row) return;
+
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+
+            const quantityInput = row?.querySelector('td.sdb-cell-stepper .np-stepper-input');
+            moveItemToInventory(actionCell, quantityInput?.value);
+            queueMicrotask(() => setSelectValue(select, ''));
+        }, true);
+    }
+
+    function setSelectValue(select, value) {
+        const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')?.set;
+        if (setter) {
+            setter.call(select, value);
+        } else {
+            select.value = value;
+        }
+        select.dispatchEvent(new Event('input', { bubbles: true }));
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
     function limitDetailsClickTargets() {
         document.addEventListener('click', event => {
             const cell = event.target.closest?.('.sdb-item-cell');
@@ -760,6 +1047,7 @@
 
     function init() {
         limitDetailsClickTargets();
+        bypassInventoryConfirmation();
         enhanceRows();
 
         const observer = new MutationObserver(scheduleEnhance);
