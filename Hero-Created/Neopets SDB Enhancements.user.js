@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets SDB Enhancements
-// @version      2.8
+// @version      2.9
 // @description  Enhances new SDB page.
 // @author       Hero
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -396,7 +396,7 @@
             cell.setAttribute(ENHANCED_ROW_ATTR, 'true');
             cell.dataset.heroSdbName = itemName;
             addNameHelper(nameEl, itemName);
-            addPriceLine(infoEl, itemName);
+            if (!isNcItemElement(cell)) addPriceLine(infoEl, itemName);
         }
 
         applyCachedPrice(cell, itemName);
@@ -416,7 +416,7 @@
             gridItem.setAttribute(ENHANCED_GRID_ATTR, 'true');
             gridItem.dataset.heroSdbName = itemName;
             addGridHelper(nameEl, itemName);
-            addPriceLine(contentEl, itemName, categoryEl);
+            if (!isNcItemElement(gridItem)) addPriceLine(contentEl, itemName, categoryEl);
         }
 
         applyCachedPrice(gridItem, itemName);
@@ -606,6 +606,10 @@
     function applyCachedPrice(cell, itemName) {
         const priceEl = cell.querySelector(`.${PRICE_CLASS}`);
         if (!priceEl) return;
+        if (isNcItemElement(cell)) {
+            priceEl.remove();
+            return;
+        }
 
         const cached = getCachedPrice(itemName);
         if (!cached) {
