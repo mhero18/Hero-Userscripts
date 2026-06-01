@@ -3,7 +3,7 @@
 Just some scripts I made to help make life easier on Neopets, hope you find some use too!  Always ensure that your use of userscripts complies with Neopets' rules. Happy to hear any suggestions or improvements for new or existing scripts! :)
 
 # [Neopets SDB Enhancements](Neopets%20SDB%20Enhancements.user.js)
-New SDB page! Added the Search Helper icons, narrowed down popup click trigger, removed donate/discard options, and added itemDB prices.
+New SDB page! Added the Search Helper icons, narrowed down popup click trigger, added itemDB prices, added Max Quantity and Remove 1 functionality, and many customization options such as hiding NC items, hiding donate option, etc.
 
 ![closetvisualizer](assets/sdbenhance.png)
 

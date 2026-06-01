@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets SDB Enhancements
-// @version      2.6
+// @version      2.8
 // @description  Enhances new SDB page.
 // @author       Hero
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -15,6 +15,7 @@
 
 // Enhancements:
 // - Added SSW, Trading Post, Auction Genie, SDB, JellyNeo, ItemDB search icons
+// - Add Closet and DTI search icons if item is wearable
 // - Pop up is kinda annoying so now only image / name click opens it
 // - Add itemDB prices
 // - Add persistent customization options
@@ -24,6 +25,7 @@
 // - Move 1 to inventory with no confirmation
 // - One click set max quantity
 // - Default display to 90 items per page option
+// - Hide NC items option
 
 
 (function () {
@@ -41,6 +43,7 @@
     const REMOVE_LINK_CLASS = 'hero-sdb-remove-one';
     const REMOVE_ERROR_CLASS = 'hero-sdb-remove-error';
     const MAX_QUANTITY_LINK_CLASS = 'hero-sdb-max-quantity';
+    const HIDDEN_NC_CLASS = 'hero-sdb-hidden-nc';
     const ENHANCED_ROW_ATTR = 'data-hero-sdb-enhanced';
     const ENHANCED_GRID_ATTR = 'data-hero-sdb-grid-enhanced';
     const DETAIL_CLICK_TARGETS = '.sdb-item-img, .sdb-item-name, .sdb-item-view-details';
@@ -199,6 +202,10 @@
                 margin-top: 2px;
             }
 
+            .${HIDDEN_NC_CLASS} {
+                display: none !important;
+            }
+
             #${CUSTOMIZATIONS_PANEL_ID} {
                 background: #fffdf7;
                 border: 1px solid #c3ad82;
@@ -262,6 +269,7 @@
         document.querySelectorAll('.sdb-grid-item').forEach(enhanceGridItem);
         document.querySelectorAll('td.sdb-cell-stepper').forEach(addMaxQuantityLink);
         document.querySelectorAll('td.sdb-cell-action').forEach(addRemoveOneLink);
+        applyNcItemVisibility();
         queueMissingPrices();
     }
 
@@ -329,6 +337,7 @@
             <label><input type="checkbox" data-setting="savePin"> Save and autofill PIN</label>
             <label><input type="checkbox" data-setting="defaultDisplay90"> Default display to 90</label>
             <label><input type="checkbox" data-setting="noInventoryConfirmation"> No Move to Inventory Confirmation</label>
+            <label><input type="checkbox" data-setting="hideNc"> Hide NC items</label>
         `;
         const app = document.getElementById('sdb-vue-app');
         if (!app) return;
@@ -342,6 +351,7 @@
                 saveSettings();
                 if (key === 'savePin') updatePinPersistence();
                 if (key === 'hideDonate' || key === 'hideDiscard') applyActionOptionVisibility();
+                if (key === 'hideNc') applyNcItemVisibility();
                 if (key === 'defaultDisplay90' && settings.defaultDisplay90) {
                     defaultDisplay90Applied = false;
                     applyDefaultDisplay90();
@@ -390,6 +400,7 @@
         }
 
         applyCachedPrice(cell, itemName);
+        syncClosetSearchLinks(cell, itemName);
     }
 
     function enhanceGridItem(gridItem) {
@@ -409,6 +420,7 @@
         }
 
         applyCachedPrice(gridItem, itemName);
+        syncClosetSearchLinks(gridItem, itemName);
     }
 
     function addRemoveOneLink(actionCell) {
@@ -515,6 +527,36 @@
         link.title = title;
         link.innerHTML = `<img src="${imgSrc}" class="searchimg" alt="">`;
         return link;
+    }
+
+    function syncClosetSearchLinks(container, itemName) {
+        const helper = container.querySelector(`.${SEARCH_HELPER_CLASS}`);
+        if (!helper) return;
+
+        const img = container.querySelector('.sdb-item-img, .sdb-grid-item-image img');
+        const item = getCachedSdbItemByIdentity(itemName, getItemFilename(img?.src));
+        const existingLinks = helper.querySelectorAll('[data-hero-closet-helper]');
+        if (!item?.canCloset) {
+            existingLinks.forEach(link => link.remove());
+            return;
+        }
+        if (existingLinks.length === 2) return;
+        existingLinks.forEach(link => link.remove());
+
+        const encodedName = encodeURIComponent(itemName);
+        const closetLink = makeSearchLink(
+            'Closet',
+            `https://www.neopets.com/closet.phtml?obj_name=${encodedName}`,
+            'https://itemdb.com.br/_next/static/media/closet.1217_t~foln1b.svg'
+        );
+        const dtiLink = makeSearchLink(
+            'Dress to Impress',
+            `https://impress.openneo.net/items?q=${encodedName}`,
+            'https://images.neopets.com/items/clo_shoyru_dappermon.gif'
+        );
+        closetLink.dataset.heroClosetHelper = 'true';
+        dtiLink.dataset.heroClosetHelper = 'true';
+        helper.append(closetLink, dtiLink);
     }
 
     function makeSswLink(itemName) {
@@ -718,7 +760,8 @@
             hideDiscard: true,
             savePin: false,
             defaultDisplay90: false,
-            noInventoryConfirmation: false
+            noInventoryConfirmation: false,
+            hideNc: false
         };
 
         try {
@@ -819,11 +862,15 @@
             const record = {
                 id: Number(id),
                 name,
-                filename: item.obj_filename || ''
+                filename: item.obj_filename || '',
+                isNc: Boolean(item.is_nc),
+                typeName: item.type_name || '',
+                canCloset: Boolean(item.can_closet)
             };
             sdbItemsByName.set(normalizeName(name), record);
             if (record.filename) sdbItemsByExactKey.set(`${normalizeName(name)}|${record.filename}`, record);
         });
+        scheduleEnhance();
     }
 
     function installSdbItemsInterceptor() {
@@ -944,11 +991,31 @@
         const row = actionCell.closest('tr');
         const img = row?.querySelector('.sdb-item-img');
         const filename = getItemFilename(img?.src);
+        return getCachedSdbItemByIdentity(itemName, filename);
+    }
+
+    function getCachedSdbItemByIdentity(itemName, filename) {
         if (itemName && filename) {
             const exact = sdbItemsByExactKey.get(`${normalizeName(itemName)}|${filename}`);
             if (exact) return exact;
         }
         return sdbItemsByName.get(normalizeName(itemName));
+    }
+
+    function applyNcItemVisibility() {
+        document.querySelectorAll('.sdb-table tbody tr, .sdb-grid-item').forEach(element => {
+            element.classList.toggle(HIDDEN_NC_CLASS, settings.hideNc && isNcItemElement(element));
+        });
+    }
+
+    function isNcItemElement(element) {
+        const itemName = getItemName(element.querySelector('.sdb-item-name, .sdb-grid-item-name'));
+        const img = element.querySelector('.sdb-item-img, .sdb-grid-item-image img');
+        const item = getCachedSdbItemByIdentity(itemName, getItemFilename(img?.src));
+        if (item?.isNc || normalizeName(item?.typeName) === 'neocash') return true;
+
+        const renderedType = element.querySelector('.sdb-item-meta, .sdb-grid-item-category')?.textContent || '';
+        return normalizeName(renderedType).replace(/^type:\s*/, '') === 'neocash';
     }
 
     function getItemFilename(src) {
