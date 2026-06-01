@@ -5,8 +5,13 @@ Credit to all the original authors!
 Just adding here as backup and for reference.
 Some of them have small modifications I made.
 
+# Neopets: Book and Food Tracker
 
-# Neopets: Better Volunteering UI
+Originally created by saahphire
+
+ - Updated to work for new SDB (not thoroughly tested)
+
+# Neopets: Better Volunteering UIs(Neopets%20Better%20Volunteering%20UI.user.js)
 
 Originally created by rawbeee, updates from Hero! THANK YOU, THIS IS LIFE SAVER.
 
