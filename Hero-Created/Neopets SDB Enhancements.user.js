@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets SDB Enhancements
-// @version      3.0
+// @version      3.1
 // @description  Enhances new SDB page.
 // @author       Hero
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -169,6 +169,7 @@
             }
 
             #${PIN_INPUT_ID} {
+                -webkit-text-security: disc;
                 background: #fff;
                 border: 1px solid #c3ad82;
                 border-radius: 5px;
@@ -284,7 +285,7 @@
         wrap.className = 'hero-sdb-pin-wrap';
         wrap.innerHTML = `
             <label for="${PIN_INPUT_ID}">SDB PIN</label>
-            <input id="${PIN_INPUT_ID}" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="0000">
+            <input id="${PIN_INPUT_ID}" type="text" inputmode="numeric" maxlength="4" autocomplete="one-time-code" placeholder="0000">
         `;
         headerBar.appendChild(wrap);
 
