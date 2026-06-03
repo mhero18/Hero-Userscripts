@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets SDB Enhancements
-// @version      2.9
+// @version      3.0
 // @description  Enhances new SDB page.
 // @author       Hero
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -14,7 +14,7 @@
 // ==/UserScript==
 
 // Enhancements:
-// - Added SSW, Trading Post, Auction Genie, SDB, JellyNeo, ItemDB search icons
+// - Added Shop Wizard/SSW, Trading Post, Auction Genie, SDB, JellyNeo, ItemDB search icons
 // - Add Closet and DTI search icons if item is wearable
 // - Pop up is kinda annoying so now only image / name click opens it
 // - Add itemDB prices
@@ -488,7 +488,7 @@
         helper.addEventListener('click', event => event.stopPropagation());
 
         helper.append(
-            makeSswLink(itemName),
+            makeShopWizardLink(itemName),
             makeSearchLink(
                 'Trading Post',
                 `https://www.neopets.com/island/tradingpost.phtml?type=browse&criteria=item_phrase&search_string=${encodeURIComponent(itemName)}&sort=newest`,
@@ -557,6 +557,26 @@
         closetLink.dataset.heroClosetHelper = 'true';
         dtiLink.dataset.heroClosetHelper = 'true';
         helper.append(closetLink, dtiLink);
+    }
+
+    function makeShopWizardLink(itemName) {
+        return isPremiumUser() ? makeSswLink(itemName) : makeRegularShopWizardLink(itemName);
+    }
+
+    function isPremiumUser() {
+        const isBeta = Boolean(document.querySelector('[class^="nav-pet-menu-icon"], [class*=" nav-pet-menu-icon"]'));
+        if (isBeta) {
+            return Boolean(document.querySelector('[class^="navsub-ssw-icon"], [class*=" navsub-ssw-icon"]'));
+        }
+        return Boolean(document.querySelector('#sswmenu .imgmenu'));
+    }
+
+    function makeRegularShopWizardLink(itemName) {
+        return makeSearchLink(
+            'Shop Wizard',
+            `https://www.neopets.com/shops/wizard.phtml?string=${encodeURIComponent(itemName)}`,
+            'http://images.neopets.com/themes/h5/basic/images/shopwizard-icon.png'
+        );
     }
 
     function makeSswLink(itemName) {
