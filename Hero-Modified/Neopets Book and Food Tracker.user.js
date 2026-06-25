@@ -3,7 +3,7 @@
 // @namespace    https://github.com/saahphire/NeopetsUserscripts
 // @version      1.0.5
 // @description  Adds a border to books/gourmet food a tracked pet hasn't read/eaten yet. Also moves them to the top in various pages.
-// @author       saahphire
+// @author       saahphire & Hero
 // @homepageURL  https://github.com/saahphire/NeopetsUserscripts
 // @homepage     https://github.com/saahphire/NeopetsUserscripts
 // @match        *://*.neopets.com/*

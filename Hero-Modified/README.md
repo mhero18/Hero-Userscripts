@@ -9,7 +9,7 @@ Some of them have small modifications I made.
 
 Originally created by saahphire
 
- - Updated to work for new SDB (not thoroughly tested)
+ - Updated to work for new SDB
 
 # Neopets: Better Volunteering UIs(Neopets%20Better%20Volunteering%20UI.user.js)
 
