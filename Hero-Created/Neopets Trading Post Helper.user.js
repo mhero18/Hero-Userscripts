@@ -196,7 +196,7 @@
 
             // ItemDB
             const itemdbLink = document.createElement('a');
-            itemdbLink.href = `https://itemdb.com.br/item/${encodeURIComponent(itemName)}`;
+            itemdbLink.href = `https://itemdb.com.br/item/${encodeURIComponent(itemName.replace(/\s+/g, "-"))}`;
             itemdbLink.target = '_blank';
             itemdbLink.title = 'Search ItemDB';
             const itemdbImg = document.createElement('img');
