@@ -512,7 +512,7 @@
             ),
             makeSearchLink(
                 'ItemDB',
-                `https://itemdb.com.br/item/${encodeURIComponent(itemName)}`,
+                `https://itemdb.com.br/item/${encodeURIComponent(itemName.replace(/\s+/g, "-"))}`,
                 'https://images.neopets.com/themes/h5/basic/images/v3/quickstock-icon.svg'
             )
         );
