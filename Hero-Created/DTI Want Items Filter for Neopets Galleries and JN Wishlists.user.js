@@ -6,7 +6,7 @@
 // @description  Save your DTI Items You Want items and filter Neopets galleries / JN lists to match.
 // @match        *://impress.openneo.net/*
 // @match        *://items.jellyneo.net/mywishes/*
-// @match        *://*.neopets.com/gallery/index.phtml*
+// @match        *://*.neopets.com/gallery/*
 // @grant        GM_setValue
 // @grant        GM_getValue
 // ==/UserScript==

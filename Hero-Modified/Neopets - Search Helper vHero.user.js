@@ -25,15 +25,12 @@
 // @match        *://*.neopets.com/pirates/academy.phtml?type=status*
 // @match        *://*.neopets.com/process_cash_object.phtml
 // @match        *://*.neopets.com/quests.phtml
-// @match        *://*.neopets.com/quickstock.phtml*
-// @match        *://*.neopets.com/safetydeposit.phtml*
 // @match        *://*.neopets.com/shops/wizard.phtml*
 // @match        *://*.neopets.com/space/coincidence.phtml
 // @match        *://*.neopets.com/winter/igloo2.phtml
 // @match        *://*.neopets.com/winter/snowfaerie*.phtml*
 // @match        *://*.neopets.com/questlog/
 // @match        *://*.neopets.com/games/teatime/
-// @match        *://*.neopets.com/island/tradingpost.phtml/?type=view
 // @icon         https://www.neopets.com/favicon.ico
 // @downloadURL  https://github.com/mhero18/Hero-Userscripts/blob/main/Hero-Modified/Neopets%20-%20Search%20Helper%20V3.js
 // @updateURL    https://github.com/mhero18/Hero-Userscripts/blob/main/Hero-Modified/Neopets%20-%20Search%20Helper%20V3.js
@@ -382,6 +379,21 @@ if (isBeta) {
         $(document).ajaxSuccess(function() {setTimeout(TaviQuest, 1000);});
     }
 
+    // Your Shop
+    if (inURL("type=your") || inURL("market_your") || $("[name=subbynext]").length === 2) {
+        function addYourShopLinks() {
+            $(".market-your-item").each(function (k, v) {
+                const itemname = $(v).find(".market-your-item__name").eq(0).text().trim();
+                const itemtype = $(v).find(".market-your-item__meta").eq(0);
+
+                if (itemname && itemtype.exists() && !$(v).find(".search-helper").exists()) {
+                    itemtype.after(makelinks(itemname));
+                }
+            });
+        }
+        addYourShopLinks();
+    }
+
     function sswopen(item) {
         $(".premium-widget__2024").hide(); // hide all open widgets
         toggleWidget__2020("ssw");
@@ -607,17 +619,6 @@ if (isBeta) {
             let extras = {cash: isNeoCash, wearable: isWearable, itemid: id};
             let nametd = $(v).parent().parent().find("td").eq(1);
             nametd.find("b").eq(0).after(makelinks(nametd.find("b").eq(0).justtext(), extras));
-        });
-    }
-
-    // Your Shop
-    if (document.URL.includes("type=your") || document.URL.includes("market_your") || $("[name=subbynext]").length === 2) { // because pressing the Previous/Next 30 is a POST and has nothing of value in the URL
-        $("img[src*='/items/']").each(function (k, v) {
-            let nametd = $(v).parent().parent().find("td").eq(0);
-            let itemname = nametd.text();
-            itemname = itemname.replace(nametd.find(".medText").text(), "");
-
-            nametd.find("b").eq(0).after(makelinks(itemname));
         });
     }
 
