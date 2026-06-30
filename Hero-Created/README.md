@@ -2,20 +2,26 @@
 # Hero's Userscripts 
 Just some scripts I made to help make life easier on Neopets, hope you find some use too!  Always ensure that your use of userscripts complies with Neopets' rules. Happy to hear any suggestions or improvements for new or existing scripts! :)
 
+# [Neopets My Shop Enhancements](Neopets%20My%20Shop%20Enhancements.user.js)
+Enhancing the new shop stock page by removing extra item metadata, widening the item column, adding Max Quantity links, and compacting the shop navigation.
+
+![myshopenhance](assets/myshopenhance.png)
+
 # [Neopets SDB Enhancements](Neopets%20SDB%20Enhancements.user.js)
 New SDB page! Added the Search Helper icons, narrowed down popup click trigger, added itemDB prices, added Max Quantity and Remove 1 functionality, and many customization options such as hiding NC items, hiding donate option, etc.
 
-![closetvisualizer](assets/sdbenhance.png)
+![sdbenhance](assets/sdbenhance.png)
 
 # [Neopets Closet Enhancements](Neopets%20Closet%20Enhancements.user.js)
 New Closet page! Added the Search Helper icons plus extra DTI icon, added top pagination, narrowed down popup click trigger, removed category label, added PB Clothing and NP items filter/categories.
 
-![closetvisualizer](assets/closetenhance.png)
+![closetenhance](assets/closetenhance.png)
 
 # [Neopets Quickstock Enhancements](Neopets%20Quickstock%20Enhancements.user.js)
 Enhancing the new quickstock page with additional features like top pagination, search helper icons, item images, and compact view.
 
 ![quickstockenhance](assets/quickstockenhance.png)
+
 
 # [Neopets Game Trophies Tracker](Neopets%20Game%20Trophies%20Tracker.user.js)
 Neopets game trophy tracker with modern UI, dynamic filtering, game links, and tracking list.
