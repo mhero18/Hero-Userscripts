@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets - Search Helper vHero
-// @version      1.0.30
+// @version      1.0.31
 // @description  Adds convenient search icons to many places
 // @author       diceroll123
 // @match        *://*.neopets.com/auctions.phtml*
