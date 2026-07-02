@@ -1,6 +1,6 @@
 ﻿// ==UserScript==
 // @name         Neopets Lab Ray Pet Grid Selector
-// @version      1.5
+// @version      1.9
 // @description  Replace the Lab Ray pet dropdown with a visual pet grid
 // @author       Hero (thanks to sn0tspoon /nadinejun0 for original)
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -13,6 +13,8 @@
 (function() {
     'use strict';
 
+    const DEFAULT_LAB_PET = '';
+
     const CONFIG = {
         selectors: {
             app: '#lab-vue-app',
@@ -20,9 +22,7 @@
             selectRow: '.lab-select-row',
             select: 'select.lab-select',
             triggerLabel: '.lab-as-trigger-label',
-            actions: '.lab-actions',
-            resultFiredPet: '.lab-result-fired b',
-            resultPetImage: '.lab-pet-preview img'
+            actions: '.lab-actions'
         },
         grid: {
             columns: 'repeat(auto-fill, minmax(130px, 1fr))',
@@ -48,132 +48,6 @@
         },
         delays: {
             init: 250
-        }
-    };
-
-    const ZapAgain = {
-        init() {
-            const content = document.querySelector(CONFIG.selectors.content);
-            if (!content || content.querySelector('#hero-lab-zap-again')) return;
-
-            const petName = this.getResultPetName(content);
-            const backAction = this.getBackToLabAction(content);
-            if (!petName || !backAction) return;
-
-            const action = document.createElement('div');
-            action.className = 'lab-actions hero-zap-again-actions';
-
-            const button = document.createElement('button');
-            button.id = 'hero-lab-zap-again';
-            button.className = 'np-button button-default__2020 button-yellow__2020';
-            button.type = 'button';
-            button.textContent = 'Zap Again';
-            button.addEventListener('click', () => this.zapAgain(button, petName));
-
-            action.appendChild(button);
-            backAction.insertAdjacentElement('beforebegin', action);
-        },
-
-        getResultPetName(content) {
-            const firedPet = content.querySelector(CONFIG.selectors.resultFiredPet);
-            if (firedPet?.textContent.trim()) return firedPet.textContent.trim();
-
-            const preview = content.querySelector(CONFIG.selectors.resultPetImage);
-            return preview?.alt?.trim() || '';
-        },
-
-        getBackToLabAction(content) {
-            return Array.from(content.querySelectorAll(CONFIG.selectors.actions))
-                .find(action => action.textContent.includes('Back to the Lab'));
-        },
-
-        getRefCk() {
-            const input = document.querySelector('input[name="_ref_ck"]');
-            if (input?.value) return input.value;
-
-            const meta = document.querySelector('meta[name="_ref_ck"], meta[name="ref_ck"]');
-            if (meta?.content) return meta.content;
-
-            const windowToken = window._ref_ck || window.ref_ck || window._refCk;
-            if (windowToken) return windowToken;
-
-            const pageHtml = document.documentElement.innerHTML;
-            const match = pageHtml.match(/["']?_ref_ck["']?\s*[:=]\s*["']([^"']+)["']/);
-            return match?.[1] || '';
-        },
-
-        async zapAgain(button, petName) {
-            const refCk = this.getRefCk();
-            if (!refCk) {
-                window.alert('Could not find the Lab Ray request token. Please use Back to the Lab for this zap.');
-                return;
-            }
-
-            const originalText = button.textContent;
-            button.disabled = true;
-            button.textContent = 'Zapping...';
-
-            try {
-                const response = await fetch('/np-templates/ajax/labray/zap.php', {
-                    method: 'POST',
-                    credentials: 'include',
-                    headers: {
-                        'Accept': 'application/json, text/plain, */*',
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: JSON.stringify({
-                        chosen: petName,
-                        _ref_ck: refCk
-                    })
-                });
-
-                const text = await response.text();
-                if (!response.ok) throw new Error(`Zap request failed (${response.status})`);
-
-                this.renderZapResponse(text);
-            } catch (error) {
-                console.error('Lab Ray Grid: Zap Again failed', error);
-                button.disabled = false;
-                button.textContent = originalText;
-                window.alert('Zap Again failed. Please use Back to the Lab for this zap.');
-            }
-        },
-
-        renderZapResponse(text) {
-            let data = null;
-            try {
-                data = JSON.parse(text);
-            } catch (error) {
-                // The endpoint may return HTML instead of JSON.
-            }
-
-            if (data?.success === false || data?.error === true) {
-                console.warn('Lab Ray Grid: Zap Again returned an error', data?.errMsg || data?.message || data);
-                window.location.reload();
-                return;
-            }
-
-            const content = document.querySelector(CONFIG.selectors.content);
-            const html = data?.html || data?.content || data?.template || data?.body || (!data && text.includes('<') ? text : '');
-
-            if (content && html) {
-                content.innerHTML = html;
-                this.init();
-                return;
-            }
-
-            if (data?.redirect) {
-                window.location.href = data.redirect;
-                return;
-            }
-
-            if (data?.errMsg || data?.message) {
-                window.alert(data.errMsg || data.message);
-                return;
-            }
-
-            window.location.reload();
         }
     };
     const PetGrid = {
@@ -202,6 +76,12 @@
                 this.syncSelection(select.value);
             });
 
+            const defaultPet = this.getDefaultPet(select);
+            if (!select.value && defaultPet) {
+                this.selectPet(defaultPet, select);
+                return;
+            }
+
             this.syncSelection(select.value);
         },
 
@@ -215,6 +95,15 @@
                 }));
         },
 
+        getDefaultPet(select) {
+            const defaultPet = DEFAULT_LAB_PET.trim();
+            if (!defaultPet) return '';
+
+            const option = Array.from(select.options)
+                .find(item => item.value.toLowerCase() === defaultPet.toLowerCase());
+
+            return option?.value || '';
+        },
         createGrid(pets, select) {
             const grid = document.createElement('div');
             grid.id = 'hero-lab-ray-pet-grid';
@@ -360,10 +249,7 @@
 
         observe() {
             const app = document.querySelector(CONFIG.selectors.app) || document.body;
-            const observer = new MutationObserver(() => {
-                this.init();
-                ZapAgain.init();
-            });
+            const observer = new MutationObserver(() => this.init());
             observer.observe(app, { childList: true, subtree: true });
         },
 
@@ -391,7 +277,6 @@
         start() {
             this.addStyles();
             this.init();
-            ZapAgain.init();
             this.observe();
         }
     };
