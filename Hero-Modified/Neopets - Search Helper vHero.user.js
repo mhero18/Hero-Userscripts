@@ -379,6 +379,81 @@ if (isBeta) {
         $(document).ajaxSuccess(function() {setTimeout(TaviQuest, 1000);});
     }
 
+    // Auctions
+    if (inURL("auctions.phtml") || inURL("genie.phtml")) {
+        function addAuctionUserActions($target, username) {
+            if (!$target.length || $target.parent().find(".auction-user-actions").exists()) {
+                return;
+            }
+
+            const cleanUser = username.replace(/[^a-zA-Z0-9_ -]+/g, "");
+            if (!cleanUser) {
+                return;
+            }
+
+            const encodedUser = encodeURIComponent(cleanUser);
+            const actions = $(`
+                <span class="user-actions auction-user-actions" style="display:block; margin-top:2px;">
+                    <a href="/neomessages.phtml?type=send&recipient=${encodedUser}" target="_blank" title="Send Neomail"><img src="http://images.neopets.com/themes/h5/basic/images/v3/neomail-icon.svg" class="searchimg" alt="Neomail"></a>
+                    <a href="/island/tradingpost.phtml?type=browse&criteria=owner&search_string=${encodedUser}" target="_blank" title="View Trading Post"><img src="http://images.neopets.com/themes/h5/basic/images/tradingpost-icon.png" class="searchimg" alt="Trading Post"></a>
+                    <a href="/genie.phtml?type=find_user&auction_username=${encodedUser}" target="_blank" title="View Auctions"><img src="http://images.neopets.com/themes/h5/basic/images/auction-icon.png" class="searchimg" alt="Auctions"></a>
+                </span>
+            `);
+
+            $target.after(actions);
+        }
+
+        function getUserFromLink(link) {
+            try {
+                const url = new URL(link.href, location.origin);
+                return url.searchParams.get("user") || "";
+            } catch (e) {
+                return "";
+            }
+        }
+
+        function addAuctionLinks() {
+            $(".ah2_list .ah2_row").each(function (k, row) {
+                const $row = $(row);
+                const $ownerLink = $row.find("td[data-label='Owner'] a[href*='user=']").first();
+                addAuctionUserActions($ownerLink, getUserFromLink($ownerLink[0]));
+
+                const $itemCell = $row.find("td").eq(2);
+                const $itemLink = $itemCell.find("a[href*='type=bids&auction_id=']").first();
+                const itemname = $itemLink.text().trim();
+
+                if (!itemname || $itemCell.find(".search-helper").exists()) {
+                    return;
+                }
+
+                const $rarity = $itemCell.find(".auction-rarity").first();
+                if ($rarity.exists()) {
+                    $rarity.after(makelinks(itemname));
+                } else {
+                    $itemLink.after(makelinks(itemname));
+                }
+            });
+
+            $(".ah2_card_body .ah2_owner").each(function (k, element) {
+                const $owner = $(element);
+                const match = $owner.text().match(/owner:\s*([a-zA-Z0-9_ -]+)/i);
+                if (match) {
+                    addAuctionUserActions($owner, match[1].trim());
+                }
+            });
+
+            $(".ah2_card_body .ah2_itemname").each(function (k, element) {
+                const $itemName = $(element);
+                const itemname = $itemName.text().trim();
+
+                if (itemname && !$itemName.parent().find(".search-helper").exists()) {
+                    $itemName.after(makelinks(itemname));
+                }
+            });
+        }
+        addAuctionLinks();
+    }
+
     // Your Shop
     if (inURL("type=your") || inURL("market_your") || $("[name=subbynext]").length === 2) {
         function addYourShopLinks() {
