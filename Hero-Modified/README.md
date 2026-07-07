@@ -30,7 +30,9 @@ Originally created by diceroll123, modified by itemDB, and updates from Hero!
 - Added search helper icons underneath Gallery items
 - Removed regular Shop Wizard icon because I always use SSW
 - Added "sort_by=newest" to TP icon so it opens newest by default
-
+- Added helpers for new My Shop page
+- Added helpers for new Auctions page
+- Added user helpers (nm/tp/auctions) for Auction pages
 
 
 # [Better Quick Stock](Better%20Quick%20Stock.user.js)

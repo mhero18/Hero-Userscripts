@@ -2,6 +2,16 @@
 # Hero's Userscripts 
 Just some scripts I made to help make life easier on Neopets, hope you find some use too!  Always ensure that your use of userscripts complies with Neopets' rules. Happy to hear any suggestions or improvements for new or existing scripts! :)
 
+# [Neopets Auctions Enhancements](Neopets%20Auctions%20Enhancements.user.js)
+Enhancing the new auctions page by adding search helper links, user helper links, and a couple of options like Themes, compact view, and removing View column. 
+
+![auctionsenhance](assets/auctionsenhance.png)
+
+# [Neopets Lab Ray Pet Grid Selector](Neopets%20Lab%20Ray%20Pet%20Grid%20Selector.user.js)
+Changes the new dropdown menu in the Lab Ray to a grid layout with pet images.
+
+![labgrid](assets/labgrid.png)
+
 # [Neopets My Shop Enhancements](Neopets%20My%20Shop%20Enhancements.user.js)
 Enhancing the new shop stock page by removing extra item metadata, widening the item column, adding Max Quantity links, and compacting the shop navigation.
 
