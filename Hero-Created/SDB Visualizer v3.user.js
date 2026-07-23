@@ -1151,7 +1151,9 @@ function renderCollectorUI() {
     #sdbvcVisualizerOverlay[data-theme="dark"] .sdbvc-viewerDetailName,
     #sdbvcVisualizerOverlay[data-theme="dark"] .sdbvc-viewerStatValue,
     #sdbvcVisualizerOverlay[data-theme="dark"] .sdbvc-viewerPriceRow strong,
-    #sdbvcVisualizerOverlay[data-theme="dark"] .sdbvc-viewerDetailStat strong {
+    #sdbvcVisualizerOverlay[data-theme="dark"] .sdbvc-viewerDetailStat strong,
+    #sdbvcVisualizerOverlay[data-theme="dark"] .sdbvc-viewerTable th,
+    #sdbvcVisualizerOverlay[data-theme="dark"] .sdbvc-viewerTable td {
       color: #f2ede4;
     }
     #sdbvcVisualizerOverlay[data-theme="dark"] .sdbvc-viewerTopbar span,
@@ -3403,12 +3405,12 @@ function buildViewerDetailLinks(item) {
     links.push(
       {
         label: "Auction House",
-        iconSrc: "https://itemdb.com.br/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fauction.1142bqb.irn5j.png&w=32&q=100",
+        iconSrc: "https://images.neopets.com/themes/h5/basic/images/auction-icon.png",
         href: `https://www.neopets.com/genie.phtml?type=process_genie&criteria=exact&auctiongenie=${encodedName}`,
       },
       {
         label: "Trading Post",
-        iconSrc: "https://itemdb.com.br/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Ftradingpost.0thlqk590y~_-.png&w=32&q=100",
+        iconSrc: "https://images.neopets.com/themes/h5/basic/images/tradingpost-icon.png",
         href: `https://www.neopets.com/island/tradingpost.phtml?type=browse&&sort_by=newest&criteria=item_exact&search_string=${encodedName}`,
       },
     );
@@ -3418,7 +3420,7 @@ function buildViewerDetailLinks(item) {
     links.push(
       {
         label: "Closet",
-        iconSrc: "https://itemdb.com.br/_next/static/media/closet.1217_t~foln1b.svg",
+        iconSrc: "https://itemdb.com.br/_next/static/media/closet.3msdv6ve4acap.svg",
         href: `https://www.neopets.com/closet.phtml?obj_name=${encodedName}`,
       },
       {
