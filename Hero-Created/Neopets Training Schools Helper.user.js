@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets Training Schools Helper
-// @version      3.3
+// @version      3.7
 // @author       Hero
 // @description  Improves Neopets training schools: train, complete, cancel, and pay for courses with bulk actions.
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -664,8 +664,50 @@
         return "Error: " + rawError.replace(/<[^>]+>/g, "").trim();
     }
 
+    function extractRefCk(html) {
+        const inputMatch = html.match(/name=["']_ref_ck["'][^>]*value=["']([^"']+)["']/i);
+        if (inputMatch) return inputMatch[1];
+
+        const valueFirstInputMatch = html.match(/value=["']([^"']+)["'][^>]*name=["']_ref_ck["']/i);
+        if (valueFirstInputMatch) return valueFirstInputMatch[1];
+
+        const pageMatch = html.match(/_ref_ck["']?\s*[:=]\s*["']([a-f0-9]+)["']/i);
+        return pageMatch?.[1] || "";
+    }
+
+    async function getRefCk() {
+        if (typeof window.getCK === "function") return window.getCK();
+
+        const refInput = document.querySelector("input[name='_ref_ck']");
+        if (refInput?.value) return refInput.value;
+
+        const currentPageRefCk = extractRefCk(document.documentElement.innerHTML);
+        if (currentPageRefCk) return currentPageRefCk;
+
+        try {
+            const response = await fetch("/safetydeposit.phtml", { credentials: "same-origin" });
+            const html = await response.text();
+            return extractRefCk(html);
+        } catch (err) {
+            return "";
+        }
+    }
+
+    function parseSdbMoveItemsStatus(response, bodyText) {
+        if (!response.ok) return `Error: SDB request failed (${response.status})`;
+        if (!bodyText.trim()) return "Error: SDB request returned an empty response";
+
+        try {
+            const payload = JSON.parse(bodyText);
+            const errorMessage = payload.message || payload.error || payload.errors?.[0]?.message || payload.errors?.[0];
+            if (payload.success === false || errorMessage) return `Error: ${errorMessage || "SDB request failed"}`;
+            return "Successful";
+        } catch (err) {
+            return parseSdbStatus(bodyText);
+        }
+    }
+
     async function getItemsFromSDB(array) {
-        const postData = {};
         const itemCount = {};
 
         for (let i = 0; i < array.length; i++) {
@@ -675,29 +717,37 @@
             itemCount[id]++;
         }
 
-        // Construct POST data
-        for (const item in itemCount) {
-            postData[`back_to_inv[${item}]`] = itemCount[item];
-            postData["obj_name"] = array.find(name => itemID[name] == item);
-        }
-        postData["pin"] = getSdbPin();
-        postData["category"] = "0";
-        postData["offset"] = "0";
+        const refCk = await getRefCk();
+        if (!refCk) return "Error: Could not find _ref_ck for SDB request";
 
-        return new Promise(async resolve => {
-            // Random delay before sending request
-            await new Promise(r => setTimeout(r, randomDelay()));
+        const payload = {
+            moves: Object.entries(itemCount).map(([id, quantity]) => ({
+                obj_info_id: Number(id),
+                quantity,
+                action: "inventory"
+            })),
+            pin: getSdbPin(),
+            _ref_ck: refCk
+        };
 
-            $.ajax({
-                type: "POST",
-                url: "/process_safetydeposit.phtml?checksub=scan",
-                data: postData,
-                success: data => {
-                    resolve(parseSdbStatus(data));
+        await new Promise(r => setTimeout(r, randomDelay()));
+
+        try {
+            const response = await fetch("/np-templates/ajax/safetydeposit/move-items.php", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                    "X-Requested-With": "XMLHttpRequest"
                 },
-                error: () => resolve("Error: SDB request failed")
+                body: JSON.stringify(payload)
             });
-        });
+            const bodyText = await response.text();
+            return parseSdbMoveItemsStatus(response, bodyText);
+        } catch (err) {
+            return "Error: SDB request failed";
+        }
     }
 
     document.getElementById("btn-get-items").addEventListener("click", async function() {
