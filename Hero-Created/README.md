@@ -2,6 +2,9 @@
 # Hero's Userscripts 
 Just some scripts I made to help make life easier on Neopets, hope you find some use too!  Always ensure that your use of userscripts complies with Neopets' rules. Happy to hear any suggestions or improvements for new or existing scripts! :)
 
+# [Neopets Instant Fruit Machine v2](Neopets%20Instant%20Fruit%20Machine%20v2.user.js)
+Skips the Fruit Machine animation.
+
 # [Neopets Auctions Enhancements](Neopets%20Auctions%20Enhancements.user.js)
 Enhancing the new auctions page by adding search helper links, user helper links, and a couple of options like Themes, compact view, and removing View column. 
 
