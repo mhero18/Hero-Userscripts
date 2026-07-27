@@ -86,15 +86,6 @@ Collects food items from the Kadoatery page and displays them in a copyable text
 ![kadfoods](assets/kadfoods.png)
 
 
-
-# [Neopets Alerts/Notifications Bubble Count Fix](Neopets%20Alerts%20Bubble%20Count%20Fix.user.js)
-Fix the annoying Alerts/Notifications bubble count that is wrong. Makes it so that the correct count is displayed and nothing if there is none.
-
-![alertsfix](assets/alertsfix.png)
-
-
-
-
 # [Neopets Training Schools Helper](Neopets%20Training%20Schools%20Helper.user.js)
 
 Adds a helper table on training school status pages (Swashbuckling Academy, Mystery Island Training, Secret Ninja School). Helps make training multiple pets easier.
