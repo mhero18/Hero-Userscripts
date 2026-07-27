@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets Quickstock Enhancements
-// @version      3.1
+// @version      3.2
 // @description  Enhances the new Quickstock page.
 // @author       Hero
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -755,10 +755,10 @@
             jnLink.href = `https://items.jellyneo.net/search/?name=${encodeURIComponent(itemName)}&name_type=3`;
             jnLink.target = '_blank';
             jnLink.title = 'JellyNeo';
-            jnLink.innerHTML = '<img src="https://images.neopets.com/items/toy_plushie_negg_fish.gif" class="searchimg">';
+            jnLink.innerHTML = '<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT2dQNzqsjgXfIRB9FaJwx4yMVjEAskB_2jxr_H8wzOX0EqADa46TRv&s" class="searchimg">';
 
             const idbLink = document.createElement('a');
-            idbLink.href = `https://itemdb.com.br/item/${encodeURIComponent(itemName)}`;
+            idbLink.href = `https://itemdb.com.br/item/${encodeURIComponent(itemName.replace(/\s+/g, "-"))}`;
             idbLink.target = '_blank';
             idbLink.title = 'ItemDB';
             idbLink.innerHTML = '<img src="https://images.neopets.com/themes/h5/basic/images/v3/quickstock-icon.svg" class="searchimg">';
