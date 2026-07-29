@@ -2,7 +2,7 @@
 // @name        SDB Visualizer v3
 // @author      Hero (special thanks to NeoQuest.Guide & itemDB & Codex)
 // @icon        https://images.neopets.com/items/foo_gmc_herohotdog.gif
-// @version     4.4
+// @version     4.8
 // @match       *://*.neopets.com/safetydeposit.phtml*
 // @connect     itemdb.com.br
 // @grant       GM_setValue
@@ -26,11 +26,17 @@ const LEGACY_STORAGE_KEYS = ["visitedSDBPages"];
 
 const ITEMDB_CHUNK_DELAY_MS = 1000;
 const ITEMDB_CHUNK_SIZE = 1000;
+const ITEMDB_V2_INTENT = "card";
 const ITEMDB_REFRESH_AFTER_MS = 1000 * 60 * 60 * 24 * 7;
 const PRICE_REFRESH_AFTER_MS = 1000 * 60 * 60 * 12;
 const ITEMDB_RATE_LIMIT_COOLDOWN_MS = 1000 * 60 * 30;
 const SDB_DEFAULT_PAGE_SIZE = 30;
 const SDB_FULL_SCAN_PAGE_SIZE = 90;
+const SDB_SCAN_DELAY_MIN_MS = 100;
+const SDB_SCAN_DELAY_MAX_MS = 300;
+// The current SDB endpoint returns NP and NC results through separate view filters.
+// Scan both explicitly so neither item type is skipped.
+const SDB_VIEW_FILTERS = ["np", "nc"];
 const WEARABLE_ZONE_DELAY_MS = 200;
 const WEARABLE_ZONE_CONCURRENCY = 5;
 const WEARABLE_ZONE_RETRY_LIMIT = 3;
@@ -1341,10 +1347,11 @@ function renderCollectorUI() {
       setStatus("Requesting full SDB snapshot...");
       const result = await scanEntireSdb({
         onProgress(progress) {
-          setStatus(`Collecting SDB snapshot page ${progress.pageIndex}/${progress.totalPages}...`);
+          const filterLabel = progress.viewFilter === "nc" ? "NC" : "NP";
+          setStatus(`Collecting ${filterLabel} SDB snapshot page ${progress.pageIndex}/${progress.totalPages}...`);
           showOverlay({
             title: "Collecting Safety Deposit Box",
-            text: `Requesting snapshot page ${progress.pageIndex} of ${progress.totalPages}. Please wait until the collection finishes.`,
+            text: `Requesting ${filterLabel} snapshot page ${progress.pageIndex} of ${progress.totalPages}. Please wait until the collection finishes.`,
             current: progress.pageIndex,
             total: progress.totalPages,
           });
@@ -1565,21 +1572,25 @@ function mergeItemsById(existingItems, nextItems) {
 }
 
 async function scanEntireSdb({ onProgress } = {}) {
-  const firstSnapshot = await fetchSdbSnapshotPage(1, { perPage: SDB_FULL_SCAN_PAGE_SIZE });
-  const totalPages = Number(firstSnapshot.pagination.total_pages || 1);
-  const collectedItems = [...firstSnapshot.items];
-  onProgress?.({
-    pageIndex: 1,
-    totalPages,
-  });
+  const collectedItems = [];
+  let totalPages = 0;
+  let hasRequestedPage = false;
 
-  for (let page = 2; page <= totalPages; page += 1) {
-    onProgress?.({
-      pageIndex: page,
-      totalPages,
-    });
-    const snapshot = await fetchSdbSnapshotPage(page, { perPage: SDB_FULL_SCAN_PAGE_SIZE });
-    collectedItems.push(...snapshot.items);
+  for (const viewFilter of SDB_VIEW_FILTERS) {
+    if (hasRequestedPage) await waitForRandomSdbScanDelay();
+    const firstSnapshot = await fetchSdbSnapshotPage(1, { perPage: SDB_FULL_SCAN_PAGE_SIZE, viewFilter });
+    hasRequestedPage = true;
+    const filterTotalPages = Number(firstSnapshot.pagination.total_pages || 1);
+    totalPages += filterTotalPages;
+    collectedItems.push(...firstSnapshot.items);
+    onProgress?.({ pageIndex: 1, totalPages: filterTotalPages, viewFilter });
+
+    for (let page = 2; page <= filterTotalPages; page += 1) {
+      onProgress?.({ pageIndex: page, totalPages: filterTotalPages, viewFilter });
+      await waitForRandomSdbScanDelay();
+      const snapshot = await fetchSdbSnapshotPage(page, { perPage: SDB_FULL_SCAN_PAGE_SIZE, viewFilter });
+      collectedItems.push(...snapshot.items);
+    }
   }
 
   const uniqueItems = mergeItemsById([], collectedItems);
@@ -1602,22 +1613,30 @@ async function scanEntireSdb({ onProgress } = {}) {
   };
 }
 
+function waitForRandomSdbScanDelay() {
+  const delay = Math.floor(
+    Math.random() * (SDB_SCAN_DELAY_MAX_MS - SDB_SCAN_DELAY_MIN_MS + 1) + SDB_SCAN_DELAY_MIN_MS,
+  );
+  return new Promise((resolve) => setTimeout(resolve, delay));
+}
 async function refreshCurrentSdbPageSnapshot() {
-  const snapshot = await fetchSdbSnapshotPage(1, { perPage: SDB_DEFAULT_PAGE_SIZE });
-  const mergedItems = mergeItemsById(getStoredItems(), snapshot.items);
+  const snapshots = await Promise.all(
+    SDB_VIEW_FILTERS.map((viewFilter) => fetchSdbSnapshotPage(1, { perPage: SDB_DEFAULT_PAGE_SIZE, viewFilter })),
+  );
+  const mergedItems = mergeItemsById(getStoredItems(), snapshots.flatMap((snapshot) => snapshot.items));
   setStoredItems(mergedItems);
   setScanMeta({
     ...getScanMeta(),
-    totalPages: Number(snapshot.pagination.total_pages || getScanMeta().totalPages || 1),
+    totalPages: snapshots.reduce((total, snapshot) => total + Number(snapshot.pagination.total_pages || 1), 0),
     username: getCurrentUsername() || getScanMeta().username || null,
     lastPageSnapshotAt: new Date().toISOString(),
   });
   return {
-    updatedItems: snapshot.items.length,
+    updatedItems: snapshots.reduce((total, snapshot) => total + snapshot.items.length, 0),
   };
 }
 
-async function fetchSdbSnapshotPage(page = 1, { perPage = SDB_DEFAULT_PAGE_SIZE } = {}) {
+async function fetchSdbSnapshotPage(page = 1, { perPage = SDB_DEFAULT_PAGE_SIZE, viewFilter = "np" } = {}) {
   const refCk = getRefCk();
   if (!refCk) {
     throw new Error("Could not find _ref_ck for SDB request.");
@@ -1637,6 +1656,7 @@ async function fetchSdbSnapshotPage(page = 1, { perPage = SDB_DEFAULT_PAGE_SIZE 
       search: "",
       category: "",
       sort: "",
+      view_filter: viewFilter,
       _ref_ck: refCk,
     }),
   });
@@ -1930,8 +1950,8 @@ function requestItemdbChunk(itemIds) {
     GM_xmlhttpRequest({
       responseType: "json",
       method: "POST",
-      url: "https://itemdb.com.br/api/v1/items/many",
-      data: JSON.stringify({ item_id: itemIds }),
+      url: "https://itemdb.com.br/api/v2/items/many",
+      data: JSON.stringify({ type: "item_id", data: itemIds, intent: ITEMDB_V2_INTENT }),
       headers: {
         "Content-Type": "application/json",
       },
@@ -1940,38 +1960,34 @@ function requestItemdbChunk(itemIds) {
           const mapped = {};
           const fetchedAt = Date.now();
           Object.entries(response.response).forEach(([keyId, item]) => {
+            const flags = new Set(Array.isArray(item.flags) ? item.flags : []);
             mapped[parseInt(keyId, 10)] = {
               slug: item.slug || slugifyItemdbName(item.name),
               name: item.name,
               internal_id: item.internal_id,
               item_id: item.item_id,
-              image: item.image,
-              image_id: item.image_id,
-              cat: item.category,
+              image: item.image?.url || "",
+              image_id: item.image?.id || "",
+              category: item.category || "",
+              cat: item.category || "",
               value: item.price?.value ?? null,
               rarity: item.rarity,
-              isNC: item.isNC,
-              isBD: item.isBD,
-              isWearable: item.isWearable,
-              isNeohome: item.isNeohome,
+              isNC: item.type === "nc" || item.type === "ncMall" || Boolean(item.ncValue),
+              isBD: flags.has("bd"),
+              isWearable: flags.has("wearable"),
+              isNeohome: flags.has("neohome"),
               type: item.type,
-              specialType: item.specialType,
               estVal: item.estVal,
-              weight: item.weight,
+              weight: null,
               description: item.description,
               status: item.status,
-              color: item.color,
-              findAt: item.findAt,
-              isMissingInfo: item.isMissingInfo,
+              color: item.colorHex || "",
+              isMissingInfo: flags.has("missingInfo"),
               priceAddedAt: item.price?.addedAt || null,
-              priceInflated: item.price?.inflated || false,
-              comment: item.comment,
-              zones: Array.isArray(item.zones)
-                ? item.zones
-                : Array.isArray(item.occupies)
-                  ? item.occupies
-                  : [],
-              zonesFetchedAt: item.zonesFetchedAt || item.occupiesFetchedAt || null,
+              priceInflated: Array.isArray(item.price?.flags) && item.price.flags.includes("inflation"),
+              comment: null,
+              zones: [],
+              zonesFetchedAt: null,
               fetchedAt,
             };
           });
