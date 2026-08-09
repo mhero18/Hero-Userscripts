@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         Neopets My Shop Enhancements
-// @version      1.0
+// @version      1.4
 // @description  Enhances the new updated My Shop stock page.
 // @author       Hero
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
 // @match        *://*.neopets.com/market.phtml?type=your*
-// @grant        none
+// @grant        GM_xmlhttpRequest
+// @connect      itemdb.com.br
 // @run-at       document-start
 // @downloadURL  https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20My%20Shop%20Enhancements.user.js
 // @updateURL    https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20My%20Shop%20Enhancements.user.js
@@ -16,15 +17,27 @@
 // - Remove the Description column so item names have more room
 // - Add Max Quantity link under Remove steppers
 // - Compact the shop navigation into one row
+// - Remove the Jump to label
+// - Add a toggle for compact shop stock rows
+// - Show ItemDB prices under item names
 
 (function () {
     'use strict';
 
     const STYLE_ID = 'hero-shop-enhancements-style';
     const MAX_LINK_CLASS = 'hero-shop-max-quantity';
+    const PRICE_CLASS = 'hero-shop-itemdb-price';
+    const COMPACT_CLASS = 'hero-shop-compact';
+    const COMPACT_TOGGLE_CLASS = 'hero-shop-compact-toggle';
     const ENHANCED_STEPPER_ATTR = 'data-hero-shop-max-link';
+    const ITEMDB_API = 'https://itemdb.com.br/api/v2/items/many';
+    const ITEMDB_INTENT = 'pricer';
+    const itemdbResults = new Map();
+    const pendingPriceNames = new Map();
     let enhanceTimer = null;
+    let priceFetchTimer = null;
     let internalMutation = false;
+    let compactMode = true;
 
     function injectStyles() {
         if (document.getElementById(STYLE_ID)) return;
@@ -92,7 +105,12 @@
             }
 
             .market-your-item__info {
+                align-items: flex-start !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 0 !important;
                 min-width: 0 !important;
+                text-align: left !important;
                 width: 100% !important;
             }
 
@@ -103,6 +121,8 @@
                 white-space: normal !important;
                 word-break: normal !important;
                 overflow-wrap: anywhere !important;
+                text-align: left !important;
+                width: 100% !important;
             }
 
             .market-your-item__meta {
@@ -133,6 +153,113 @@
                 margin-right: auto;
             }
 
+            .mkt-subnav__label {
+                display: none !important;
+            }
+
+            .market-your-metarow {
+                align-items: center !important;
+                display: flex !important;
+                flex-wrap: wrap !important;
+                gap: 8px !important;
+            }
+
+            .hero-shop-compact-toggle {
+                background: #ffffff;
+                border: 1px solid #9ca3af;
+                border-radius: 4px;
+                color: #374151;
+                cursor: pointer;
+                font-size: 12px;
+                font-weight: 600;
+                line-height: 1.2;
+                padding: 4px 8px;
+                white-space: nowrap;
+            }
+
+            .hero-shop-compact-toggle[aria-pressed="true"] {
+                background: #e7f1f8;
+                border-color: #1f5f95;
+                color: #16496f;
+            }
+
+            .hero-shop-compact-toggle:hover {
+                border-color: #1f5f95;
+            }
+
+            .hero-shop-compact-toggle:focus-visible {
+                outline: 2px solid #1f5f95;
+                outline-offset: 2px;
+            }
+
+            .hero-shop-itemdb-price {
+                align-self: stretch !important;
+                color: #4b5563;
+                display: block;
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 1.2;
+                margin-top: 2px;
+                text-align: left !important;
+                width: 100% !important;
+                white-space: nowrap;
+            }
+
+            .hero-shop-itemdb-price.is-loading,
+            .hero-shop-itemdb-price.is-missing {
+                color: #6b7280;
+            }
+
+            #market-your-app.hero-shop-compact .market-your-table .market-your__col-item {
+                width: 48% !important;
+            }
+
+            #market-your-app.hero-shop-compact .market-your-table .market-your__col-stock {
+                width: 8% !important;
+            }
+
+            #market-your-app.hero-shop-compact .market-your-table .market-your__col-cost {
+                width: 26% !important;
+            }
+
+            #market-your-app.hero-shop-compact .market-your-table .market-your__col-rm {
+                width: 18% !important;
+            }
+
+            #market-your-app.hero-shop-compact .market-your-table th,
+            #market-your-app.hero-shop-compact .market-your-table td {
+                padding: 6px 8px !important;
+            }
+
+            #market-your-app.hero-shop-compact .market-your-table .market-your-item__imgwrap,
+            #market-your-app.hero-shop-compact .market-your-table .market-your-item__img {
+                height: 48px !important;
+                width: 48px !important;
+            }
+
+            #market-your-app.hero-shop-compact .market-your-table .market-your__cost-field input[data-money] {
+                box-sizing: border-box !important;
+                height: 30px !important;
+                padding: 3px 6px !important;
+                width: 100px !important;
+            }
+
+            #market-your-app.hero-shop-compact .market-your-table .market-your__price-hint {
+                display: none !important;
+            }
+
+            #market-your-app.hero-shop-compact .market-your-table .mkt-stepper__btn,
+            #market-your-app.hero-shop-compact .market-your-table .mkt-stepper__input {
+                height: 28px !important;
+            }
+
+            #market-your-app.hero-shop-compact .market-your-table .mkt-stepper__btn {
+                width: 28px !important;
+            }
+
+            #market-your-app.hero-shop-compact .market-your-table .mkt-stepper__input {
+                width: 40px !important;
+            }
             @media (max-width: 900px) {
                 .mkt-subnav {
                     justify-content: flex-start !important;
@@ -157,9 +284,12 @@
         internalMutation = true;
         try {
             injectStyles();
+            addCompactToggle();
+            removeJumpToLabel();
             removeDescriptionColumn();
             hideTypeMetadata();
             addMaxQuantityLinks();
+            addItemdbPriceLines();
         } finally {
             requestAnimationFrame(() => {
                 internalMutation = false;
@@ -167,6 +297,40 @@
         }
     }
 
+    function addCompactToggle() {
+        const app = document.getElementById('market-your-app');
+        app?.classList.toggle(COMPACT_CLASS, compactMode);
+
+        const metaRow = document.querySelector('.market-your-metarow');
+        if (!metaRow) return;
+
+        let button = metaRow.querySelector('.' + COMPACT_TOGGLE_CLASS);
+        if (!button) {
+            button = document.createElement('button');
+            button.type = 'button';
+            button.className = COMPACT_TOGGLE_CLASS;
+            button.addEventListener('click', event => {
+                event.preventDefault();
+                compactMode = !compactMode;
+                addCompactToggle();
+            });
+
+            const feedMeta = metaRow.querySelector('.shop-feed-meta');
+            if (feedMeta) {
+                feedMeta.insertAdjacentElement('afterend', button);
+            } else {
+                metaRow.appendChild(button);
+            }
+        }
+
+        const label = compactMode ? 'Compact: On' : 'Compact: Off';
+        button.setAttribute('aria-pressed', String(compactMode));
+        button.title = compactMode ? 'Use regular row spacing' : 'Use compact row spacing';
+        if (button.textContent !== label) button.textContent = label;
+    }
+    function removeJumpToLabel() {
+        document.querySelectorAll('.mkt-subnav .mkt-subnav__label').forEach(label => label.remove());
+    }
     function removeDescriptionColumn() {
         document.querySelectorAll('table.market-your-table').forEach(table => {
             const headerCells = Array.from(table.querySelectorAll('thead th'));
@@ -213,6 +377,118 @@
         });
     }
 
+    function addItemdbPriceLines() {
+        document.querySelectorAll('.market-your-table .market-your-item__name').forEach(nameEl => {
+            const itemName = nameEl.textContent.replace(/\s+/g, ' ').trim();
+            const infoEl = nameEl.closest('.market-your-item__info');
+            if (!itemName || !infoEl) return;
+
+            let priceEl = infoEl.querySelector(`.${PRICE_CLASS}`);
+            if (!priceEl) {
+                priceEl = document.createElement('span');
+                priceEl.className = `${PRICE_CLASS} is-loading`;
+                priceEl.textContent = 'itemdb: checking...';
+                nameEl.insertAdjacentElement('afterend', priceEl);
+            }
+
+            const key = normalizeName(itemName);
+            priceEl.dataset.itemdbName = key;
+
+            if (itemdbResults.has(key)) {
+                renderItemdbPrice(priceEl, itemdbResults.get(key));
+            } else {
+                pendingPriceNames.set(key, itemName);
+            }
+        });
+
+        queueItemdbPriceFetch();
+    }
+
+    function queueItemdbPriceFetch() {
+        if (!pendingPriceNames.size) return;
+
+        clearTimeout(priceFetchTimer);
+        priceFetchTimer = setTimeout(() => {
+            const requestedNames = new Map(pendingPriceNames);
+            pendingPriceNames.clear();
+
+            fetchItemdbPrices(Array.from(requestedNames.values())).then(itemsByName => {
+                requestedNames.forEach((itemName, key) => {
+                    const item = itemsByName.get(key);
+                    const rawValue = item?.price?.value;
+                    const value = rawValue == null ? NaN : Number(rawValue);
+                    const result = item && Number.isFinite(value)
+                        ? { status: 'ready', value }
+                        : { status: 'missing', value: null };
+
+                    itemdbResults.set(key, result);
+                    updateItemdbPriceElements(key, result);
+                });
+            }).catch(() => {
+                requestedNames.forEach((itemName, key) => {
+                    const result = { status: 'unavailable', value: null };
+                    itemdbResults.set(key, result);
+                    updateItemdbPriceElements(key, result);
+                });
+            });
+        }, 150);
+    }
+
+    function fetchItemdbPrices(names) {
+        return new Promise((resolve, reject) => {
+            GM_xmlhttpRequest({
+                method: 'POST',
+                url: ITEMDB_API,
+                headers: { 'Content-Type': 'application/json' },
+                data: JSON.stringify({ type: 'name', data: names, intent: ITEMDB_INTENT }),
+                responseType: 'json',
+                timeout: 15000,
+                onload(response) {
+                    if (response.status < 200 || response.status >= 300) {
+                        reject(new Error(`ItemDB returned status ${response.status}`));
+                        return;
+                    }
+
+                    try {
+                        let data = response.response;
+                        if (!data || typeof data !== 'object') {
+                            data = JSON.parse(response.responseText || '{}');
+                        }
+
+                        const itemsByName = new Map();
+                        Object.values(data || {}).forEach(item => {
+                            if (item?.name) itemsByName.set(normalizeName(item.name), item);
+                        });
+                        resolve(itemsByName);
+                    } catch (error) {
+                        reject(error);
+                    }
+                },
+                onerror: reject,
+                ontimeout: reject
+            });
+        });
+    }
+
+    function updateItemdbPriceElements(key, result) {
+        document.querySelectorAll(`.${PRICE_CLASS}`).forEach(priceEl => {
+            if (priceEl.dataset.itemdbName === key) renderItemdbPrice(priceEl, result);
+        });
+    }
+
+    function renderItemdbPrice(priceEl, result) {
+        const isReady = result.status === 'ready';
+        const className = isReady ? PRICE_CLASS : `${PRICE_CLASS} is-missing`;
+        const text = isReady
+            ? `itemdb: ${result.value.toLocaleString('en-US')} NPs`
+            : result.status === 'unavailable'
+                ? 'itemdb: unavailable'
+                : 'itemdb: no price';
+
+        if (priceEl.className === className && priceEl.textContent === text) return;
+        priceEl.className = className;
+        priceEl.textContent = text;
+    }
     function getStepperMax(stepper, input) {
         const max = Number.parseInt(stepper.dataset.max || input.max || '', 10);
         if (Number.isFinite(max)) return max;
@@ -238,6 +514,9 @@
         return (element?.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
     }
 
+    function normalizeName(name) {
+        return String(name || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    }
     function startEnhancer() {
         enhanceShopPage();
 
