@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets My Shop Enhancements
-// @version      1.4
+// @version      1.5
 // @description  Enhances the new updated My Shop stock page.
 // @author       Hero
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -29,6 +29,7 @@
     const PRICE_CLASS = 'hero-shop-itemdb-price';
     const COMPACT_CLASS = 'hero-shop-compact';
     const COMPACT_TOGGLE_CLASS = 'hero-shop-compact-toggle';
+    const DESCRIPTION_CELL_CLASS = 'hero-shop-description-cell';
     const ENHANCED_STEPPER_ATTR = 'data-hero-shop-max-link';
     const ITEMDB_API = 'https://itemdb.com.br/api/v2/items/many';
     const ITEMDB_INTENT = 'pricer';
@@ -125,7 +126,9 @@
                 width: 100% !important;
             }
 
-            .market-your-item__meta {
+            .market-your-item__meta,
+            .market-your__col-desc,
+            .hero-shop-description-cell {
                 display: none !important;
             }
 
@@ -260,13 +263,39 @@
             #market-your-app.hero-shop-compact .market-your-table .mkt-stepper__input {
                 width: 40px !important;
             }
+            @media (max-width: 1024px) {
+                .market-your-table {
+                    table-layout: auto !important;
+                }
+
+                .market-your-table.np-table tbody td:nth-child(4) > span {
+                    align-items: center !important;
+                    display: flex !important;
+                    flex-wrap: wrap !important;
+                    gap: 6px !important;
+                }
+
+                .market-your-table.np-table tbody td:nth-child(4) .mkt-cell-label {
+                    flex: 0 0 auto;
+                }
+
+                .market-your-table.np-table tbody td:nth-child(4) .market-your__cost-field {
+                    align-items: center !important;
+                    display: flex !important;
+                    flex: 1 1 140px;
+                    flex-wrap: wrap !important;
+                    gap: 4px 6px !important;
+                    min-width: 0;
+                }
+
+                .market-your-table.np-table tbody td:nth-child(4) input[data-money] {
+                    max-width: 100% !important;
+                }
+            }
+
             @media (max-width: 900px) {
                 .mkt-subnav {
                     justify-content: flex-start !important;
-                }
-
-                .market-your-table {
-                    table-layout: auto !important;
                 }
             }
         `;
@@ -337,10 +366,10 @@
             const descIndex = headerCells.findIndex(th => th.classList.contains('market-your__col-desc') || getText(th) === 'description');
             if (descIndex < 0) return;
 
-            headerCells[descIndex].remove();
+            headerCells[descIndex].classList.add(DESCRIPTION_CELL_CLASS);
             table.querySelectorAll('tbody tr').forEach(row => {
                 const cells = Array.from(row.children).filter(child => child.matches?.('td, th'));
-                cells[descIndex]?.remove();
+                cells[descIndex]?.classList.add(DESCRIPTION_CELL_CLASS);
             });
         });
     }
