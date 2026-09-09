@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets Soup Kitchen Donation Tracker
-// @version      1.1
+// @version      1.2
 // @description  Tracks total Neopoints donated and the current Soup Kitchen donation-day streak.
 // @author       Hero
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -177,6 +177,9 @@
         const state = readState();
         tracker.querySelector("[data-total]").textContent = `${state.totalAmount.toLocaleString()} NP`;
         tracker.querySelector("[data-streak]").textContent = state.streak.toLocaleString();
+        tracker.querySelector("[data-donated-today]").textContent = state.lastDonationDate === getNeopetsDate()
+            ? "Yes"
+            : "No";
     }
 
     function mountTracker() {
@@ -194,6 +197,9 @@
             </p>
             <p class="hero-sk-tracker__stat">
                 Total Donation Days Streak: <span class="hero-sk-tracker__value" data-streak>0</span>
+            </p>
+            <p class="hero-sk-tracker__stat">
+                Donated Today? <span class="hero-sk-tracker__value" data-donated-today>No</span>
             </p>
             <button class="hero-sk-tracker__reset" type="button">Reset Donation Tracker</button>
         `;
