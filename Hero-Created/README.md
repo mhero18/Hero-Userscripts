@@ -2,6 +2,9 @@
 # Hero's Userscripts 
 Just some scripts I made to help make life easier on Neopets, hope you find some use too!  Always ensure that your use of userscripts complies with Neopets' rules. Happy to hear any suggestions or improvements for new or existing scripts! :)
 
+# [Neopets Better Styling Chamber](Neopets%20Better%20Styling%20Chamber.user.js)
+Makes styling chamber layout a little better and see more things.
+
 # [Neopets Instant Fruit Machine v2](Neopets%20Instant%20Fruit%20Machine%20v2.user.js)
 Skips the Fruit Machine animation.
 
