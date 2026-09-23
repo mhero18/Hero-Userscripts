@@ -2,6 +2,11 @@
 # Hero's Userscripts 
 Just some scripts I made to help make life easier on Neopets, hope you find some use too!  Always ensure that your use of userscripts complies with Neopets' rules. Happy to hear any suggestions or improvements for new or existing scripts! :)
 
+# [Neopets Soup Kitchen Donation Tracker](Neopets%20Soup%20Faerie%20Donation%20Tracker.user.js)
+Autofills donation amount, tracks total amount donated, and total streak.
+
+![soupfaerie](assets/soupfaerie.png)
+
 # [Neopets Better Styling Chamber](Neopets%20Better%20Styling%20Chamber.user.js)
 Makes styling chamber layout a little better and see more things.
 
