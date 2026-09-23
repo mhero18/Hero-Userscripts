@@ -3,12 +3,35 @@
 // @description    Removes user code from shops.
 // @include        *neopets.com/browseshop*
 // @match          *neopets.com/browseshop*
-// @version        2.0
-// @updated        06.02.2023
+// @version        2.1
+// @updated        07.07.2026
 // @namespace https://greasyfork.org/users/6099
-// @downloadURL https://update.greasyfork.org/scripts/8865/Neopets%20-%20Turn%20Off%20Shop%20Code.user.js
-// @updateURL https://update.greasyfork.org/scripts/8865/Neopets%20-%20Turn%20Off%20Shop%20Code.meta.js
 // ==/UserScript==
 
-var e = document.getElementsByClassName('content')[0];
-e.innerHTML = e.innerHTML.replace(/<!-- desc start -->[\s\S]*<!-- desc end -->/ig, "");
+(function () {
+    'use strict';
+
+    const pageRoot = document.querySelector('.bsp-description-inline, .content, #container__2020, .bsp-page') || document.body;
+    const walker = document.createTreeWalker(pageRoot, NodeFilter.SHOW_COMMENT);
+    const comments = [];
+
+    while (walker.nextNode()) {
+        comments.push(walker.currentNode);
+    }
+
+    const startComment = comments.find((comment) => /desc start/i.test(comment.nodeValue));
+    const endComment = comments.find((comment) => /desc end/i.test(comment.nodeValue));
+
+    if (!startComment || !endComment) {
+        return;
+    }
+
+    if (!(startComment.compareDocumentPosition(endComment) & Node.DOCUMENT_POSITION_FOLLOWING)) {
+        return;
+    }
+
+    const range = document.createRange();
+    range.setStartBefore(startComment);
+    range.setEndAfter(endComment);
+    range.deleteContents();
+})();

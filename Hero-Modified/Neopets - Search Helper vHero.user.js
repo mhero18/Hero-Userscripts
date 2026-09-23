@@ -3,7 +3,6 @@
 // @version      1.0.31
 // @description  Adds convenient search icons to many places
 // @author       diceroll123
-// @match        *://*.neopets.com/auctions.phtml*
 // @match        *://*.neopets.com/closet.phtml*
 // @match        *://*.neopets.com/dome/neopets.phtml*
 // @match        *://*.neopets.com/faerieland/darkfaerie.phtml*
@@ -12,7 +11,6 @@
 // @match        *://*.neopets.com/games/kadoatery/*
 // @match        *://*.neopets.com/games/kadoatery/index.phtml
 // @match        *://*.neopets.com/generalstore.phtml*
-// @match        *://*.neopets.com/genie.phtml*
 // @match        *://*.neopets.com/halloween/esophagor*.phtml*
 // @match        *://*.neopets.com/halloween/witchtower*.phtml*
 // @match        *://*.neopets.com/hospital.phtml

@@ -1,12 +1,14 @@
 // ==UserScript==
 // @name         Neopets Soup Kitchen Donation Tracker
-// @version      1.2
-// @description  Tracks total Neopoints donated and the current Soup Kitchen donation-day streak.
+// @version      1.3
+// @description  Tracks Soup Kitchen donations and remembers the last entered donation amount.
 // @author       Hero
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
 // @match        *://*.neopets.com/soupkitchen.phtml*
 // @run-at       document-start
 // @grant        none
+// @downloadURL  https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20Soup%20Kitchen%20Donation%20Tracker.user.js
+// @updateURL    https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20Soup%20Kitchen%20Donation%20Tracker.user.js
 // ==/UserScript==
 
 (function () {
@@ -18,6 +20,7 @@
 
     const DONATION_ENDPOINT = "/np-templates/ajax/soupkitchen/donate.php";
     const STORAGE_KEY = "heroSoupKitchenDonationTracker";
+    const AMOUNT_STORAGE_KEY = "heroSoupKitchenLastDonationAmount";
     const TRACKER_ID = "hero-sk-donation-tracker";
     const STYLE_ID = "hero-sk-donation-tracker-styles";
     const DEFAULT_STATE = Object.freeze({
@@ -217,9 +220,35 @@
         renderState();
     }
 
+    function initAmountAutofill() {
+        const input = document.getElementById("sk-donate-amount");
+        if (!input) return;
+
+        function restoreAmount() {
+            const savedAmount = window.localStorage.getItem(AMOUNT_STORAGE_KEY);
+            if (!savedAmount) return;
+
+            input.value = savedAmount;
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+
+        input.addEventListener("input", () => {
+            const amount = input.value.replace(/\D/g, "");
+            if (amount) window.localStorage.setItem(AMOUNT_STORAGE_KEY, amount);
+            else window.localStorage.removeItem(AMOUNT_STORAGE_KEY);
+        });
+
+        document.getElementById("sk-donate-back")?.addEventListener("click", () => {
+            setTimeout(restoreAmount, 0);
+        });
+
+        restoreAmount();
+    }
+
     function initTracker() {
         expireBrokenStreak();
         mountTracker();
+        setTimeout(initAmountAutofill, 0);
     }
 
     installFetchTracker();
