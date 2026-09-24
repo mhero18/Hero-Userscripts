@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets SDB Enhancements
-// @version      3.1
+// @version      3.2
 // @description  Enhances new SDB page.
 // @author       Hero
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -65,6 +65,7 @@
     const pendingPriceNames = new Set();
     const sdbItemsByExactKey = new Map();
     const sdbItemsByName = new Map();
+    const pendingItemLookups = new Map();
     const removedActionOptions = new WeakMap();
     let settings = loadSettings();
     let priceFetchTimer = null;
@@ -958,14 +959,6 @@
             return;
         }
 
-        const pin = getSdbPin();
-        const itemName = getActionCellItemName(actionCell);
-        const item = getCachedSdbItem(actionCell, itemName);
-        if (!item?.id) {
-            showRemoveError(actionCell, 'Could not find this item ID yet. Refresh and try again.');
-            return;
-        }
-
         const refCk = getRefCk();
         if (!refCk) {
             showRemoveError(actionCell, 'Could not find _ref_ck for the SDB request.');
@@ -973,6 +966,15 @@
         }
 
         try {
+            const pin = getSdbPin();
+            const itemName = getActionCellItemName(actionCell);
+            const item = getCachedSdbItem(actionCell, itemName)
+                || await fetchSdbItemId(actionCell, itemName, refCk);
+            if (!item?.id) {
+                showRemoveError(actionCell, 'Could not find this item in the SDB response.');
+                return;
+            }
+
             const response = await fetch('/np-templates/ajax/safetydeposit/move-items.php', {
                 method: 'POST',
                 credentials: 'same-origin',
@@ -1016,7 +1018,8 @@
         const row = actionCell.closest('tr');
         const img = row?.querySelector('.sdb-item-img');
         const filename = getItemFilename(img?.src);
-        return getCachedSdbItemByIdentity(itemName, filename);
+        const item = getCachedSdbItemByIdentity(itemName, filename);
+        return item && (!filename || item.filename === filename) ? item : null;
     }
 
     function getCachedSdbItemByIdentity(itemName, filename) {
@@ -1025,6 +1028,57 @@
             if (exact) return exact;
         }
         return sdbItemsByName.get(normalizeName(itemName));
+    }
+
+    function fetchSdbItemId(actionCell, itemName, refCk) {
+        const row = actionCell.closest('tr');
+        const filename = getItemFilename(row?.querySelector('.sdb-item-img')?.src);
+        const key = `${normalizeName(itemName)}|${filename}`;
+        if (!itemName) return Promise.resolve(null);
+        if (pendingItemLookups.has(key)) return pendingItemLookups.get(key);
+
+        const isNc = normalizeName(row?.querySelector('.sdb-item-meta')?.textContent)
+            .replace(/^type:\s*/, '') === 'neocash';
+        const lookup = (async () => {
+            let page = 1;
+            let totalPages = 1;
+            do {
+                const response = await fetch('/np-templates/ajax/safetydeposit/get-items.php', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        page,
+                        per_page: 90,
+                        search: itemName,
+                        category: '',
+                        sort: '',
+                        view_filter: isNc ? 'nc' : 'np',
+                        _ref_ck: refCk
+                    })
+                });
+                const payload = await response.json();
+                if (!response.ok || payload?.success === false) {
+                    throw new Error(payload?.message || 'Could not look up this SDB item.');
+                }
+                cacheSdbItems(payload);
+                const items = payload?.data?.items || [];
+                const match = items.find(item => normalizeName(item?.obj_name) === normalizeName(itemName)
+                    && (!filename || item?.obj_filename === filename));
+                const id = Number(match?.obj_info_id || match?.id);
+                if (Number.isSafeInteger(id) && id > 0) return { id };
+                totalPages = Number(payload?.data?.pagination?.total_pages) || 1;
+                page += 1;
+            } while (page <= totalPages);
+            return null;
+        })();
+        pendingItemLookups.set(key, lookup);
+        lookup.finally(() => pendingItemLookups.delete(key)).catch(() => {});
+        return lookup;
     }
 
     function applyNcItemVisibility() {
