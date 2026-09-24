@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets Soup Kitchen Donation Tracker
-// @version      1.3
+// @version      1.4
 // @description  Tracks Soup Kitchen donations and remembers the last entered donation amount.
 // @author       Hero
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -21,8 +21,11 @@
     const DONATION_ENDPOINT = "/np-templates/ajax/soupkitchen/donate.php";
     const STORAGE_KEY = "heroSoupKitchenDonationTracker";
     const AMOUNT_STORAGE_KEY = "heroSoupKitchenLastDonationAmount";
+    const DEFAULT_AMOUNT = "25000";
+    const MIN_ITEM_PRIZE_AMOUNT = 25000;
     const TRACKER_ID = "hero-sk-donation-tracker";
     const STYLE_ID = "hero-sk-donation-tracker-styles";
+    const AMOUNT_WARNING_ID = "hero-sk-amount-warning";
     const DEFAULT_STATE = Object.freeze({
         totalAmount: 0,
         streak: 0,
@@ -166,6 +169,14 @@
                 font-size: 12px;
             }
 
+            #${AMOUNT_WARNING_ID} {
+                margin: 6px 0;
+                color: #c62828;
+                font-family: MuseoSansRounded500, Arial, sans-serif;
+                font-size: 14px;
+                text-align: center;
+            }
+
             @media (max-width: 600px) {
                 #${TRACKER_ID} { margin-inline: 16px; }
             }
@@ -224,16 +235,20 @@
         const input = document.getElementById("sk-donate-amount");
         if (!input) return;
 
-        function restoreAmount() {
-            const savedAmount = window.localStorage.getItem(AMOUNT_STORAGE_KEY);
-            if (!savedAmount) return;
+        const warning = document.createElement("p");
+        warning.id = AMOUNT_WARNING_ID;
+        warning.textContent = "25,000 minimum is needed for the item prize!";
+        warning.hidden = true;
+        input.insertAdjacentElement("afterend", warning);
 
-            input.value = savedAmount;
+        function restoreAmount() {
+            input.value = window.localStorage.getItem(AMOUNT_STORAGE_KEY) || DEFAULT_AMOUNT;
             input.dispatchEvent(new Event("input", { bubbles: true }));
         }
 
         input.addEventListener("input", () => {
             const amount = input.value.replace(/\D/g, "");
+            warning.hidden = !amount || Number(amount) >= MIN_ITEM_PRIZE_AMOUNT;
             if (amount) window.localStorage.setItem(AMOUNT_STORAGE_KEY, amount);
             else window.localStorage.removeItem(AMOUNT_STORAGE_KEY);
         });
