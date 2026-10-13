@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Neopets Soup Kitchen Donation Tracker
-// @version      1.4
-// @description  Tracks Soup Kitchen donations and remembers the last entered donation amount.
+// @version      3.0
+// @description  Tracks monthly Soup Kitchen donations, 14-day streak cycles, and autofills the last entered donation amount.
 // @author       Hero
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
 // @match        *://*.neopets.com/soupkitchen.phtml*
@@ -10,6 +10,16 @@
 // @downloadURL  https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20Soup%20Kitchen%20Donation%20Tracker.user.js
 // @updateURL    https://github.com/mhero18/Hero-Userscripts/raw/refs/heads/main/Hero-Created/Neopets%20Soup%20Kitchen%20Donation%20Tracker.user.js
 // ==/UserScript==
+
+/*
+ * - Times/Days/Months are tracked using PST / NST
+ * - Reminders for minimum amounts needed for both item prize and avatar
+ * - Autofills 25k by default as donation amount, but remembers your last entered amount
+ * - The cumulative total amount donated is reset each month, even if you skip the 1st
+ * - Tracks your streak and resets if you miss a day
+ * - Streak count starts over after completing 14 days
+ * - Values are all stored in browser's localstorage
+ */
 
 (function () {
     "use strict";
@@ -21,13 +31,15 @@
     const DONATION_ENDPOINT = "/np-templates/ajax/soupkitchen/donate.php";
     const STORAGE_KEY = "heroSoupKitchenDonationTracker";
     const AMOUNT_STORAGE_KEY = "heroSoupKitchenLastDonationAmount";
-    const DEFAULT_AMOUNT = "25000";
     const MIN_ITEM_PRIZE_AMOUNT = 25000;
+    const MIN_MONTHLY_AVATAR_AMOUNT = 15000000;
     const TRACKER_ID = "hero-sk-donation-tracker";
     const STYLE_ID = "hero-sk-donation-tracker-styles";
     const AMOUNT_WARNING_ID = "hero-sk-amount-warning";
+    const MONTHLY_REMINDER_ID = "hero-sk-monthly-reminder";
     const DEFAULT_STATE = Object.freeze({
         totalAmount: 0,
+        totalMonth: null,
         streak: 0,
         lastDonationDate: null
     });
@@ -53,6 +65,7 @@
 
             return {
                 totalAmount: Number.isSafeInteger(totalAmount) && totalAmount >= 0 ? totalAmount : 0,
+                totalMonth: /^\d{4}-\d{2}$/.test(saved.totalMonth || "") ? saved.totalMonth : null,
                 streak: Number.isSafeInteger(streak) && streak >= 0 ? streak : 0,
                 lastDonationDate
             };
@@ -88,22 +101,35 @@
         return Math.floor(Date.UTC(year, month - 1, day) / 86_400_000);
     }
 
-    function expireBrokenStreak() {
+    function getCurrentState(today = getNeopetsDate()) {
         const state = readState();
-        if (!state.lastDonationDate || state.streak === 0) return;
+        const previousState = JSON.stringify(state);
+        const month = today.slice(0, 7);
 
-        const daysSinceDonation = dateToDayNumber(getNeopetsDate()) - dateToDayNumber(state.lastDonationDate);
-        if (daysSinceDonation > 1) {
-            state.streak = 0;
-            saveState(state);
+        // Save old totals in their last donation month until manually corrected
+        state.totalMonth ||= state.lastDonationDate?.slice(0, 7) || month;
+        if (state.totalMonth !== month) {
+            state.totalAmount = 0;
+            state.totalMonth = month;
         }
+
+        if (state.streak > 14) state.streak = ((state.streak - 1) % 14) + 1;
+        const daysSinceDonation = state.lastDonationDate
+            ? dateToDayNumber(today) - dateToDayNumber(state.lastDonationDate)
+            : Infinity;
+        if (daysSinceDonation > 1 || (daysSinceDonation > 0 && state.streak === 14)) {
+            state.streak = 0;
+        }
+
+        if (JSON.stringify(state) !== previousState) saveState(state);
+        return state;
     }
 
     function recordDonation(amount) {
         if (!Number.isSafeInteger(amount) || amount <= 0) return;
 
-        const state = readState();
         const today = getNeopetsDate();
+        const state = getCurrentState(today);
 
         if (state.lastDonationDate !== today) {
             const continuedStreak = state.lastDonationDate
@@ -148,7 +174,7 @@
                 width: auto;
                 margin: 16px 54px 5px;
                 font-family: MuseoSansRounded500, Arial, sans-serif;
-                font-size: 14.6667px;
+                font-size: 14px;
                 text-align: center;
             }
 
@@ -169,12 +195,57 @@
                 font-size: 12px;
             }
 
-            #${AMOUNT_WARNING_ID} {
+            #${TRACKER_ID} .hero-sk-tracker__editor {
+                max-width: 460px;
+                margin: 12px auto 0;
+            }
+
+            #${TRACKER_ID} .hero-sk-tracker__row {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 6px;
+                margin: 8px 0;
+            }
+
+            #${TRACKER_ID} .hero-sk-tracker__editor input {
+                width: 130px;
+            }
+
+            #${TRACKER_ID} .hero-sk-tracker__editor input,
+            #${TRACKER_ID} .hero-sk-tracker__editor select {
+                font: inherit;
+            }
+
+            #${TRACKER_ID} .hero-sk-tracker__note {
+                margin: 6px 0;
+                font-size: 12px;
+            }
+
+            #${TRACKER_ID} [data-editor-error] {
+                color: #c62828;
+            }
+
+            #${AMOUNT_WARNING_ID}, #${MONTHLY_REMINDER_ID} {
                 margin: 6px 0;
                 color: #c62828;
                 font-family: MuseoSansRounded500, Arial, sans-serif;
                 font-size: 14px;
                 text-align: center;
+            }
+
+            #sk-donate-result #${MONTHLY_REMINDER_ID} {
+                display: block;
+                box-sizing: border-box;
+                width: 100%;
+                max-width: 520px;
+                margin: 6px auto;
+                text-align: center;
+            }
+
+            #${MONTHLY_REMINDER_ID}[data-goal-met="true"] {
+                color: #2e7d32;
             }
 
             @media (max-width: 600px) {
@@ -188,12 +259,32 @@
         const tracker = document.getElementById(TRACKER_ID);
         if (!tracker) return;
 
-        const state = readState();
+        const state = getCurrentState();
         tracker.querySelector("[data-total]").textContent = `${state.totalAmount.toLocaleString()} NP`;
         tracker.querySelector("[data-streak]").textContent = state.streak.toLocaleString();
         tracker.querySelector("[data-donated-today]").textContent = state.lastDonationDate === getNeopetsDate()
             ? "Yes"
             : "No";
+        renderMonthlyReminder(state.totalAmount);
+    }
+
+    function renderMonthlyReminder(totalAmount) {
+        const thanks = document.getElementById("sk-donate-thanks");
+        if (!thanks) return;
+
+        let reminder = document.getElementById(MONTHLY_REMINDER_ID);
+        if (!reminder) {
+            reminder = document.createElement("p");
+            reminder.id = MONTHLY_REMINDER_ID;
+            thanks.insertAdjacentElement("afterend", reminder);
+        }
+
+        const goalMet = totalAmount >= MIN_MONTHLY_AVATAR_AMOUNT;
+        const minimumAmount = MIN_MONTHLY_AVATAR_AMOUNT.toLocaleString("en-US");
+        reminder.dataset.goalMet = String(goalMet);
+        reminder.textContent = goalMet
+            ? `You've met the minimum of ${minimumAmount} NPs total donated for this month, remember to come back on the 1st of next month to get your avatar!`
+            : `Remember to donate a minimum of ${minimumAmount} NPs total before the end of this month to be eligible for the avatar!`;
     }
 
     function mountTracker() {
@@ -207,28 +298,102 @@
         tracker.setAttribute("aria-label", "Soup Kitchen donation totals");
         tracker.innerHTML = `
             <p class="hero-sk-tracker__stat">
-                Total Amount Donated: <span class="hero-sk-tracker__value" data-total>0 NP</span>
+                Total Amount Donated This Month: <span class="hero-sk-tracker__value" data-total>0 NP</span>
             </p>
             <p class="hero-sk-tracker__stat">
-                Total Donation Days Streak: <span class="hero-sk-tracker__value" data-streak>0</span>
+                Total Donation Days Streak: <span class="hero-sk-tracker__value" data-streak>0</span> / 14
             </p>
             <p class="hero-sk-tracker__stat">
                 Donated Today? <span class="hero-sk-tracker__value" data-donated-today>No</span>
             </p>
-            <button class="hero-sk-tracker__reset" type="button">Reset Donation Tracker</button>
+            <button class="hero-sk-tracker__reset" type="button" data-edit>Edit / Reset Donation Tracker</button>
+            <form class="hero-sk-tracker__editor" data-editor hidden novalidate>
+                <div class="hero-sk-tracker__row">
+                    <label for="hero-sk-edit-total">This month's total (NP):</label>
+                    <input id="hero-sk-edit-total" name="totalAmount" type="text" inputmode="numeric" required>
+                    <button class="hero-sk-tracker__reset" type="button" data-reset="totalAmount">Set to 0</button>
+                </div>
+                <div class="hero-sk-tracker__row">
+                    <label for="hero-sk-edit-streak">Streak (0–14):</label>
+                    <input id="hero-sk-edit-streak" name="streak" type="number" min="0" max="14" step="1" required>
+                    <button class="hero-sk-tracker__reset" type="button" data-reset="streak">Set to 0</button>
+                </div>
+                <div class="hero-sk-tracker__row">
+                    <label for="hero-sk-edit-today">Donated today?</label>
+                    <select id="hero-sk-edit-today" name="donatedToday">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                    </select>
+                    <button class="hero-sk-tracker__reset" type="button" data-reset="donatedToday">Set to No</button>
+                </div>
+                <p data-editor-error role="alert" hidden></p>
+                <button class="hero-sk-tracker__reset" type="submit">Save Values</button>
+                <button class="hero-sk-tracker__reset" type="button" data-cancel>Cancel</button>
+            </form>
         `;
 
-        tracker.querySelector("button").addEventListener("click", () => {
-            const confirmed = window.confirm(
-                "Warning: This will reset your locally stored donation total and streak. Continue?"
-            );
-            if (!confirmed) return;
-
-            if (saveState({ ...DEFAULT_STATE })) renderState();
-        });
+        initValueEditor(tracker);
 
         donationContainer.append(tracker);
         renderState();
+    }
+
+    function initValueEditor(tracker) {
+        const editor = tracker.querySelector("[data-editor]");
+        const error = editor.querySelector("[data-editor-error]");
+        const field = (name) => editor.elements.namedItem(name);
+
+        tracker.querySelector("[data-edit]").addEventListener("click", () => {
+            const state = getCurrentState();
+            field("totalAmount").value = state.totalAmount.toLocaleString("en-US");
+            field("streak").value = state.streak;
+            field("donatedToday").value = state.lastDonationDate === getNeopetsDate() ? "yes" : "no";
+            error.hidden = true;
+            editor.hidden = false;
+            field("totalAmount").focus();
+        });
+
+        editor.querySelectorAll("[data-reset]").forEach((button) => {
+            button.addEventListener("click", () => {
+                const name = button.dataset.reset;
+                field(name).value = name === "donatedToday" ? "no" : "0";
+            });
+        });
+        editor.querySelector("[data-cancel]").addEventListener("click", () => {
+            editor.hidden = true;
+        });
+
+        editor.addEventListener("submit", (event) => {
+            event.preventDefault();
+            const totalText = field("totalAmount").value.replaceAll(",", "").trim();
+            const streakText = field("streak").value.trim();
+            const totalAmount = Number(totalText);
+            const streak = Number(streakText);
+            error.hidden = true;
+
+            if (!/^\d+$/.test(totalText) || !Number.isSafeInteger(totalAmount)
+                || !/^\d+$/.test(streakText) || !Number.isInteger(streak) || streak > 14) {
+                error.textContent = "Enter a non-negative whole NP amount and a whole streak from 0 to 14 only.";
+                error.hidden = false;
+                return;
+            }
+
+            if (!window.confirm("Replace your tracker values? This cannot be undone!")) return;
+
+            const today = getNeopetsDate();
+            const yesterday = new Date((dateToDayNumber(today) - 1) * 86_400_000).toISOString().slice(0, 10);
+            const lastDonationDate = field("donatedToday").value === "yes"
+                ? today
+                : (streak > 0 ? yesterday : null);
+
+            if (saveState({ totalAmount, totalMonth: today.slice(0, 7), streak, lastDonationDate })) {
+                editor.hidden = true;
+                renderState();
+            } else {
+                error.textContent = "Could not save your values. Please try again.";
+                error.hidden = false;
+            }
+        });
     }
 
     function initAmountAutofill() {
@@ -237,12 +402,12 @@
 
         const warning = document.createElement("p");
         warning.id = AMOUNT_WARNING_ID;
-        warning.textContent = "25,000 minimum is needed for the item prize!";
+        warning.textContent = `${MIN_ITEM_PRIZE_AMOUNT.toLocaleString("en-US")} minimum is needed for the 14-day streak item prize!`;
         warning.hidden = true;
         input.insertAdjacentElement("afterend", warning);
 
         function restoreAmount() {
-            input.value = window.localStorage.getItem(AMOUNT_STORAGE_KEY) || DEFAULT_AMOUNT;
+            input.value = window.localStorage.getItem(AMOUNT_STORAGE_KEY) || MIN_ITEM_PRIZE_AMOUNT;
             input.dispatchEvent(new Event("input", { bubbles: true }));
         }
 
@@ -261,9 +426,10 @@
     }
 
     function initTracker() {
-        expireBrokenStreak();
         mountTracker();
         setTimeout(initAmountAutofill, 0);
+        // Refresh calendar-dependent values if the page stays open overnight.
+        setInterval(renderState, 60_000);
     }
 
     installFetchTracker();
@@ -275,6 +441,9 @@
     }
 
     window.addEventListener("storage", (event) => {
-        if (event.key === STORAGE_KEY) renderState();
+        if (event.key === STORAGE_KEY || event.key === null) renderState();
+    });
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) renderState();
     });
 }());
