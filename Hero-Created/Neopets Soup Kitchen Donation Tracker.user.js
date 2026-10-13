@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Neopets Soup Kitchen Donation Tracker
-// @version      3.0
+// @version      3.2
 // @description  Tracks monthly Soup Kitchen donations, 14-day streak cycles, and autofills the last entered donation amount.
 // @author       Hero
 // @icon         https://images.neopets.com/items/foo_gmc_herohotdog.gif
@@ -16,6 +16,7 @@
  * - Reminders for minimum amounts needed for both item prize and avatar
  * - Autofills 25k by default as donation amount, but remembers your last entered amount
  * - The cumulative total amount donated is reset each month, even if you skip the 1st
+ * - Keeps last month's total for reference
  * - Tracks your streak and resets if you miss a day
  * - Streak count starts over after completing 14 days
  * - Values are all stored in browser's localstorage
@@ -40,6 +41,8 @@
     const DEFAULT_STATE = Object.freeze({
         totalAmount: 0,
         totalMonth: null,
+        lastMonthTotal: null,
+        lastMonth: null,
         streak: 0,
         lastDonationDate: null
     });
@@ -58,6 +61,7 @@
             if (!saved || typeof saved !== "object") return { ...DEFAULT_STATE };
 
             const totalAmount = Number(saved.totalAmount);
+            const lastMonthTotal = saved.lastMonthTotal == null ? null : Number(saved.lastMonthTotal);
             const streak = Number(saved.streak);
             const lastDonationDate = /^\d{4}-\d{2}-\d{2}$/.test(saved.lastDonationDate || "")
                 ? saved.lastDonationDate
@@ -66,6 +70,8 @@
             return {
                 totalAmount: Number.isSafeInteger(totalAmount) && totalAmount >= 0 ? totalAmount : 0,
                 totalMonth: /^\d{4}-\d{2}$/.test(saved.totalMonth || "") ? saved.totalMonth : null,
+                lastMonthTotal: Number.isSafeInteger(lastMonthTotal) && lastMonthTotal >= 0 ? lastMonthTotal : null,
+                lastMonth: /^\d{4}-\d{2}$/.test(saved.lastMonth || "") ? saved.lastMonth : null,
                 streak: Number.isSafeInteger(streak) && streak >= 0 ? streak : 0,
                 lastDonationDate
             };
@@ -105,12 +111,20 @@
         const state = readState();
         const previousState = JSON.stringify(state);
         const month = today.slice(0, 7);
+        const [year, monthNumber] = month.split("-").map(Number);
+        const lastMonth = new Date(Date.UTC(year, monthNumber - 2, 1)).toISOString().slice(0, 7);
 
-        // Save old totals in their last donation month until manually corrected
+        // Assign older saved totals to their last recorded donation month
         state.totalMonth ||= state.lastDonationDate?.slice(0, 7) || month;
         if (state.totalMonth !== month) {
+            // Archive before resetting
+            state.lastMonthTotal = state.totalMonth === lastMonth ? state.totalAmount : 0;
+            state.lastMonth = lastMonth;
             state.totalAmount = 0;
             state.totalMonth = month;
+        } else if (state.lastMonth !== lastMonth) {
+            state.lastMonthTotal = null;
+            state.lastMonth = lastMonth;
         }
 
         if (state.streak > 14) state.streak = ((state.streak - 1) % 14) + 1;
@@ -261,6 +275,9 @@
 
         const state = getCurrentState();
         tracker.querySelector("[data-total]").textContent = `${state.totalAmount.toLocaleString()} NP`;
+        tracker.querySelector("[data-last-month-total]").textContent = state.lastMonthTotal === null
+            ? "Not Tracked"
+            : `${state.lastMonthTotal.toLocaleString()} NP`;
         tracker.querySelector("[data-streak]").textContent = state.streak.toLocaleString();
         tracker.querySelector("[data-donated-today]").textContent = state.lastDonationDate === getNeopetsDate()
             ? "Yes"
@@ -326,6 +343,9 @@
                     </select>
                     <button class="hero-sk-tracker__reset" type="button" data-reset="donatedToday">Set to No</button>
                 </div>
+                <p class="hero-sk-tracker__stat">
+                    Last Month's Total Donated: <span class="hero-sk-tracker__value" data-last-month-total>Not Tracked</span>
+                </p>
                 <p data-editor-error role="alert" hidden></p>
                 <button class="hero-sk-tracker__reset" type="submit">Save Values</button>
                 <button class="hero-sk-tracker__reset" type="button" data-cancel>Cancel</button>
@@ -344,6 +364,12 @@
         const field = (name) => editor.elements.namedItem(name);
 
         tracker.querySelector("[data-edit]").addEventListener("click", () => {
+            if (!editor.hidden) {
+                editor.hidden = true;
+                return;
+            }
+
+            renderState();
             const state = getCurrentState();
             field("totalAmount").value = state.totalAmount.toLocaleString("en-US");
             field("streak").value = state.streak;
@@ -386,7 +412,7 @@
                 ? today
                 : (streak > 0 ? yesterday : null);
 
-            if (saveState({ totalAmount, totalMonth: today.slice(0, 7), streak, lastDonationDate })) {
+            if (saveState({ ...getCurrentState(today), totalAmount, totalMonth: today.slice(0, 7), streak, lastDonationDate })) {
                 editor.hidden = true;
                 renderState();
             } else {
